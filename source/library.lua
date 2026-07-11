@@ -1,4 +1,4 @@
-local Library do ----15
+local Library do ----16
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2511,16 +2511,16 @@ LeftTabsScroll.MouseLeave:Connect(function()
     }):Play()
 end)
 
-                                                                                             -- ==================== CATEGORY SYSTEM (УЛУЧШЕННАЯ — ВСЕ ТАБЫ) ====================
+                                                                                                     -- ==================== CATEGORY SYSTEM (ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ) ====================
         Window.Categories = {}
-     
+    
         function Window:Category(Name)
             local Category = {
                 Name = Name,
                 Open = true,
                 Elements = {}
             }
-         
+        
             local CategoryFrame = Instances:Create("Frame", {
                 Parent = Items["LeftTabs"].Instance,
                 Name = "\0",
@@ -2528,7 +2528,7 @@ end)
                 Size = UDim2New(1, 0, 0, 42),
                 BorderSizePixel = 0,
             })
-         
+        
             local CategoryButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
@@ -2543,7 +2543,7 @@ end)
                 Position = UDim2New(0, 0, 0, 0),
                 ZIndex = 3,
             }) CategoryButton:AddToTheme({TextColor3 = "Text"})
-         
+        
             local CollapseButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
@@ -2556,13 +2556,13 @@ end)
                 Position = UDim2New(1, -38, 0, 0),
                 ZIndex = 3,
             })
-         
+        
             Category.Frame = CategoryFrame
             Category.CollapseButton = CollapseButton
             Category.Button = CategoryButton
-         
+        
             TableInsert(Window.Categories, Category)
-         
+        
             local function ToggleCategory()
                 Category.Open = not Category.Open
                 
@@ -2575,50 +2575,54 @@ end)
                     for _, Page in ipairs(Category.Elements) do
                         if not Page or not Page.Name then continue end
                         
-                        -- Ищем ВСЕ кнопки-табы, которые соответствуют странице
+                        -- === ПРАВИЛЬНЫЙ ПОИСК ТАБА (по внутреннему TextLabel) ===
                         for _, child in ipairs(Items["LeftTabs"].Instance:GetChildren()) do
-                            if child:IsA("TextButton") and (child.Text == Page.Name or child.Name:find(Page.Name)) then
+                            if child:IsA("TextButton") then
+                                local textLabel = child:FindFirstChildWhichIsA("TextLabel")
                                 
-                                if Category.Open then
-                                    -- === ПОЯВЛЕНИЕ ===
-                                    child.Visible = true
-                                    child.BackgroundTransparency = 1
-                                    Tween:Create(child, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
-                                    
-                                    for _, desc in ipairs(child:GetDescendants()) do
-                                        if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                                            desc.TextTransparency = 1
-                                            Tween:Create(desc, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-                                        elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                                            desc.ImageTransparency = 1
-                                            Tween:Create(desc, TweenInfo.new(0.25), {ImageTransparency = 0}):Play()
+                                if textLabel and textLabel.Text == Page.Name then
+                                    -- Нашли нужный таб для этой страницы
+                                    if Category.Open then
+                                        -- === ПОЯВЛЕНИЕ ===
+                                        child.Visible = true
+                                        child.BackgroundTransparency = 1
+                                        Tween:Create(child, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+                                        
+                                        for _, desc in ipairs(child:GetDescendants()) do
+                                            if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                                                desc.TextTransparency = 1
+                                                Tween:Create(desc, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+                                            elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                                                desc.ImageTransparency = 1
+                                                Tween:Create(desc, TweenInfo.new(0.25), {ImageTransparency = 0}):Play()
+                                            end
                                         end
+                                    else
+                                        -- === ИСЧЕЗНОВЕНИЕ ===
+                                        for _, desc in ipairs(child:GetDescendants()) do
+                                            if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                                                Tween:Create(desc, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+                                            elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                                                Tween:Create(desc, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+                                            end
+                                        end
+                                        
+                                        task.delay(0.25, function()
+                                            if not Category.Open then
+                                                child.Visible = false
+                                            end
+                                        end)
                                     end
-                                else
-                                    -- === ИСЧЕЗНОВЕНИЕ ===
-                                    for _, desc in ipairs(child:GetDescendants()) do
-                                        if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                                            Tween:Create(desc, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
-                                        elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                                            Tween:Create(desc, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
-                                        end
-                                    end
-                                    
-                                    task.delay(0.25, function()
-                                        if not Category.Open then
-                                            child.Visible = false
-                                        end
-                                    end)
                                 end
                             end
                         end
                     end
                 end)
             end
-         
+        
             CollapseButton:Connect("MouseButton1Down", ToggleCategory)
             CategoryButton:Connect("MouseButton1Down", ToggleCategory)
-         
+        
             return Category
         end
                 Items["Logo"] = Instances:Create("ImageLabel", {
