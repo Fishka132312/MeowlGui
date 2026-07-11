@@ -1,4 +1,4 @@
-local Library do ----14
+local Library do ----15
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2511,7 +2511,7 @@ LeftTabsScroll.MouseLeave:Connect(function()
     }):Play()
 end)
 
-                                                                                     -- ==================== CATEGORY SYSTEM (ФИНАЛЬНАЯ ВЕРСИЯ) ====================
+                                                                                             -- ==================== CATEGORY SYSTEM (УЛУЧШЕННАЯ — ВСЕ ТАБЫ) ====================
         Window.Categories = {}
      
         function Window:Category(Name)
@@ -2563,82 +2563,53 @@ end)
          
             TableInsert(Window.Categories, Category)
          
-            -- Анимация + Прозрачность (самый надёжный поиск)
             local function ToggleCategory()
                 Category.Open = not Category.Open
                 
                 local TargetSize = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 0)
-                
                 CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = TargetSize})
                 
                 CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
                 
                 task.spawn(function()
                     for _, Page in ipairs(Category.Elements) do
-                        if not Page then continue end
+                        if not Page or not Page.Name then continue end
                         
-                        -- === РАСШИРЕННЫЙ ПОИСК ФРЕЙМА ===
-                        local frame = nil
-                        
-                        if Page.Items then
-                            frame = Page.Items["PageFrame"] or 
-                                    Page.Items["MainFrame"] or 
-                                    Page.Items["Content"] or
-                                    Page.Items["Frame"]
-                        end
-                        
-                        if not frame and Page.Instance then
-                            frame = Page
-                        end
-                        
-                        -- Если ничего не нашли — ищем по имени (на крайний случай)
-                        if not frame and Page.Name then
-                            for _, child in ipairs(Items["LeftTabs"].Instance:GetChildren()) do
-                                if child.Name == Page.Name or child.Name:find(Page.Name) then
-                                    frame = {Instance = child}
-                                    break
-                                end
-                            end
-                        end
-                        
-                        if frame and frame.Instance then
-                            local mainFrame = frame.Instance
-                            
-                            if Category.Open then
-                                -- Появление
-                                mainFrame.Visible = true
-                                mainFrame.BackgroundTransparency = 1
-                                Tween:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+                        -- Ищем ВСЕ кнопки-табы, которые соответствуют странице
+                        for _, child in ipairs(Items["LeftTabs"].Instance:GetChildren()) do
+                            if child:IsA("TextButton") and (child.Text == Page.Name or child.Name:find(Page.Name)) then
                                 
-                                for _, desc in ipairs(mainFrame:GetDescendants()) do
-                                    if desc:IsA("Frame") and not desc.Name:find("UI") then
-                                        desc.BackgroundTransparency = 1
-                                        Tween:Create(desc, TweenInfo.new(0.25), {BackgroundTransparency = 0}):Play()
-                                    elseif desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                                        desc.TextTransparency = 1
-                                        Tween:Create(desc, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-                                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                                        desc.ImageTransparency = 1
-                                        Tween:Create(desc, TweenInfo.new(0.25), {ImageTransparency = 0}):Play()
+                                if Category.Open then
+                                    -- === ПОЯВЛЕНИЕ ===
+                                    child.Visible = true
+                                    child.BackgroundTransparency = 1
+                                    Tween:Create(child, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+                                    
+                                    for _, desc in ipairs(child:GetDescendants()) do
+                                        if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                                            desc.TextTransparency = 1
+                                            Tween:Create(desc, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+                                        elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                                            desc.ImageTransparency = 1
+                                            Tween:Create(desc, TweenInfo.new(0.25), {ImageTransparency = 0}):Play()
+                                        end
                                     end
+                                else
+                                    -- === ИСЧЕЗНОВЕНИЕ ===
+                                    for _, desc in ipairs(child:GetDescendants()) do
+                                        if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                                            Tween:Create(desc, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+                                        elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                                            Tween:Create(desc, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+                                        end
+                                    end
+                                    
+                                    task.delay(0.25, function()
+                                        if not Category.Open then
+                                            child.Visible = false
+                                        end
+                                    end)
                                 end
-                            else
-                                -- Исчезновение
-                                for _, desc in ipairs(mainFrame:GetDescendants()) do
-                                    if desc:IsA("Frame") and not desc.Name:find("UI") then
-                                        Tween:Create(desc, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
-                                    elseif desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                                        Tween:Create(desc, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
-                                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                                        Tween:Create(desc, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
-                                    end
-                                end
-                                
-                                task.delay(0.25, function()
-                                    if not Category.Open then
-                                        mainFrame.Visible = false
-                                    end
-                                end)
                             end
                         end
                     end
