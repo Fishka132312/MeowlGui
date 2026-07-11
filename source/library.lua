@@ -1,4 +1,4 @@
-local Library do ----25
+local Library do ----26
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2565,15 +2565,15 @@ end)
 
             TableInsert(Window.Categories, Category)
 
-            local function ToggleCategory()
+           local function ToggleCategory()
     Category.Open = not Category.Open
 
     CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
 
-    -- Анимация высоты заголовка категории
-    -- 18px при закрытии — теперь нормально выглядит и не прилипает
-    CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 18)
+    -- Заголовок категории теперь ВСЕГДА остаётся 42px (не сжимаем)
+    -- Это решает проблему "упирания" в низ меню
+    CategoryFrame:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Size = UDim2New(1, 0, 0, 42)
     })
 
     task.spawn(function()
@@ -2588,43 +2588,41 @@ end)
             local tabInst = Tab.Instance
 
             if Category.Open then
-                -- Показываем таб
+                -- Показываем таб + восстанавливаем состояние (выделен / не выделен)
                 tabInst.Visible = true
                 tabInst.BackgroundTransparency = 1
 
-                -- ВАЖНО: восстанавливаем правильное состояние (выделен / не выделен)
                 local targetTransparency = Page.Active and 0.25 or 1
-                Tween:Create(Tab, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Tween:Create(Tab, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundTransparency = targetTransparency
                 })
 
-                -- Показываем текст и иконку
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                        Tween:Create(desc, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                             TextTransparency = 0
                         }, true)
                     elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                        Tween:Create(desc, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                             ImageTransparency = 0
                         }, true)
                     end
                 end
             else
-                -- Скрываем текст и иконки
+                -- Скрываем содержимое таба
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+                        Tween:Create(desc, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
                             TextTransparency = 1
                         }, true)
                     elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+                        Tween:Create(desc, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
                             ImageTransparency = 1
                         }, true)
                     end
                 end
 
-                Tween:Create(Tab, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+                Tween:Create(Tab, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
                     BackgroundTransparency = 1
                 })
 
@@ -2632,9 +2630,9 @@ end)
             end
         end
 
-        -- Скрываем все табы одновременно после анимации (чисто работает и с 1, и с 5 Pages)
+        -- Прячем все табы одновременно после анимации
         if not Category.Open and #tabsToHide > 0 then
-            task.delay(0.22, function()
+            task.delay(0.18, function()
                 if not Category.Open then
                     for _, inst in ipairs(tabsToHide) do
                         if inst and inst.Parent then
