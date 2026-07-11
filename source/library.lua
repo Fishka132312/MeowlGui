@@ -1,4 +1,4 @@
-local Library do ----3
+local Library do ----4
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2279,7 +2279,7 @@ local Library do ----3
 
             local Items = { } do
                 Items["MainFrame"] = Instances:Create("Frame", {
-                   Parent = Items["MainFrame"].Instance,
+                   Parent = Library.Holder.Instance,
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(0.5, 0.5),
