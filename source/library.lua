@@ -1,4 +1,4 @@
-local Library do ----23
+local Library do ----25
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2571,29 +2571,34 @@ end)
     CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
 
     -- Анимация высоты заголовка категории
-    -- 42px — открыто, 10px — закрыто (чтобы не прилипали друг к другу)
+    -- 18px при закрытии — теперь нормально выглядит и не прилипает
     CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 10)
+        Size = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 18)
     })
 
     task.spawn(function()
+        local tabsToHide = {}
+
         for _, Page in ipairs(Category.Elements) do
-            if not Page or not Page.TabButton then 
-                continue 
+            if not Page or not Page.TabButton then
+                continue
             end
 
-            local Tab = Page.TabButton          -- обёртка Instances
-            local tabInst = Tab.Instance        -- реальный TextButton
+            local Tab = Page.TabButton
+            local tabInst = Tab.Instance
 
             if Category.Open then
-                -- Показываем табы
+                -- Показываем таб
                 tabInst.Visible = true
                 tabInst.BackgroundTransparency = 1
 
+                -- ВАЖНО: восстанавливаем правильное состояние (выделен / не выделен)
+                local targetTransparency = Page.Active and 0.25 or 1
                 Tween:Create(Tab, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundTransparency = 0
+                    BackgroundTransparency = targetTransparency
                 })
 
+                -- Показываем текст и иконку
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
                         Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
@@ -2606,7 +2611,7 @@ end)
                     end
                 end
             else
-                -- Скрываем содержимое табов
+                -- Скрываем текст и иконки
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
                         Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
@@ -2623,16 +2628,24 @@ end)
                     BackgroundTransparency = 1
                 })
 
-                task.delay(0.22, function()
-                    if tabInst and tabInst.Parent and not Category.Open then
-                        tabInst.Visible = false
-                    end
-                end)
+                table.insert(tabsToHide, tabInst)
             end
+        end
+
+        -- Скрываем все табы одновременно после анимации (чисто работает и с 1, и с 5 Pages)
+        if not Category.Open and #tabsToHide > 0 then
+            task.delay(0.22, function()
+                if not Category.Open then
+                    for _, inst in ipairs(tabsToHide) do
+                        if inst and inst.Parent then
+                            inst.Visible = false
+                        end
+                    end
+                end
+            end)
         end
     end)
 end
-
             CollapseButton:Connect("MouseButton1Down", ToggleCategory)
             CategoryButton:Connect("MouseButton1Down", ToggleCategory)
 
