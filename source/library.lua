@@ -1,4 +1,4 @@
-local Library do ----19
+local Library do ----20
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -4002,12 +4002,18 @@ Page.TabButton = Items["Inactive"]
             end)
 
             if #Page.Window.Pages == 0 then 
-                Page:Turn(true)
-            end
+    Page:Turn(true)
+end
             
-            TableInsert(Page.Window.Pages, Page)
-            return setmetatable(Page, Library.Pages)
-        end
+TableInsert(Page.Window.Pages, Page)
+
+-- === Регистрация страницы в категорию ===
+if Data.Category then
+    table.insert(Data.Category.Elements, Page)
+end
+
+return setmetatable(Page, Library.Pages)
+end
 
         Library.Pages.GlobalChat = function(self, Side)
             local GlobalChat = { }
