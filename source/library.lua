@@ -1,4 +1,4 @@
-local Library do ----28
+local Library do ----29
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2806,12 +2806,7 @@ end
                     CornerRadius = UDimNew(0, 8)
                 })
 
-Instances:Create("UICorner", {
-    Parent = CategoryFrame.Instance,
-    Name = "\0",
-    CornerRadius = UDimNew(0, 8)
-})
-                
+             
                 do
                     Items["LeftBottomPixels"] = Instances:Create("Frame", {
                         Parent = Items["MainFrame"].Instance,
