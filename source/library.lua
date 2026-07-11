@@ -2313,6 +2313,12 @@ local Library do
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
+
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                    CanvasSize = UDim2New(0, 0, 0, 0),
+                    ScrollBarThickness = 4,
+                    ScrollBarImageColor3 = FromRGB(60, 60, 70),
+                    ScrollingDirection = Enum.ScrollingDirection.Y,
                 })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
 
                 Library:MakeBlurred(Items["LeftTabs"], Window)
@@ -2475,6 +2481,8 @@ local Library do
                     PaddingRight = UDimNew(0, 12),
                     PaddingLeft = UDimNew(0, 12)
                 })
+
+                Items["LeftTabs"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
 
                 Items["Logo"] = Instances:Create("ImageLabel", {
                     Parent = Items["MainFrame"].Instance,
