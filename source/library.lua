@@ -1,4 +1,4 @@
-local Library do 
+local Library do ----34242342424
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2302,24 +2302,24 @@ local Library do
                 Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(9999, 9999), OriginalSizes)
                 Library:MakeBlurred(Items["MainFrame"], Window)
                 
-                Items["LeftTabs"] = Instances:Create("Frame", {
-                    Parent = Items["MainFrame"].Instance,
-                    Name = "\0",
-                    Visible = true,
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    AnchorPoint = Vector2New(1, 0),
-                    BackgroundTransparency = 0.15,
-                    Size = UDim2New(0, 225, 1, 0),
-                    ZIndex = 2,
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(27, 25, 29)
-
-                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                    CanvasSize = UDim2New(0, 0, 0, 0),
-                    ScrollBarThickness = 4,
-                    ScrollBarImageColor3 = FromRGB(60, 60, 70),
-                    ScrollingDirection = Enum.ScrollingDirection.Y,
-                })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
+                Items["LeftTabs"] = Instances:Create("ScrollingFrame", {
+    Parent = Items["MainFrame"].Instance,
+    Name = "\0",
+    Visible = true,
+    BorderColor3 = FromRGB(0, 0, 0),
+    AnchorPoint = Vector2New(1, 0),
+    BackgroundTransparency = 0.15,
+    Size = UDim2New(0, 225, 1, 0),
+    ZIndex = 2,
+    BorderSizePixel = 0,
+    BackgroundColor3 = FromRGB(27, 25, 29),
+    
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    CanvasSize = UDim2New(0, 0, 0, 0),
+    ScrollBarThickness = 4,
+    ScrollBarImageColor3 = FromRGB(60, 60, 70),
+    ScrollingDirection = Enum.ScrollingDirection.Y,
+})  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
 
                 Library:MakeBlurred(Items["LeftTabs"], Window)
 
