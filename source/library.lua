@@ -1,4 +1,4 @@
-local Library do ----20
+local Library do ----21
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2566,64 +2566,74 @@ end)
             TableInsert(Window.Categories, Category)
 
             local function ToggleCategory()
-                Category.Open = not Category.Open
+    Category.Open = not Category.Open
 
-                CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
+    CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
 
-                -- Анимация заголовка категории
-                CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                    Size = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 0)
+    -- Анимация заголовка категории (схлопываем/разворачиваем высоту)
+    CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Size = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 0)
+    })
+
+    task.spawn(function()
+        for _, Page in ipairs(Category.Elements) do
+            if not Page or not Page.TabButton then 
+                continue 
+            end
+
+            local Tab = Page.TabButton          -- это Instances-обёртка
+            local tabInst = Tab.Instance        -- реальный TextButton
+
+            if Category.Open then
+                -- Показываем сразу, чтобы Layout обновился
+                tabInst.Visible = true
+                tabInst.BackgroundTransparency = 1
+
+                -- Tween wrapper'а (правильно, без 4-го аргумента)
+                Tween:Create(Tab, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundTransparency = 0
                 })
 
-                task.spawn(function()
-                    for _, Page in ipairs(Category.Elements) do
-                        if not Page or not Page.TabButton then 
-                            continue 
-                        end
+                -- Tween descendants (сырые Instance → нужен 4-й аргумент true)
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                            TextTransparency = 0
+                        }, true)
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                            ImageTransparency = 0
+                        }, true)
+                    end
+                end
+            else
+                -- Плавно скрываем содержимое
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+                            TextTransparency = 1
+                        }, true)
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+                            ImageTransparency = 1
+                        }, true)
+                    end
+                end
 
-                        local Tab = Page.TabButton
+                -- Также скрываем саму кнопку таба
+                Tween:Create(Tab, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+                    BackgroundTransparency = 1
+                })
 
-                        if Category.Open then
-                            Tab.Visible = true
-                            Tab.BackgroundTransparency = 1
-
-                            Tween:Create(Tab, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                                BackgroundTransparency = 0
-                            }, true)
-
-                            for _, desc in ipairs(Tab:GetDescendants()) do
-                                if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                                    Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
-                                        TextTransparency = 0
-                                    }, true)
-                                elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                                    Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
-                                        ImageTransparency = 0
-                                    }, true)
-                                end
-                            end
-                        else
-                            for _, desc in ipairs(Tab:GetDescendants()) do
-                                if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                                    Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
-                                        TextTransparency = 1
-                                    }, true)
-                                elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                                    Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
-                                        ImageTransparency = 1
-                                    }, true)
-                                end
-                            end
-
-                            task.delay(0.2, function()
-                                if Tab and Tab.Parent and not Category.Open then
-                                    Tab.Visible = false
-                                end
-                            end)
-                        end
+                task.delay(0.2, function()
+                    if tabInst and tabInst.Parent and not Category.Open then
+                        tabInst.Visible = false
                     end
                 end)
             end
+        end
+    end)
+end
 
             CollapseButton:Connect("MouseButton1Down", ToggleCategory)
             CategoryButton:Connect("MouseButton1Down", ToggleCategory)
