@@ -1,4 +1,4 @@
-local Library do ----12
+local Library do ----13
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2511,25 +2511,24 @@ LeftTabsScroll.MouseLeave:Connect(function()
     }):Play()
 end)
 
-                                                               -- ==================== CATEGORY SYSTEM (Улучшенная) ====================
+                                                                      -- ==================== CATEGORY SYSTEM (Фикс + Анимация) ====================
         Window.Categories = {}
-        
+       
         function Window:Category(Name)
             local Category = {
                 Name = Name,
                 Open = true,
                 Elements = {}
             }
-            
+           
             local CategoryFrame = Instances:Create("Frame", {
                 Parent = Items["LeftTabs"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
-                Size = UDim2New(1, 0, 0, 42),   -- высота категории
+                Size = UDim2New(1, 0, 0, 42),
                 BorderSizePixel = 0,
-                AutomaticSize = Enum.AutomaticSize.Y,
             })
-            
+           
             local CategoryButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
@@ -2544,7 +2543,7 @@ end)
                 Position = UDim2New(0, 0, 0, 0),
                 ZIndex = 3,
             }) CategoryButton:AddToTheme({TextColor3 = "Text"})
-            
+           
             local CollapseButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
@@ -2557,41 +2556,53 @@ end)
                 Position = UDim2New(1, -38, 0, 0),
                 ZIndex = 3,
             })
-            
+           
             Category.Frame = CategoryFrame
             Category.CollapseButton = CollapseButton
             Category.Button = CategoryButton
-            
+           
             TableInsert(Window.Categories, Category)
-            
-            -- Анимация сворачивания
+           
+            -- Анимация + надёжное скрытие
             local function ToggleCategory()
                 Category.Open = not Category.Open
                 
-                if Category.Open then
-                    CollapseButton.Instance.Text = "▼"
-                    CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2New(1, 0, 0, 42)})
-                else
-                    CollapseButton.Instance.Text = "▶"
-                    CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2New(1, 0, 0, 42)})
-                end
+                local TargetSize = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 0)
                 
-                -- Скрываем/показываем страницы
+                -- Анимируем высоту категории
+                CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = TargetSize})
+                
+                -- Меняем иконку
+                CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
+                
+                -- Скрываем/показываем ВСЕ страницы этой категории
                 task.spawn(function()
                     for _, Page in ipairs(Category.Elements) do
-                        if Page and Page.Items and Page.Items["PageFrame"] then
-                            Page.Items["PageFrame"].Instance.Visible = Category.Open
+                        if not Page then continue end
+                        
+                        -- Основные возможные контейнеры страницы
+                        local targets = {}
+                        if Page.Items then
+                            if Page.Items["PageFrame"] then table.insert(targets, Page.Items["PageFrame"]) end
+                            if Page.Items["MainFrame"] then table.insert(targets, Page.Items["MainFrame"]) end
+                            if Page.Items["Content"] then table.insert(targets, Page.Items["Content"]) end
+                        end
+                        if Page.Instance then table.insert(targets, Page) end
+                        
+                        for _, obj in ipairs(targets) do
+                            if obj and obj.Instance then
+                                obj.Instance.Visible = Category.Open
+                            end
                         end
                     end
                 end)
             end
-            
+           
             CollapseButton:Connect("MouseButton1Down", ToggleCategory)
             CategoryButton:Connect("MouseButton1Down", ToggleCategory)
-            
+           
             return Category
         end
-
                 Items["Logo"] = Instances:Create("ImageLabel", {
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
