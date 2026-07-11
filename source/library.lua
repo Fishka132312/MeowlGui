@@ -1,4 +1,4 @@
-local Library do ----9
+local Library do ----10
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2285,7 +2285,7 @@ local Library do ----9
                     AnchorPoint = Vector2New(0.5, 0.5),
                     BackgroundTransparency = 0.12,
                     Position = UDim2New(0.5, 0, 0.5, 0),
-                    Size = UDim2New(0, 680, 0, 680),
+                    Size = UDim2New(0, 820, 0, 620),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
@@ -2301,13 +2301,12 @@ local Library do ----9
 
             
 Items["MainFrame"]:MakeResizeable(
-    Vector2New(580, 550), 
-    Vector2New(850, 850), 
+    Vector2New(650, 520),
+    Vector2New(1000, 750),
     OriginalSizes
 )
 
--- Принудительно ставим нужный размер после ресайза
-Items["MainFrame"].Instance.Size = UDim2New(0, 680, 0, 680)
+Items["MainFrame"].Instance.Size = UDim2New(0, 820, 0, 620)
                                                 
                 Library:MakeBlurred(Items["MainFrame"], Window)
                 
