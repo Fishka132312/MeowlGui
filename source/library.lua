@@ -1,4 +1,4 @@
-local Library do ----2
+local Library do ----3
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2279,13 +2279,13 @@ local Library do ----2
 
             local Items = { } do
                 Items["MainFrame"] = Instances:Create("Frame", {
-                    Parent = Library.Holder.Instance,
+                   Parent = Items["MainFrame"].Instance,
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(0.5, 0.5),
                     BackgroundTransparency = 0.12,
                     Position = UDim2New(0.5519999861717224, 0, 0.5, 0),
-                    Size = UDim2New(0, 677, 0, 644),
+                    Size = UDim2New(0, 680, 0, 780),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
@@ -2299,7 +2299,12 @@ local Library do ----2
                     })                    
                 end
 
-                Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(9999, 9999), OriginalSizes)
+            
+Items["MainFrame"]:MakeResizeable(
+    Vector2New(580, 520),    
+    Vector2New(920, 920),
+    OriginalSizes
+)
                 Library:MakeBlurred(Items["MainFrame"], Window)
                 
                 Items["LeftTabs"] = Instances:Create("ScrollingFrame", {
