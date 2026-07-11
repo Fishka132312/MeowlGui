@@ -1,4 +1,4 @@
-local Library do ----34242342424
+local Library do ----2
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2314,11 +2314,18 @@ local Library do ----34242342424
     BorderSizePixel = 0,
     BackgroundColor3 = FromRGB(27, 25, 29),
     
+    -- Красивые настройки скролла
     AutomaticCanvasSize = Enum.AutomaticSize.Y,
     CanvasSize = UDim2New(0, 0, 0, 0),
-    ScrollBarThickness = 4,
-    ScrollBarImageColor3 = FromRGB(60, 60, 70),
+    ScrollBarThickness = 3,                    -- тонкий
+    ScrollBarImageTransparency = 0.6,          -- полупрозрачный
+    ScrollBarImageColor3 = FromRGB(255, 255, 255),
     ScrollingDirection = Enum.ScrollingDirection.Y,
+    
+    -- Дополнительно для красоты
+    MidImage = "rbxassetid://3570695787",      -- гладкий скролл
+    TopImage = "rbxassetid://3570695787",
+    BottomImage = "rbxassetid://3570695787",
 })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
 
                 Library:MakeBlurred(Items["LeftTabs"], Window)
@@ -2483,6 +2490,20 @@ local Library do ----34242342424
                 })
 
                 Items["LeftTabs"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
+
+                local LeftTabsScroll = Items["LeftTabs"].Instance
+
+                LeftTabsScroll.MouseEnter:Connect(function()
+    TweenService:Create(LeftTabsScroll, TweenInfo.new(0.2), {
+        ScrollBarImageTransparency = 0.3
+    }):Play()
+end)
+
+LeftTabsScroll.MouseLeave:Connect(function()
+    TweenService:Create(LeftTabsScroll, TweenInfo.new(0.2), {
+        ScrollBarImageTransparency = 0.6
+    }):Play()
+end)
 
                 Items["Logo"] = Instances:Create("ImageLabel", {
                     Parent = Items["MainFrame"].Instance,
