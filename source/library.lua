@@ -1,4 +1,4 @@
-local Library do ----10
+local Library do ----11
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2285,7 +2285,7 @@ local Library do ----10
                     AnchorPoint = Vector2New(0.5, 0.5),
                     BackgroundTransparency = 0.12,
                     Position = UDim2New(0.5, 0, 0.5, 0),
-                    Size = UDim2New(0, 820, 0, 620),
+                    Size = UDim2New(0, 860, 0, 590),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
@@ -2306,7 +2306,7 @@ Items["MainFrame"]:MakeResizeable(
     OriginalSizes
 )
 
-Items["MainFrame"].Instance.Size = UDim2New(0, 820, 0, 620)
+Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
                                                 
                 Library:MakeBlurred(Items["MainFrame"], Window)
                 
@@ -2322,16 +2322,14 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 820, 0, 620)
     BorderSizePixel = 0,
     BackgroundColor3 = FromRGB(27, 25, 29),
     
-    -- Красивые настройки скролла
     AutomaticCanvasSize = Enum.AutomaticSize.Y,
     CanvasSize = UDim2New(0, 0, 0, 0),
-    ScrollBarThickness = 3,                    -- тонкий
-    ScrollBarImageTransparency = 0.6,          -- полупрозрачный
+    ScrollBarThickness = 3,
+    ScrollBarImageTransparency = 0.6,
     ScrollBarImageColor3 = FromRGB(255, 255, 255),
     ScrollingDirection = Enum.ScrollingDirection.Y,
     
-    -- Дополнительно для красоты
-    MidImage = "rbxassetid://3570695787",      -- гладкий скролл
+    MidImage = "rbxassetid://3570695787",
     TopImage = "rbxassetid://3570695787",
     BottomImage = "rbxassetid://3570695787",
 })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
@@ -2512,6 +2510,75 @@ LeftTabsScroll.MouseLeave:Connect(function()
         ScrollBarImageTransparency = 0.6
     }):Play()
 end)
+
+                                                        -- ==================== CATEGORY SYSTEM ====================
+        Window.Categories = {}
+        
+        function Window:Category(Name)
+            local Category = {
+                Name = Name,
+                Open = true,
+                Elements = {}  -- сюда будем складывать страницы этой категории
+            }
+            
+            local CategoryFrame = Instances:Create("Frame", {
+                Parent = Items["LeftTabs"].Instance,
+                Name = "\0",
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 0, 35),
+                BorderSizePixel = 0,
+            })
+            
+            local CategoryButton = Instances:Create("TextButton", {
+                Parent = CategoryFrame.Instance,
+                Name = "\0",
+                Text = Name,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(240, 240, 240),
+                TextTransparency = 0.1,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, -40, 1, 0),
+                Position = UDim2New(0, 12, 0, 0),
+                ZIndex = 3,
+            }) CategoryButton:AddToTheme({TextColor3 = "Text"})
+            
+            local CollapseButton = Instances:Create("TextButton", {
+                Parent = CategoryFrame.Instance,
+                Name = "\0",
+                Text = "▼",
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(180, 180, 180),
+                BackgroundTransparency = 1,
+                Size = UDim2New(0, 30, 1, 0),
+                Position = UDim2New(1, -35, 0, 0),
+                ZIndex = 3,
+            })
+            
+            -- Сохраняем
+            Category.Frame = CategoryFrame
+            Category.CollapseButton = CollapseButton
+            Category.Button = CategoryButton
+            
+            TableInsert(Window.Categories, Category)
+            
+            -- Логика сворачивания
+            local function ToggleCategory()
+                Category.Open = not Category.Open
+                CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
+                
+                for _, Element in ipairs(Category.Elements) do
+                    if Element.Instance then
+                        Element.Instance.Visible = Category.Open
+                    end
+                end
+            end
+            
+            CollapseButton:Connect("MouseButton1Down", ToggleCategory)
+            CategoryButton:Connect("MouseButton1Down", ToggleCategory)
+            
+            return Category
+        end
 
                 Items["Logo"] = Instances:Create("ImageLabel", {
                     Parent = Items["MainFrame"].Instance,
