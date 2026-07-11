@@ -1,4 +1,4 @@
-local Library do ----21
+local Library do ----22
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2570,9 +2570,19 @@ end)
 
     CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
 
-    -- Анимация заголовка категории (схлопываем/разворачиваем высоту)
+    -- Анимация заголовка категории
+    -- При закрытии оставляем 10px высоты, чтобы категории не прилипали друг к другу
     CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 0)
+        Size = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 10)
+    })
+
+    -- Плавно скрываем/показываем текст заголовка категории
+    local headerAlpha = Category.Open and 0 or 1
+    CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = headerAlpha
+    })
+    CollapseButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = headerAlpha
     })
 
     task.spawn(function()
@@ -2581,20 +2591,19 @@ end)
                 continue 
             end
 
-            local Tab = Page.TabButton          -- это Instances-обёртка
+            local Tab = Page.TabButton          -- это обёртка Instances
             local tabInst = Tab.Instance        -- реальный TextButton
 
             if Category.Open then
-                -- Показываем сразу, чтобы Layout обновился
                 tabInst.Visible = true
                 tabInst.BackgroundTransparency = 1
 
-                -- Tween wrapper'а (правильно, без 4-го аргумента)
+                -- Tween wrapper'а (без 4-го аргумента)
                 Tween:Create(Tab, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundTransparency = 0
                 })
 
-                -- Tween descendants (сырые Instance → нужен 4-й аргумент true)
+                -- Tween детей (сырые Instance → нужен true)
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
                         Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
@@ -2607,7 +2616,7 @@ end)
                     end
                 end
             else
-                -- Плавно скрываем содержимое
+                -- Скрываем текст/иконки внутри табов
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
                         Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
@@ -2620,12 +2629,12 @@ end)
                     end
                 end
 
-                -- Также скрываем саму кнопку таба
+                -- Скрываем сам TabButton
                 Tween:Create(Tab, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
                     BackgroundTransparency = 1
                 })
 
-                task.delay(0.2, function()
+                task.delay(0.22, function()
                     if tabInst and tabInst.Parent and not Category.Open then
                         tabInst.Visible = false
                     end
