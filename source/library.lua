@@ -1,4 +1,4 @@
-local Library do ----5
+local Library do ----6
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2301,15 +2301,14 @@ local Library do ----5
 
             
 Items["MainFrame"]:MakeResizeable(
-    Vector2New(580, 550),     -- минимальный размер
-    Vector2New(900, 1000),    -- максимальный
+    Vector2New(580, 550),
+    Vector2New(800, 720),
     OriginalSizes
 )
 
--- Принудительно ставим прямоугольный размер при запуске
 Items["MainFrame"]:Tween(nil, {Size = UDim2New(0, 680, 0, 780)})
--- или так (если Tween не сработает):
-Items["MainFrame"].Instance.Size = UDim2New(0, 680, 0, 780)
+                                                
+Items["MainFrame"].Instance.Size = UDim2New(0, 680, 0, 500)
                                                 
                 Library:MakeBlurred(Items["MainFrame"], Window)
                 
