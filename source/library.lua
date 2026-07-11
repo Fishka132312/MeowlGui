@@ -1,4 +1,4 @@
-local Library do ----17
+local Library do ----18
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2511,129 +2511,123 @@ LeftTabsScroll.MouseLeave:Connect(function()
     }):Play()
 end)
 
-                                                                                                     -- ==================== CATEGORY SYSTEM (ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ) ====================
+                                                                                                     -- ==================== CATEGORY SYSTEM (ИСПРАВЛЕНО) ====================
         Window.Categories = {}
-    
+
         function Window:Category(Name)
             local Category = {
                 Name = Name,
                 Open = true,
-                Elements = {}
+                Elements = {}, -- сюда будут добавляться Page
+                Frame = nil,
+                ContentFrame = nil
             }
-        
+
+            -- Контейнер категории (заголовок + контент)
             local CategoryFrame = Instances:Create("Frame", {
                 Parent = Items["LeftTabs"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
                 Size = UDim2New(1, 0, 0, 42),
                 BorderSizePixel = 0,
+                ZIndex = 2
             })
-        
+
             local CategoryButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
                 Text = "   " .. Name,
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(255, 255, 255),
-                TextTransparency = 0,
-                TextSize = 16,
+                TextSize = 15,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 BackgroundTransparency = 1,
                 Size = UDim2New(1, -45, 0, 42),
-                Position = UDim2New(0, 0, 0, 0),
                 ZIndex = 3,
             }) CategoryButton:AddToTheme({TextColor3 = "Text"})
-        
+
             local CollapseButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
                 Text = "▼",
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(200, 200, 200),
-                TextSize = 18,
+                TextSize = 16,
                 BackgroundTransparency = 1,
                 Size = UDim2New(0, 30, 0, 42),
-                Position = UDim2New(1, -38, 0, 0),
+                Position = UDim2New(1, -35, 0, 0),
                 ZIndex = 3,
             })
-        
+
             Category.Frame = CategoryFrame
             Category.CollapseButton = CollapseButton
             Category.Button = CategoryButton
-        
+
             TableInsert(Window.Categories, Category)
-        
+
             local function ToggleCategory()
-    Category.Open = not Category.Open
+                Category.Open = not Category.Open
 
-    -- Анимация самого заголовка категории
-    local TargetSize = Category.Open 
-        and UDim2New(1, 0, 0, 42) 
-        or  UDim2New(1, 0, 0, 0)
+                CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
 
-    CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = TargetSize})
-    CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
+                -- Анимация заголовка категории
+                CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 0)
+                })
 
-    task.spawn(function()
-        for _, Page in ipairs(Category.Elements) do
-            if not Page or not Page.TabButton then 
-                continue 
-            end
+                task.spawn(function()
+                    for _, Page in ipairs(Category.Elements) do
+                        if not Page or not Page.TabButton then 
+                            continue 
+                        end
 
-            local Tab = Page.TabButton -- <-- будем хранить прямую ссылку на таб
+                        local Tab = Page.TabButton
 
-            if Category.Open then
-                -- === РАЗВОРАЧИВАНИЕ ===
-                Tab.Visible = true
-                Tab.BackgroundTransparency = 1
+                        if Category.Open then
+                            Tab.Visible = true
+                            Tab.BackgroundTransparency = 1
 
-                -- Таб
-                Tween:Create(Tab, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundTransparency = 0
-                }, true):Play()
+                            Tween:Create(Tab, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                BackgroundTransparency = 0
+                            }, true)
 
-                -- Все текстовые и картинки внутри
-                for _, desc in ipairs(Tab:GetDescendants()) do
-                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        desc.TextTransparency = 1
-                        Tween:Create(desc, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-                            TextTransparency = 0
-                        }, true):Play()
-                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        desc.ImageTransparency = 1
-                        Tween:Create(desc, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-                            ImageTransparency = 0
-                        }, true):Play()
-                    end
-                end
-            else
-                -- === СВОРАЧИВАНИЕ ===
-                for _, desc in ipairs(Tab:GetDescendants()) do
-                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                            TextTransparency = 1
-                        }, true):Play()
-                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                            ImageTransparency = 1
-                        }, true):Play()
-                    end
-                end
+                            for _, desc in ipairs(Tab:GetDescendants()) do
+                                if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                                    Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                                        TextTransparency = 0
+                                    }, true)
+                                elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                                    Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                                        ImageTransparency = 0
+                                    }, true)
+                                end
+                            end
+                        else
+                            for _, desc in ipairs(Tab:GetDescendants()) do
+                                if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                                    Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+                                        TextTransparency = 1
+                                    }, true)
+                                elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                                    Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+                                        ImageTransparency = 1
+                                    }, true)
+                                end
+                            end
 
-                -- Прячем таб после анимации
-                task.delay(0.22, function()
-                    if Tab and Tab.Parent and not Category.Open then
-                        Tab.Visible = false
+                            task.delay(0.2, function()
+                                if Tab and Tab.Parent and not Category.Open then
+                                    Tab.Visible = false
+                                end
+                            end)
+                        end
                     end
                 end)
             end
-        end
-    end)
-end
-        
+
             CollapseButton:Connect("MouseButton1Down", ToggleCategory)
             CategoryButton:Connect("MouseButton1Down", ToggleCategory)
-        
+
             return Category
         end
                 Items["Logo"] = Instances:Create("ImageLabel", {
