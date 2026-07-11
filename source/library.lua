@@ -2511,16 +2511,16 @@ LeftTabsScroll.MouseLeave:Connect(function()
     }):Play()
 end)
 
-                                                                              -- ==================== CATEGORY SYSTEM (С ПЛАВНОЙ ПРОЗРАЧНОСТЬЮ) ====================
+                                                                                     -- ==================== CATEGORY SYSTEM (ФИНАЛЬНАЯ ВЕРСИЯ) ====================
         Window.Categories = {}
-      
+     
         function Window:Category(Name)
             local Category = {
                 Name = Name,
                 Open = true,
                 Elements = {}
             }
-          
+         
             local CategoryFrame = Instances:Create("Frame", {
                 Parent = Items["LeftTabs"].Instance,
                 Name = "\0",
@@ -2528,7 +2528,7 @@ end)
                 Size = UDim2New(1, 0, 0, 42),
                 BorderSizePixel = 0,
             })
-          
+         
             local CategoryButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
@@ -2543,7 +2543,7 @@ end)
                 Position = UDim2New(0, 0, 0, 0),
                 ZIndex = 3,
             }) CategoryButton:AddToTheme({TextColor3 = "Text"})
-          
+         
             local CollapseButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
@@ -2556,88 +2556,98 @@ end)
                 Position = UDim2New(1, -38, 0, 0),
                 ZIndex = 3,
             })
-          
+         
             Category.Frame = CategoryFrame
             Category.CollapseButton = CollapseButton
             Category.Button = CategoryButton
-          
+         
             TableInsert(Window.Categories, Category)
-          
-            -- Анимация + Прозрачность
+         
+            -- Анимация + Прозрачность (самый надёжный поиск)
             local function ToggleCategory()
                 Category.Open = not Category.Open
                 
                 local TargetSize = Category.Open and UDim2New(1, 0, 0, 42) or UDim2New(1, 0, 0, 0)
                 
-                -- Анимируем высоту
                 CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = TargetSize})
                 
-                -- Иконка
                 CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
                 
-                -- Плавная прозрачность + скрытие
                 task.spawn(function()
                     for _, Page in ipairs(Category.Elements) do
                         if not Page then continue end
                         
-                        local targets = {}
-                        if Page.Items then
-                            if Page.Items["PageFrame"] then table.insert(targets, Page.Items["PageFrame"]) end
-                            if Page.Items["MainFrame"] then table.insert(targets, Page.Items["MainFrame"]) end
-                            if Page.Items["Content"] then table.insert(targets, Page.Items["Content"]) end
-                        end
-                        if Page.Instance then table.insert(targets, Page) end
+                        -- === РАСШИРЕННЫЙ ПОИСК ФРЕЙМА ===
+                        local frame = nil
                         
-                        for _, obj in ipairs(targets) do
-                            if obj and obj.Instance then
-                                local frame = obj.Instance
-                                
-                                if Category.Open then
-                                    -- === ПОЯВЛЕНИЕ ===
-                                    frame.Visible = true
-                                    frame.BackgroundTransparency = 1
-                                    
-                                    Tween:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
-                                    
-                                    for _, desc in ipairs(frame:GetDescendants()) do
-                                        if desc:IsA("Frame") and not desc.Name:find("UI") then
-                                            desc.BackgroundTransparency = 1
-                                            Tween:Create(desc, TweenInfo.new(0.25), {BackgroundTransparency = desc.BackgroundTransparency or 0}):Play()
-                                        elseif desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                                            desc.TextTransparency = 1
-                                            Tween:Create(desc, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-                                        elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                                            desc.ImageTransparency = 1
-                                            Tween:Create(desc, TweenInfo.new(0.25), {ImageTransparency = 0}):Play()
-                                        end
-                                    end
-                                else
-                                    -- === ИСЧЕЗНОВЕНИЕ ===
-                                    for _, desc in ipairs(frame:GetDescendants()) do
-                                        if desc:IsA("Frame") and not desc.Name:find("UI") then
-                                            Tween:Create(desc, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
-                                        elseif desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                                            Tween:Create(desc, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
-                                        elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                                            Tween:Create(desc, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
-                                        end
-                                    end
-                                    
-                                    task.delay(0.22, function()
-                                        if not Category.Open then
-                                            frame.Visible = false
-                                        end
-                                    end)
+                        if Page.Items then
+                            frame = Page.Items["PageFrame"] or 
+                                    Page.Items["MainFrame"] or 
+                                    Page.Items["Content"] or
+                                    Page.Items["Frame"]
+                        end
+                        
+                        if not frame and Page.Instance then
+                            frame = Page
+                        end
+                        
+                        -- Если ничего не нашли — ищем по имени (на крайний случай)
+                        if not frame and Page.Name then
+                            for _, child in ipairs(Items["LeftTabs"].Instance:GetChildren()) do
+                                if child.Name == Page.Name or child.Name:find(Page.Name) then
+                                    frame = {Instance = child}
+                                    break
                                 end
+                            end
+                        end
+                        
+                        if frame and frame.Instance then
+                            local mainFrame = frame.Instance
+                            
+                            if Category.Open then
+                                -- Появление
+                                mainFrame.Visible = true
+                                mainFrame.BackgroundTransparency = 1
+                                Tween:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+                                
+                                for _, desc in ipairs(mainFrame:GetDescendants()) do
+                                    if desc:IsA("Frame") and not desc.Name:find("UI") then
+                                        desc.BackgroundTransparency = 1
+                                        Tween:Create(desc, TweenInfo.new(0.25), {BackgroundTransparency = 0}):Play()
+                                    elseif desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                                        desc.TextTransparency = 1
+                                        Tween:Create(desc, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+                                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                                        desc.ImageTransparency = 1
+                                        Tween:Create(desc, TweenInfo.new(0.25), {ImageTransparency = 0}):Play()
+                                    end
+                                end
+                            else
+                                -- Исчезновение
+                                for _, desc in ipairs(mainFrame:GetDescendants()) do
+                                    if desc:IsA("Frame") and not desc.Name:find("UI") then
+                                        Tween:Create(desc, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+                                    elseif desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                                        Tween:Create(desc, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+                                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                                        Tween:Create(desc, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+                                    end
+                                end
+                                
+                                task.delay(0.25, function()
+                                    if not Category.Open then
+                                        mainFrame.Visible = false
+                                    end
+                                end)
                             end
                         end
                     end
                 end)
             end
-          
+         
             CollapseButton:Connect("MouseButton1Down", ToggleCategory)
             CategoryButton:Connect("MouseButton1Down", ToggleCategory)
-          
+         
             return Category
         end
                 Items["Logo"] = Instances:Create("ImageLabel", {
