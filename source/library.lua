@@ -1,4 +1,4 @@
-local Library do ----11
+local Library do ----12
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2511,35 +2511,37 @@ LeftTabsScroll.MouseLeave:Connect(function()
     }):Play()
 end)
 
-                                                        -- ==================== CATEGORY SYSTEM ====================
+                                                               -- ==================== CATEGORY SYSTEM (Улучшенная) ====================
         Window.Categories = {}
         
         function Window:Category(Name)
             local Category = {
                 Name = Name,
                 Open = true,
-                Elements = {}  -- сюда будем складывать страницы этой категории
+                Elements = {}
             }
             
             local CategoryFrame = Instances:Create("Frame", {
                 Parent = Items["LeftTabs"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
-                Size = UDim2New(1, 0, 0, 35),
+                Size = UDim2New(1, 0, 0, 42),   -- высота категории
                 BorderSizePixel = 0,
+                AutomaticSize = Enum.AutomaticSize.Y,
             })
             
             local CategoryButton = Instances:Create("TextButton", {
                 Parent = CategoryFrame.Instance,
                 Name = "\0",
-                Text = Name,
+                Text = "   " .. Name,
                 FontFace = Library.Font,
-                TextColor3 = FromRGB(240, 240, 240),
-                TextTransparency = 0.1,
+                TextColor3 = FromRGB(255, 255, 255),
+                TextTransparency = 0,
+                TextSize = 16,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 BackgroundTransparency = 1,
-                Size = UDim2New(1, -40, 1, 0),
-                Position = UDim2New(0, 12, 0, 0),
+                Size = UDim2New(1, -45, 0, 42),
+                Position = UDim2New(0, 0, 0, 0),
                 ZIndex = 3,
             }) CategoryButton:AddToTheme({TextColor3 = "Text"})
             
@@ -2548,30 +2550,40 @@ end)
                 Name = "\0",
                 Text = "▼",
                 FontFace = Library.Font,
-                TextColor3 = FromRGB(180, 180, 180),
+                TextColor3 = FromRGB(200, 200, 200),
+                TextSize = 18,
                 BackgroundTransparency = 1,
-                Size = UDim2New(0, 30, 1, 0),
-                Position = UDim2New(1, -35, 0, 0),
+                Size = UDim2New(0, 30, 0, 42),
+                Position = UDim2New(1, -38, 0, 0),
                 ZIndex = 3,
             })
             
-            -- Сохраняем
             Category.Frame = CategoryFrame
             Category.CollapseButton = CollapseButton
             Category.Button = CategoryButton
             
             TableInsert(Window.Categories, Category)
             
-            -- Логика сворачивания
+            -- Анимация сворачивания
             local function ToggleCategory()
                 Category.Open = not Category.Open
-                CollapseButton.Instance.Text = Category.Open and "▼" or "▶"
                 
-                for _, Element in ipairs(Category.Elements) do
-                    if Element.Instance then
-                        Element.Instance.Visible = Category.Open
-                    end
+                if Category.Open then
+                    CollapseButton.Instance.Text = "▼"
+                    CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2New(1, 0, 0, 42)})
+                else
+                    CollapseButton.Instance.Text = "▶"
+                    CategoryFrame:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2New(1, 0, 0, 42)})
                 end
+                
+                -- Скрываем/показываем страницы
+                task.spawn(function()
+                    for _, Page in ipairs(Category.Elements) do
+                        if Page and Page.Items and Page.Items["PageFrame"] then
+                            Page.Items["PageFrame"].Instance.Visible = Category.Open
+                        end
+                    end
+                end)
             end
             
             CollapseButton:Connect("MouseButton1Down", ToggleCategory)
