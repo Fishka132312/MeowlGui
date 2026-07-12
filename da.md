@@ -43,7 +43,7 @@ Section:Button({
 ```
 
 ### 2. Toggles
-Toggles are the core building blocks of the library. They support **nested sub-options** that expand beautifully when activated.
+Toggles support additional settings through a gear icon (opens a small panel with extra elements)
 
 ```lua
 local MyToggle = Section:Toggle({
@@ -128,7 +128,7 @@ Section:Colorpicker({
     Flag = "ParticleColor",
     Default = Color3.fromRGB(255, 0, 0),
     Alpha = 1, -- Transparency (0-1)
-    Callback = function(Color, Alpha) ... end
+    Callback = function(Color, Alpha)  end
 })
 
 Section:Keybind({
@@ -145,15 +145,6 @@ MyToggle:Keybind({ Default = Enum.KeyCode.X })
 ```
 
 ---
-
-## 🖥️ Event Logger
-
-Built-in draggable logger that snaps to the center of the screen. Great for debugging and user feedback.
-
-**Enable it first:**
-```lua
-Library.LogsEnabled = true -- Required to show the panel
-```
 
 **Send logs:**
 ```lua
@@ -172,16 +163,8 @@ Add a ready-made Settings page (Menu Scale, Config Manager, Watermark, etc.) wit
 Library:CreateSettingsPage(Window)
 ```
 
-### Menu Scale
-Supports DPI scaling. Best to let users change it in Settings, but you can also set it manually:
-
-```lua
--- Values: 0.5, 0.75, 1, 1.25, 1.5
-Library.CurrentScale = 1.25 
--- Recommended: use the built-in Settings Page dropdown instead of setting manually.
-```
-
 ---
+
 
 ## 🔄 Updating Values Programmatically
 
