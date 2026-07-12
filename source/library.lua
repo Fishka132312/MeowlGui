@@ -72,9 +72,9 @@ local Library do ----38
         FadeSpeed = 0.2,
 
         Folders = {
-            Directory = "lyapossss",
-            Configs = "lyapossss/Configs",
-            Assets = "lyapossss/Assets",
+            Directory = "MeowlLibrary",
+            Configs = "MeowlLibrary/Configs",
+            Assets = "MeowlLibrary/Assets",
         },
 
         -- Ignore below
