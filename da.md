@@ -257,8 +257,8 @@ local MyDropdown = Section:Dropdown({
     Name = "Select Mode",
     Flag = "SelectMode",
     Items = {"Default", "Dark", "Light", "Custom"},
-    Default = "Default", -- Use {"Default", "Dark"} for Multi
-    Multi = false, -- Set to true for multiple selection
+    Default = "Default",
+    Multi = false,
     Callback = function(Value)
         print("Selected:", Value)
     end
@@ -365,7 +365,7 @@ Section:Keybind({
     Name = "Gui Keybind",
     Flag = "GuiKeybind",
     Default = Enum.KeyCode.E,
-    Mode = "Hold", -- "Toggle", "Hold", or "Always"
+    Mode = "Hold",
     Callback = function(State) ... end
 })
 
