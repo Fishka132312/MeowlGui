@@ -352,14 +352,22 @@ PlayersSection:Button({
     end
 })
 
-local PlayersCat = Window:Category("Players")
+local GuiCat = Window:Category("Gui")
 local PlayersPage = Window:Page({
-		Name = "Players",
+		Name = "Gui",
 		Icon = "7539983773",
-		Category = PlayersCat
+		Category = GuiCat
 })
 
-local PlayersSection = PlayersPage:Section({Name = "Ban", Side = 1})
+local GuiSection = GuiPage:Section({Name = "Gui", Side = 1})
+
+Section:Keybind({
+    Name = "Gui Keybind",
+    Flag = "GuiKeybind",
+    Default = Enum.KeyCode.E,
+    Mode = "Hold", -- "Toggle", "Hold", or "Always"
+    Callback = function(State) ... end
+})
 
 local SettingsCat = Window:Category("Settings")
 local SettingsPage = Library:CreateSettingsPage(Window, KeybindList)
