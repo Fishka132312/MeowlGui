@@ -1,4 +1,4 @@
-local Library do ----37
+local Library do ----38
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2566,69 +2566,80 @@ function Window:Category(Name)
     TableInsert(Window.Categories, Category)
 
     local function ToggleCategory()
-        Category.Open = not Category.Open
+    Category.Open = not Category.Open
 
-        -- Меняем стрелку: открыто = ▲ (вверх), закрыто = ▼ (вниз)
-        CollapseButton.Instance.Text = Category.Open and "▲" or "▼"
+    -- Стрелка: открыто = ▲ (вверх), закрыто = ▼ (вниз)
+    CollapseButton.Instance.Text = Category.Open and "▲" or "▼"
 
-        -- Плавное затемнение заголовка (премиум эффект)
-        local headerAlpha = Category.Open and 0 or 0.45
-        CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            TextTransparency = headerAlpha
-        })
-        CollapseButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            TextTransparency = headerAlpha
-        })
+    -- Плавное затемнение заголовка категории
+    local headerAlpha = Category.Open and 0 or 0.45
+    CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = headerAlpha
+    })
+    CollapseButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = headerAlpha
+    })
 
-        task.spawn(function()
-            for _, Page in ipairs(Category.Elements) do
-                if not Page or not Page.TabButton then continue end
+    task.spawn(function()
+        for _, Page in ipairs(Category.Elements) do
+            if not Page or not Page.TabButton then continue end
 
-                local Tab = Page.TabButton
-                local tabInst = Tab.Instance
+            local Tab = Page.TabButton
+            local tabInst = Tab.Instance
 
-                if Category.Open then
-                    -- ОТКРЫВАЕМ
-                    tabInst.Visible = true
-                    tabInst.Size = UDim2New(1, 0, 0, 42) -- возвращаем нормальный размер
+            if Category.Open then
+                -- ==================== ОТКРЫТИЕ ====================
+                tabInst.Visible = true
+                tabInst.Size = UDim2New(1, 0, 0, 42) -- сразу возвращаем нормальный размер
 
-                    local targetTransparency = Page.Active and 0.25 or 1
-                    Tween:Create(Tab, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                        BackgroundTransparency = targetTransparency
-                    })
+                local targetTransparency = Page.Active and 0.25 or 1
 
-                    for _, desc in ipairs(tabInst:GetDescendants()) do
-                        if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                            Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), { TextTransparency = 0 }, true)
-                        elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                            Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), { ImageTransparency = 0 }, true)
-                        end
+                Tween:Create(Tab, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    BackgroundTransparency = targetTransparency
+                })
+
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                            TextTransparency = 0
+                        }, true)
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                            ImageTransparency = 0
+                        }, true)
                     end
-                else
-                    -- ЗАКРЫВАЕМ (плавно сжимаем + фейд)
-                    for _, desc in ipairs(tabInst:GetDescendants()) do
-                        if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                            Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { TextTransparency = 1 }, true)
-                        elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                            Tween:Create(desc, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { ImageTransparency = 1 }, true)
-                        end
-                    end
-
-                    Tween:Create(Tab, TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                        BackgroundTransparency = 1,
-                        Size = UDim2New(1, 0, 0, 0) -- сжимаем высоту → нижние категории наезжают плавно
-                    })
-
-                    task.delay(0.25, function()
-                        if not Category.Open and tabInst and tabInst.Parent then
-                            tabInst.Visible = false
-                            tabInst.Size = UDim2New(1, 0, 0, 42) -- восстанавливаем размер на будущее
-                        end
-                    end)
                 end
+
+            else
+                -- ==================== ЗАКРЫТИЕ (плавно и без дёрганья) ====================
+                local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+                -- Фейдим текст и иконки
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, tweenInfo, { TextTransparency = 1 }, true)
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, tweenInfo, { ImageTransparency = 1 }, true)
+                    end
+                end
+
+                -- Плавно сжимаем таб до 0 высоты (именно это даёт эффект "наезжания")
+                local sizeTween = Tween:Create(Tab, tweenInfo, {
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 0)
+                })
+
+                -- Когда анимация полностью закончилась — скрываем
+                sizeTween.Completed:Connect(function()
+                    if not Category.Open and tabInst and tabInst.Parent then
+                        tabInst.Visible = false
+                        -- Размер НЕ восстанавливаем здесь! Оставляем 0, пока категория закрыта
+                    end
+                end)
             end
-        end)
-    end
+        end
+    end)
+end
 
     CollapseButton:Connect("MouseButton1Down", ToggleCategory)
     CategoryButton:Connect("MouseButton1Down", ToggleCategory)
