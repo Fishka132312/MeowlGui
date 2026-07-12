@@ -221,7 +221,7 @@ Library:Unload()
 
 ```lua
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fishka132312/MeowlGui/refs/heads/main/source/library.lua"))()
-local Name = "Hello"
+local CheatName = "Hello"
 
 Library.Folders = {
     Directory = CheatName,
