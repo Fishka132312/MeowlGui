@@ -1,4 +1,4 @@
-local Library do ----34
+local Library do ----35
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2315,6 +2315,7 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
     Name = "\0",
     Visible = true,
     BorderColor3 = FromRGB(0, 0, 0),
+    AnchorPoint = Vector2New(1, 0),
     BackgroundTransparency = 0.15,
     Size = UDim2New(0, 225, 1, 0),
     ZIndex = 2,
