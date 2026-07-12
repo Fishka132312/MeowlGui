@@ -1,4 +1,4 @@
-local Library do ----30
+local Library do ----31
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2315,9 +2315,10 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
     Name = "\0",
     Visible = true,
     BorderColor3 = FromRGB(0, 0, 0),
-    AnchorPoint = Vector2New(1, 0),
+    AnchorPoint = Vector2New(0, 0),
     BackgroundTransparency = 0.15,
-    Size = UDim2New(0, 225, 1, 0),
+    Position = UDim2New(0, 0, 0, 55),
+    Size = UDim2New(0, 225, 1, -55),
     ZIndex = 2,
     BorderSizePixel = 0,
     BackgroundColor3 = FromRGB(27, 25, 29),
@@ -2489,8 +2490,8 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
                 Instances:Create("UIPadding", {
                     Parent = Items["LeftTabs"].Instance,
                     Name = "\0",
-                    PaddingTop = UDimNew(0, 15),
-                    PaddingBottom = UDimNew(0, 15),
+                    PaddingTop = UDimNew(0, 20),
+                    PaddingBottom = UDimNew(0, 20),
                     PaddingRight = UDimNew(0, 12),
                     PaddingLeft = UDimNew(0, 12)
                 })
