@@ -249,9 +249,9 @@ local MainPage = Window:Page({
 		Category = MainCat
 })
 
-local MainSection = MainPage:Section({Name = "Test", Side = 1})
+local testSection = MainPage:Section({Name = "Test", Side = 1})
 
-local MyDropdown = Section:Dropdown({
+local MyDropdown = testSection:Dropdown({
     Name = "Select Mode",
     Flag = "SelectMode",
     Items = {"Default", "Dark", "Light", "Custom"},
@@ -262,7 +262,7 @@ local MyDropdown = Section:Dropdown({
     end
 })
 
-local MyToggle = MainSection:Toggle({
+local MyToggle = testSection:Toggle({
     Name = "Apply Mode",
     Flag = "ApplyMode",
     Default = false,
@@ -271,9 +271,9 @@ local MyToggle = MainSection:Toggle({
     end
 })
 
-local MainSection = MainPage:Section({Name = "Test1", Side = 2})
+local test1Section = MainPage:Section({Name = "Test1", Side = 2})
 
-local MySlider = MainSection:Slider({
+local MySlider = test1Section:Slider({
     Name = "Camera FOV",
     Flag = "CameraFOV",
     Min = 16,
@@ -286,7 +286,7 @@ local MySlider = MainSection:Slider({
     end
 })
 
-MainSection:Button({
+test1Section:Button({
     Name = "Set Camera Fov",
     Callback = function()
         print("Button was clicked!")
@@ -300,9 +300,9 @@ local PlayersPage = Window:Page({
 		Category = PlayersCat
 })
 
-local PlayersSection = PlayersPage:Section({Name = "Ban", Side = 1})
+local BanSection = PlayersPage:Section({Name = "Ban", Side = 1})
 
-local MyInput = PlayersSection:Textbox({
+local MyInput = BanSection:Textbox({
     Name = "Player Name",
     Flag = "PlayerName",
     Default = "",
@@ -314,16 +314,16 @@ local MyInput = PlayersSection:Textbox({
     end
 })
 
-PlayersSection:Button({
+BanSection:Button({
     Name = "Ban Player!",
     Callback = function()
         print("Button was clicked!")
     end
 })
 
-local PlayersSection = PlayersPage:Section({Name = "Ban Reason", Side = 2})
+local ReasonSection = PlayersPage:Section({Name = "Ban Reason", Side = 2})
 
-local MyInput = PlayersSection:Textbox({
+local MyInput = ReasonSection:Textbox({
     Name = "Ban Reason",
     Flag = "BanReason",
     Default = "",
@@ -335,15 +335,7 @@ local MyInput = PlayersSection:Textbox({
     end
 })
 
-PlayersSection:Colorpicker({
-    Name = "Text Color",
-    Flag = "TextColor",
-    Default = Color3.fromRGB(255, 0, 0),
-    Alpha = 1,
-    Callback = function(Color, Alpha) ... end
-})
-
-PlayersSection:Button({
+ReasonSection:Button({
     Name = "Apply Reason!",
     Callback = function()
         print("Button was clicked!")
@@ -351,7 +343,7 @@ PlayersSection:Button({
 })
 
 local GuiCat = Window:Category("Gui")
-local PlayersPage = Window:Page({
+local GuiPage = Window:Page({
 		Name = "Gui",
 		Icon = "7539983773",
 		Category = GuiCat
@@ -359,16 +351,18 @@ local PlayersPage = Window:Page({
 
 local GuiSection = GuiPage:Section({Name = "Gui", Side = 1})
 
-Section:Keybind({
+GuiSection:Keybind({
     Name = "Gui Keybind",
     Flag = "GuiKeybind",
     Default = Enum.KeyCode.E,
-    Mode = "Hold",
-    Callback = function(State) ... end
+    Mode = "Toggle",
+    Callback = function(State)
+        print("Gui Keybind State:", State)
+    end
 })
 
 local SettingsCat = Window:Category("Settings")
-local SettingsPage = Library:CreateSettingsPage(Window, KeybindList)
+local SettingsPage = Library:CreateSettingsPage(Window)
 table.insert(SettingsCat.Elements, SettingsPage)
 Window:Init()
 ```
