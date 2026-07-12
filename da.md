@@ -1,7 +1,7 @@
-# MeowlSploit
+# MeowlLibrary
 
-> A clean, modern, and powerful UI library for Roblox scripts.  
-> Built for developers who want premium-looking menus without the hassle.
+> A clean, modern, and powerful UI library for Roblox.
+> Built for developers who want premium-looking interfaces with minimal effort.
 
 ## ✨ Installation
 
@@ -16,80 +16,55 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fishk
 Here's a minimal example to create a window, add a page, and organize content into sections.
 
 ```lua
-local Window = Library:Window({
-    Name = "Cheat Name",
-    SubName = "Best script ever",
-    Logo = "123456789", -- Roblox Asset ID
-    MenuKeybind = Enum.KeyCode.End
+local MainCat = Window:Category("Main")
+local MainPage = Window:Page({
+		Name = "Main",
+		Icon = "7539983773",
+		Category = MainCat
 })
 
-local Page = Window:Page({Name = "Ragebot", Icon = "rbxassetid://..."})
-local Section = Page:Section({Name = "Main Settings", Side = 1}) -- Side 1 (Left) or 2 (Right)
+local MainSection = MainPage:Section({Name = "hello", Side = 1}) -- Side 1 (Left) or 2 (Right)
 ```
 
 ---
 
 ## 📚 Documentation & API
 
-### 1. Toggles
+### 1. Buttons
+Buttons are used to trigger one-time actions such as applying settings, refreshing data, or executing custom functions.
+
+```
+Section:Button({
+    Name = "Click Me",
+    Callback = function()
+        print("Button was clicked!")
+    end
+})
+```
+
+### 2. Toggles
 Toggles are the core building blocks of the library. They support **nested sub-options** that expand beautifully when activated.
 
 ```lua
 local MyToggle = Section:Toggle({
-    Name = "Silent Aim",
-    Flag = "SilentAim", -- Unique identifier for Configs
+    Name = "Show FPS",
+    Flag = "ShowFPS", -- Unique identifier for Configs
     Default = false,
     Callback = function(Value)
-        print("Silent Aim is now:", Value)
+        print("Show FPS is now:", Value)
     end
 })
 ```
 
-#### Nested Elements (Sub-Options)
-You can place other elements *inside* a toggle — they will appear only when the toggle is expanded.
-
-```lua
--- Add a Slider inside the Toggle
-MyToggle:Slider({
-    Name = "FOV Radius",
-    Min = 0, Max = 360, Default = 180
-})
-
--- Add a Dropdown inside the Toggle
-MyToggle:Dropdown({
-    Name = "Hitbox",
-    Items = {"Head", "Torso"},
-    Default = "Head"
-})
-```
-
-### 2. Sliders
-Perfect for adjusting numeric values like speeds, radii, or delays.
-
-```lua
-local MySlider = Section:Slider({
-    Name = "Walkspeed",
-    Flag = "WS_Slider",
-    Min = 16,
-    Max = 200,
-    Default = 16,
-    Decimals = 1, -- 0 for integers, 1 for 0.5, etc.
-    Suffix = " studs",
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end
-})
-```
-
-### 3. Dropdowns
-Support single & multi-selection + built-in search.
+### 3. Dropdown
+Perfect for selecting from a list of predefined options such as game modes, difficulties, weapon types, themes, or any other categorical settings.
 
 ```lua
 local MyDropdown = Section:Dropdown({
-    Name = "Target Selection",
-    Flag = "Target_Drop",
-    Items = {"Player", "NPC", "Boss", "Ally"},
-    Default = "Player", -- Use {"Player", "NPC"} for Multi
+    Name = "Select Preset",
+    Flag = "SelectPreset",
+    Items = {"Default", "Dark", "Light", "Custom"},
+    Default = "Default", -- Use {"Default", "Dark"} for Multi
     Multi = false, -- Set to true for multiple selection
     Callback = function(Value)
         print("Selected:", Value)
@@ -97,7 +72,7 @@ local MyDropdown = Section:Dropdown({
 })
 ```
 
-#### Updating Dropdowns
+### Updating Dropdowns
 Refresh items or change selection dynamically from your code.
 
 ```lua
@@ -108,22 +83,57 @@ MyDropdown:Refresh({"New Item 1", "New Item 2"}, "New Item 1")
 MyDropdown:Set("New Item 2")
 ```
 
-### 4. Colorpickers & Keybinds
+### 4. Sliders
+Perfect for adjusting numeric values like speeds, radii, or delays.
+
+```lua
+local MySlider = Section:Slider({
+    Name = "Camera FOV",
+    Flag = "CameraFOV",
+    Min = 16,
+    Max = 120,
+    Default = 16,
+    Decimals = 1, -- 0 for integers, 1 for 0.5, etc.
+    Suffix = "", -- Text shown after the number (e.g. 85°)
+    Callback = function(Value)
+        print("Camera FOV set to:", Value)
+    end
+})
+```
+
+### 5. Textboxes (Inputs)
+Perfect for entering custom text values such as usernames, messages, commands, URLs, or any string data.
+
+```lua
+local MyInput = MainSection:Textbox({
+    Name = "Player Name",           -- Label shown above the textbox
+    Flag = "PlayerName",               -- Unique flag to save/load the value
+    Default = "",                   -- Default value
+    Placeholder = "Enter nickname or text...", -- Hint text when empty
+    Numeric = false,                -- true = only allows numbers (with decimals if needed)
+    Finished = false,               -- false = callback on every change, true = callback only on Enter / focus lost
+    Callback = function(Value)
+        print("Entered:", Value)
+    end
+})
+```
+
+### 6. Colorpickers & Keybinds
 Can be used standalone or attached directly to toggles and other elements.
 
 ```lua
 -- Standalone
 Section:Colorpicker({
-    Name = "ESP Color",
-    Flag = "ESP_Color",
+    Name = "Particle Color",
+    Flag = "ParticleColor",
     Default = Color3.fromRGB(255, 0, 0),
     Alpha = 1, -- Transparency (0-1)
     Callback = function(Color, Alpha) ... end
 })
 
 Section:Keybind({
-    Name = "Triggerbot Key",
-    Flag = "Trigger_Bind",
+    Name = "Toggle Menu",
+    Flag = "ToggleMenu",
     Default = Enum.KeyCode.E,
     Mode = "Hold", -- "Toggle", "Hold", or "Always"
     Callback = function(State) ... end
@@ -210,45 +220,149 @@ Library:Unload()
 ## 📝 Full Example Script
 
 ```lua
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/ImInsane-1337/neverlose-ui/refs/heads/main/source/library.lua"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fishka132312/MeowlGui/refs/heads/main/source/library.lua"))()
+local Name = "Hello"
 
--- Enable Logs
-Library.LogsEnabled = true
+Library.Folders = {
+    Directory = CheatName,
+    Configs = CheatName .. "/Configs",
+    Assets = CheatName .. "/Assets",
+}
 
+local Accent = Color3.fromRGB(255, 65, 85)
+local Gradient = Color3.fromRGB(140, 10, 45)
+
+Library.Theme.Accent = Accent
+Library.Theme.AccentGradient = Gradient
+Library:ChangeTheme("Accent", Accent)
+Library:ChangeTheme("AccentGradient", Gradient)
 local Window = Library:Window({
-    Name = "Project Nova",
-    SubName = "Release Build",
-    Logo = "123456789",
-    MenuKeybind = Enum.KeyCode.RightShift
+    Name = "Hello",
+    SubName = "Meowl Library",
+    Logo = "6274377111"
 })
 
-local MainTab = Window:Page({Name = "Combat", Icon = "rbxassetid://123..."})
-local MainSection = MainTab:Section({Name = "Aimbot", Side = 1})
+-------------------------Main-----------------------
 
-local AimToggle = MainSection:Toggle({
-    Name = "Enabled",
-    Flag = "AimEnabled",
-    Default = false,
-    Callback = function(v)
-        if v then 
-            Library:Log("Aimbot Enabled", 3)
-        end
+local MainCat = Window:Category("Main")
+local MainPage = Window:Page({
+		Name = "Main",
+		Icon = "7539983773",
+		Category = MainCat
+})
+
+local MainSection = MainPage:Section({Name = "Test", Side = 1})
+
+local MyDropdown = Section:Dropdown({
+    Name = "Select Mode",
+    Flag = "SelectMode",
+    Items = {"Default", "Dark", "Light", "Custom"},
+    Default = "Default", -- Use {"Default", "Dark"} for Multi
+    Multi = false, -- Set to true for multiple selection
+    Callback = function(Value)
+        print("Selected:", Value)
     end
 })
 
--- Nested Slider
-AimToggle:Slider({
-    Name = "FOV",
-    Min = 0, Max = 180, Default = 90
+local MyToggle = MainSection:Toggle({
+    Name = "Apply Mode",
+    Flag = "ApplyMode",
+    Default = false,
+    Callback = function(Value)
+        print("Apply Mode is now:", Value)
+    end
 })
 
--- Nested Dropdown
-AimToggle:Dropdown({
-    Name = "Hitbox",
-    Items = {"Head", "Torso", "Legs"},
-    Default = "Head"
+local MainSection = MainPage:Section({Name = "Test1", Side = 2})
+
+local MySlider = MainSection:Slider({
+    Name = "Camera FOV",
+    Flag = "CameraFOV",
+    Min = 16,
+    Max = 120,
+    Default = 16,
+    Decimals = 1,
+    Suffix = "",
+    Callback = function(Value)
+        print("Camera FOV set to:", Value)
+    end
 })
 
--- Create Settings Page (Configs, Scale, etc.)
-Library:CreateSettingsPage(Window)
+MainSection:Button({
+    Name = "Set Camera Fov",
+    Callback = function()
+        print("Button was clicked!")
+    end
+})
+
+local PlayersCat = Window:Category("Players")
+local PlayersPage = Window:Page({
+		Name = "Players",
+		Icon = "7539983773",
+		Category = PlayersCat
+})
+
+local PlayersSection = PlayersPage:Section({Name = "Ban", Side = 1})
+
+local MyInput = PlayersSection:Textbox({
+    Name = "Player Name",
+    Flag = "PlayerName",
+    Default = "",
+    Placeholder = "Enter nickname or text...",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
+        print("Entered:", Value)
+    end
+})
+
+PlayersSection:Button({
+    Name = "Ban Player!",
+    Callback = function()
+        print("Button was clicked!")
+    end
+})
+
+local PlayersSection = PlayersPage:Section({Name = "Ban Reason", Side = 2})
+
+local MyInput = PlayersSection:Textbox({
+    Name = "Ban Reason",
+    Flag = "BanReason",
+    Default = "",
+    Placeholder = "Enter ban reason...",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
+        print("Ban reason is:", Value)
+    end
+})
+
+PlayersSection:Colorpicker({
+    Name = "Text Color",
+    Flag = "TextColor",
+    Default = Color3.fromRGB(255, 0, 0),
+    Alpha = 1, -- Transparency (0-1)
+    Callback = function(Color, Alpha) ... end
+})
+
+PlayersSection:Button({
+    Name = "Apply Reason!",
+    Callback = function()
+        print("Button was clicked!")
+    end
+})
+
+local PlayersCat = Window:Category("Players")
+local PlayersPage = Window:Page({
+		Name = "Players",
+		Icon = "7539983773",
+		Category = PlayersCat
+})
+
+local PlayersSection = PlayersPage:Section({Name = "Ban", Side = 1})
+
+local SettingsCat = Window:Category("Settings")
+local SettingsPage = Library:CreateSettingsPage(Window, KeybindList)
+table.insert(SettingsCat.Elements, SettingsPage)
+Window:Init()
 ```
