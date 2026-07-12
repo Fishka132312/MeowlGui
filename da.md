@@ -242,8 +242,6 @@ local Window = Library:Window({
     Logo = "6274377111"
 })
 
--------------------------Main-----------------------
-
 local MainCat = Window:Category("Main")
 local MainPage = Window:Page({
 		Name = "Main",
@@ -341,7 +339,7 @@ PlayersSection:Colorpicker({
     Name = "Text Color",
     Flag = "TextColor",
     Default = Color3.fromRGB(255, 0, 0),
-    Alpha = 1, -- Transparency (0-1)
+    Alpha = 1,
     Callback = function(Color, Alpha) ... end
 })
 
