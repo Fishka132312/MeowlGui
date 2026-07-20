@@ -1673,9 +1673,11 @@ local Library do ----38
                 Colorpicker:Update()
             end
 
-            Items["ColorpickerButton"]:Connect("MouseButton1Down", function()
-                Colorpicker:SetOpen(not Colorpicker.IsOpen)
-            end)
+           Items["ColorpickerButton"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Colorpicker:SetOpen(not Colorpicker.IsOpen)
+    end
+end)
 
             Items["Palette"]:Connect("InputBegan", function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
@@ -1788,14 +1790,15 @@ local Library do ----38
                         Alpha = Colorpicker.Alpha,
                     }
     
-                    SavedColor:Connect("MouseButton1Down", function()
-                        local NewColorData = Colorpicker.SavedColors[SaveIndex]
-                        Colorpicker:Set(NewColorData.Color, NewColorData.Alpha)
-                    end)
-
-                    SavedColor:Tween(nil, {BackgroundTransparency = 0})
-                --end
-            end
+                    SavedColor:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        local NewColorData = Colorpicker.SavedColors[SaveIndex]
+        Colorpicker:Set(NewColorData.Color, NewColorData.Alpha)
+    end
+end)
+SavedColor:Tween(nil, {BackgroundTransparency = 0})
+--end
+end
 
             local Colors = {
                 ["Orange"] = FromRGB(245, 114, 66),
@@ -2646,7 +2649,11 @@ end
         ToggleCategory()
     end
 end)
-    CategoryButton:Connect("MouseButton1Down", ToggleCategory)
+    CategoryButton:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        ToggleCategory()
+    end
+end)
 
     return Category
 end
@@ -2762,10 +2769,11 @@ end
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["CloseIcon"]:AddToTheme({ImageColor3 = "Text"})        
                 
-                Items["CloseButton"]:Connect("MouseButton1Down", function()
-                    Library:Unload()
-                end)
-
+                Items["CloseButton"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Library:Unload()
+    end
+end)
                 Items["CloseIconAccent"] = Instances:Create("Frame", {
                     Parent = Items["CloseButton"].Instance,
                     Name = "\0",
@@ -3318,9 +3326,11 @@ end
                         end)
                     end
     
-                    SettingsItems["CloseButton"]:Connect("MouseButton1Down", function()
-                        Settings:SetOpen(false)
-                    end)
+                    SettingsItems["CloseButton"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Settings:SetOpen(false)
+    end
+end)
     
                     Items["SettingsButton"]:Connect("InputBegan", function(Input)
                         if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
@@ -4012,17 +4022,17 @@ Page.TabButton = Items["Inactive"]
                 end)
             end
 
-            Items["Inactive"]:Connect("MouseButton1Down", function()
-                for Index, Value in Page.Window.Pages do 
-                    if Value == Page and Page.Active then
-                        return
-                    end
-
-                    Value:Turn(Value == Page)
-                end
-            end)
-
-            if #Page.Window.Pages == 0 then 
+            Items["Inactive"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        for Index, Value in Page.Window.Pages do 
+            if Value == Page and Page.Active then
+                return
+            end
+            Value:Turn(Value == Page)
+        end
+    end
+end)
+if #Page.Window.Pages == 0 then 
     Page:Turn(true)
 end
             
@@ -4568,13 +4578,15 @@ end
                 end
             end
 
-            Items["SendButton"]:Connect("MouseButton1Down", function()
-                if GlobalChat:GetTypedMessage() == "" then
-                    return
-                end
-                
-                OnMessagePressed()
-            end)
+            Items["SendButton"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        if GlobalChat:GetTypedMessage() == "" then
+            return
+        end
+        
+        OnMessagePressed()
+    end
+end)
 
             Items["Messages"]:Connect("ChildAdded", function()
                 task.wait()
@@ -4986,9 +4998,11 @@ end
                 end
             end
 
-            Items["Toggle"]:Connect("MouseButton1Down", function()
-                Section:ToggleBackground()
-            end)
+            Items["Toggle"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Section:ToggleBackground()
+    end
+end)
 
             Section.Page.Sections[Section.Name] = Section
 
@@ -5389,9 +5403,11 @@ end
                     end)
                 end
 
-                SettingsItem["Button"]:Connect("MouseButton1Down", function()
-                    Settings:SetOpen(false)
-                end)
+                SettingsItem["Button"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Settings:SetOpen(false)
+    end
+end)
 
                 SettingsItem["SettingsIcon"]:Connect("InputBegan", function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
@@ -5643,9 +5659,11 @@ end
                 end
             end
 
-            Items["Button"]:Connect("MouseButton1Down", function()
-                Button:Press()
-            end)
+            Items["Button"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Button:Press()
+    end
+end)
 
             return Button
         end
@@ -5870,13 +5888,17 @@ end
                 end
             end
 
-            Items["Plus"]:Connect("MouseButton1Down", function()
-                Slider:Set(Slider.Value + Slider.Decimals)
-            end)
+            Items["Plus"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Slider:Set(Slider.Value + Slider.Decimals)
+    end
+end)
 
-            Items["Minus"]:Connect("MouseButton1Down", function()
-                Slider:Set(Slider.Value - Slider.Decimals)
-            end)
+Items["Minus"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Slider:Set(Slider.Value - Slider.Decimals)
+    end
+end)
 
             local InputChanged 
             
@@ -6464,9 +6486,11 @@ end
                     end
                 end
 
-                OptionData.Button:Connect("MouseButton1Down", function()
-                    OptionData:Set()
-                end)
+                OptionData.Button:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        OptionData:Set()
+    end
+end)
 
                 Dropdown.Options[OptionData.Name] = OptionData
                 Dropdown.OptionsWithIndexes[#Dropdown.OptionsWithIndexes+1] = OptionData
@@ -6504,9 +6528,11 @@ end
                 end
             end
 
-            Items["RealDropdown"]:Connect("MouseButton1Down", function()
-                Dropdown:SetOpen(not Dropdown.IsOpen)
-            end)
+            Items["RealDropdown"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Dropdown:SetOpen(not Dropdown.IsOpen)
+    end
+end)
 
             Library:Connect(UserInputService.InputBegan, function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
@@ -7067,40 +7093,42 @@ end
                 Keybind.Picking = false
             end
 
-            Items["KeyButton"]:Connect("MouseButton1Click", function()
-                Keybind.Picking = true 
+           Items["KeyButton"]:Connect("InputBegan", function(TapInput)
+    if TapInput.UserInputType == Enum.UserInputType.MouseButton1 or TapInput.UserInputType == Enum.UserInputType.Touch then
+        Keybind.Picking = true 
 
-                Items["KeyButton"].Instance.Text = "."
-                Library:Thread(function()
-                    local Count = 1
+        Items["KeyButton"].Instance.Text = "."
+        Library:Thread(function()
+            local Count = 1
 
-                    while true do 
-                        if not Keybind.Picking then 
-                            break
-                        end
+            while true do 
+                if not Keybind.Picking then 
+                    break
+                end
 
-                        if Count == 4 then
-                            Count = 1
-                        end
+                if Count == 4 then
+                    Count = 1
+                end
 
-                        Items["KeyButton"].Instance.Text = Count == 1 and "." or Count == 2 and ".." or Count == 3 and "..."
-                        Count += 1
-                        task.wait(0.35)
-                    end
-                end)
+                Items["KeyButton"].Instance.Text = Count == 1 and "." or Count == 2 and ".." or Count == 3 and "..."
+                Count += 1
+                task.wait(0.35)
+            end
+        end)
 
-                local InputBegan
-                InputBegan = UserInputService.InputBegan:Connect(function(Input)
-                    if Input.UserInputType == Enum.UserInputType.Keyboard then 
-                        Keybind:Set(Input.KeyCode)
-                    else
-                        Keybind:Set(Input.UserInputType)
-                    end
+        local InputBegan
+        InputBegan = UserInputService.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.Keyboard then 
+                Keybind:Set(Input.KeyCode)
+            else
+                Keybind:Set(Input.UserInputType)
+            end
 
-                    InputBegan:Disconnect()
-                    InputBegan = nil
-                end)
-            end)
+            InputBegan:Disconnect()
+            InputBegan = nil
+        end)
+    end
+end)
 
             Library:Connect(UserInputService.InputBegan, function(Input)
                 if Keybind.Value == "None" then
@@ -7158,20 +7186,26 @@ end
                 end
             end)
 
-            Items["Toggle"]:Connect("MouseButton1Down", function()
-                Keybind.ModeSelected = "Toggle"
-                Keybind:SetMode("Toggle")
-            end)
+            Items["Toggle"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Keybind.ModeSelected = "Toggle"
+        Keybind:SetMode("Toggle")
+    end
+end)
 
-            Items["Hold"]:Connect("MouseButton1Down", function()
-                Keybind.ModeSelected = "Hold"
-                Keybind:SetMode("Hold")
-            end)
+Items["Hold"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Keybind.ModeSelected = "Hold"
+        Keybind:SetMode("Hold")
+    end
+end)
 
-            Items["Always"]:Connect("MouseButton1Down", function()
-                Keybind.ModeSelected = "Always"
-                Keybind:SetMode("Always")
-            end)
+Items["Always"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Keybind.ModeSelected = "Always"
+        Keybind:SetMode("Always")
+    end
+end)
 
             if Keybind.Default then 
                 Keybind:Set({
@@ -7675,9 +7709,11 @@ end
                     end
                 end
 
-                OptionData.Button:Connect("MouseButton1Down", function()
-                    OptionData:Set()
-                end)
+                OptionData.Button:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        OptionData:Set()
+    end
+end)
 
                 Dropdown.Options[OptionData.Name] = OptionData
                 return OptionData
