@@ -1,4 +1,4 @@
-local Library do ----49
+local Library do ----50
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2561,10 +2561,10 @@ function Window:Category(Name)
     local function ToggleCategory()
     Category.Open = not Category.Open
 
-    -- Стрелка
+    -- Стрелка: открыто = ▲ (вверх), закрыто = ▼ (вниз)
     CollapseButton.Instance.Text = Category.Open and "▲" or "▼"
 
-    -- Затемнение заголовка
+    -- Плавное затемнение заголовка категории
     local headerAlpha = Category.Open and 0 or 0.45
     CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         TextTransparency = headerAlpha
@@ -2573,11 +2573,7 @@ function Window:Category(Name)
         TextTransparency = headerAlpha
     })
 
-    -- ==================== Основная анимация ====================
     task.spawn(function()
-        local tweenInfoFade = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-        local tweenInfoSize = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-
         for _, Page in ipairs(Category.Elements) do
             if not Page or not Page.TabButton then continue end
 
@@ -2585,46 +2581,52 @@ function Window:Category(Name)
             local tabInst = Tab.Instance
 
             if Category.Open then
-                -- === ОТКРЫТИЕ ===
+                -- ==================== ОТКРЫТИЕ ====================
                 tabInst.Visible = true
-                tabInst.Size = UDim2New(1, 0, 0, 0) -- начинаем с нулевой высоты
+                tabInst.Size = UDim2New(1, 0, 0, 42) -- сразу возвращаем нормальный размер
 
-                -- Плавное появление
-                Tween:Create(Tab, tweenInfoSize, {
-                    BackgroundTransparency = Page.Active and 0.25 or 1,
-                    Size = UDim2New(1, 0, 0, 42)
-                }):Play()
+                local targetTransparency = Page.Active and 0.25 or 1
+
+                Tween:Create(Tab, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    BackgroundTransparency = targetTransparency
+                })
 
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, tweenInfoFade, { TextTransparency = 0 }):Play()
+                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                            TextTransparency = 0
+                        }, true)
                     elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, tweenInfoFade, { ImageTransparency = 0 }):Play()
+                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                            ImageTransparency = 0
+                        }, true)
                     end
                 end
 
             else
-                -- === ЗАКРЫТИЕ ===
-                local sizeTween = Tween:Create(Tab, tweenInfoSize, {
+                -- ==================== ЗАКРЫТИЕ (плавно и без дёрганья) ====================
+                local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+                -- Фейдим текст и иконки
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, tweenInfo, { TextTransparency = 1 }, true)
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, tweenInfo, { ImageTransparency = 1 }, true)
+                    end
+                end
+
+                -- Плавно сжимаем таб до 0 высоты (именно это даёт эффект "наезжания")
+                local sizeTween = Tween:Create(Tab, tweenInfo, {
                     BackgroundTransparency = 1,
                     Size = UDim2New(1, 0, 0, 0)
                 })
 
-                -- Фейдим контент
-                for _, desc in ipairs(tabInst:GetDescendants()) do
-                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, tweenInfoFade, { TextTransparency = 1 }):Play()
-                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, tweenInfoFade, { ImageTransparency = 1 }):Play()
-                    end
-                end
-
-                sizeTween:Play()
-
-                -- Скрываем после завершения анимации
-                sizeTween.Tween.Completed:Once(function()
+                -- Когда анимация полностью закончилась — скрываем
+                sizeTween.Completed:Connect(function()
                     if not Category.Open and tabInst and tabInst.Parent then
                         tabInst.Visible = false
+                        -- Размер НЕ восстанавливаем здесь! Оставляем 0, пока категория закрыта
                     end
                 end)
             end
@@ -7846,29 +7848,111 @@ end)
             Library:RefreshConfigsList(ConfigsDropdown)
         end
 
-        local UISection = Page:Section({Name = "UI Settings", Side = 2}) do
-            UISection:Toggle({
-                Name = "Watermark",
-                Flag = "WatermarkToggle",
-                Default = false,
-                Callback = function(Value)
-                    if Library.WatermarkFrame then
-                        Library.WatermarkFrame.Instance.Visible = Value
-                    end
-                end
-            })
+        local BackgroundSection = Page:Section({Name = "Custom Background", Side = 2})
 
-            UISection:Toggle({
-                Name = "Keybind List",
-                Flag = "KeybindListToggle",
-                Default = false,
-                Callback = function(Value)
-                    if KeybindList then
-                        KeybindList:SetVisibility(Value)
-                    end
-                end
-            })
+local BgEnabled = BackgroundSection:Toggle({
+    Name = "Enable Background",
+    Flag = "CustomBackgroundEnabled",
+    Default = false,
+    Callback = function(v)
+        UpdateBackground()
+    end
+})
+
+local BgUrlInput = BackgroundSection:Textbox({
+    Name = "Link to the picture",
+    Placeholder = "https://...",
+    Flag = "CustomBackgroundUrl",
+    Default = "",
+    Callback = function() end
+})
+
+local BgTransparency = BackgroundSection:Slider({
+    Name = "Background transparency",
+    Flag = "CustomBackgroundTransparency",
+    Min = 0,
+    Max = 1,
+    Default = 0.3,
+    Decimals = 2,
+    Callback = function(v)
+        UpdateBackground()
+    end
+})
+
+BackgroundSection:Button({
+    Name = "Apply Background",
+    Callback = function()
+        UpdateBackground(true) -- true = принудительно скачать
+    end
+})
+
+BackgroundSection:Button({
+    Name = "Reset to Standard",
+    Callback = function()
+        Library.Flags.CustomBackgroundEnabled = false
+        if Library.BackgroundImage then
+            Library.BackgroundImage.Instance:Destroy()
+            Library.BackgroundImage = nil
         end
+        BgEnabled:Set(false)
+    end
+})
+        end
+
+local function UpdateBackground(forceDownload)
+    local Enabled = Library.Flags.CustomBackgroundEnabled
+    local Url = Library.Flags.CustomBackgroundUrl
+    
+    if not Enabled or not Url or Url == "" then
+        if Library.BackgroundImage then
+            Library.BackgroundImage.Instance.Visible = false
+        end
+        return
+    end
+
+    -- Создаём ImageLabel один раз
+    if not Library.BackgroundImage then
+        Library.BackgroundImage = Instances:Create("ImageLabel", {
+            Parent = Items["MainFrame"].Instance,
+            Name = "CustomBackground",
+            BackgroundTransparency = 1,
+            Size = UDim2New(1, 0, 1, 0),
+            Position = UDim2New(0, 0, 0, 0),
+            ZIndex = 0,           -- самый задний слой
+            ImageTransparency = Library.Flags.CustomBackgroundTransparency or 0.3,
+            ScaleType = Enum.ScaleType.Crop,   -- или Tile / Fit
+        })
+    end
+
+    local Bg = Library.BackgroundImage
+
+    if forceDownload or Bg.Instance.Image == "" then
+        task.spawn(function()
+            local Success, Result = pcall(function()
+                if not isfolder(Library.Folders.Assets) then
+                    makefolder(Library.Folders.Assets)
+                end
+                
+                local FileName = "bg_" .. HttpService:GenerateGUID(false) .. ".png"
+                local FullPath = Library.Folders.Assets .. "/" .. FileName
+                
+                local ImageData = game:HttpGet(Url)
+                writefile(FullPath, ImageData)
+                
+                Bg.Instance.Image = getcustomasset(FullPath)
+                Bg.Instance.Visible = true
+                Bg.Instance.ImageTransparency = Library.Flags.CustomBackgroundTransparency or 0.3
+            end)
+            
+            if not Success then
+                warn("Не удалось загрузить фон:", Result)
+            end
+        end)
+    else
+        Bg.Instance.Visible = true
+        Bg.Instance.ImageTransparency = Library.Flags.CustomBackgroundTransparency or 0.3
+    end
+end
 
         return Page
     end
