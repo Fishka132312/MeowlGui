@@ -1,4 +1,4 @@
-local Library do ----63
+local Library do ----64
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7872,7 +7872,7 @@ end)
             })
         end
 
-   -- ==================== BACKGROUND SETTINGS ====================
+  -- ==================== BACKGROUND SETTINGS ====================
 local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
     local UseImage = BackgroundSection:Toggle({
@@ -7888,6 +7888,7 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
         Default = "",
     })
 
+    -- Достаём обе гуишки: и таб-лист слева, и контент справа
     local function GetBgParts()
         local MainFrame = Window.Items and Window.Items["MainFrame"]
         local LeftTabs  = Window.Items and Window.Items["LeftTabs"]
@@ -7907,13 +7908,9 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
             local useImage = Library.Flags["UseCustomBackground"] or false
             local url = Library.Flags["CustomBackgroundUrl"] or ""
 
-            -- убираем старые картинки перед созданием новых
-            for _, Frame in {MainFrame, LeftTabs} do
-                if Frame then
-                    local Old = Frame.Instance:FindFirstChild("CustomBackground")
-                    if Old then Old:Destroy() end
-                end
-            end
+            -- убираем старую картинку, если она уже есть
+            local OldBg = MainFrame.Instance:FindFirstChild("CustomBackground")
+            if OldBg then OldBg:Destroy() end
 
             if useImage and url and url ~= "" then
                 local FileName = Library.Folders.Assets .. "/bg_" .. tostring(#url) .. ".png"
@@ -7930,39 +7927,32 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
                     return
                 end
 
-                -- функция создания картинки-фона внутри любого фрейма (MainFrame или LeftTabs)
-                local function CreateBgImage(ParentInstance, TabsFrame)
-                    local Bg = Instance.new("ImageLabel")
-                    Bg.Name = "CustomBackground"
-                    Bg.Size = UDim2.new(1, 0, 1, 0)
-                    Bg.Position = UDim2.new(0, 0, 0, 0)
-                    Bg.BackgroundTransparency = 1
-                    Bg.Image = AssetId
-                    Bg.ImageTransparency = 0
-                    Bg.ScaleType = Enum.ScaleType.Crop
-                    Bg.ZIndex = 1
-                    Bg.Visible = true
-                    Bg.Parent = ParentInstance
+                -- ОДНА картинка позади ВСЕГО содержимого MainFrame
+                -- (и LeftTabs, и Content — сверху неё, просто становятся прозрачными)
+                local Bg = Instance.new("ImageLabel")
+                Bg.Name = "CustomBackground"
+                Bg.Size = UDim2.new(1, 0, 1, 0)
+                Bg.Position = UDim2.new(0, 0, 0, 0)
+                Bg.BackgroundTransparency = 1
+                Bg.Image = AssetId
+                Bg.ImageTransparency = 0
+                Bg.ScaleType = Enum.ScaleType.Crop
+                Bg.ZIndex = 1        -- ниже, чем LeftTabs/Content (у них ZIndex = 2)
+                Bg.Visible = true
+                Bg.Parent = MainFrame.Instance
 
-                    -- если это LeftTabs — нужно "вырезать" ту же часть общей картинки
-                    -- (тот же ScaleType.Crop + смещение через RectOffset не поддерживается для Image,
-                    -- поэтому проще класть один слой позади всего, см. ниже альтернативу)
-                    return Bg
-                end
-
-                CreateBgImage(MainFrame.Instance)
-
-                -- делаем панели прозрачными, чтобы картинка была видна и слева, и в контенте
+                -- делаем обе "гуишки" прозрачными, чтобы через них было видно картинку
                 MainFrame.Instance.BackgroundTransparency = 1
                 if LeftTabs then LeftTabs.Instance.BackgroundTransparency = 1 end
-                if Content then Content.Instance.BackgroundTransparency = 1 end
+                if Content  then Content.Instance.BackgroundTransparency  = 1 end
 
-                print("✅ Фон применён:", AssetId)
+                print("✅ Фон применён и виден и в табах, и в контенте:", AssetId)
             else
+                -- возвращаем стандартные цвета темы
                 MainFrame.Instance.BackgroundTransparency = 0.12
                 MainFrame.Instance.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
                 if LeftTabs then LeftTabs.Instance.BackgroundTransparency = 0.15 end
-                if Content then Content.Instance.BackgroundTransparency = 0.75 end
+                if Content  then Content.Instance.BackgroundTransparency  = 0.75 end
                 print("🔄 Default restored")
             end
         end
@@ -7982,14 +7972,12 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
             local Bg = MainFrame.Instance:FindFirstChild("CustomBackground")
 
             if Bg then
-                -- Value = 0 -> картинка полностью видна (ImageTransparency = 0)
-                -- Value = 1 -> картинка полностью прозрачная, видно чистую тему (не блюр/чернота)
+                -- Value = 0 -> картинка полностью видна
+                -- Value = 1 -> картинка полностью прозрачная (crossfade в цвет темы, не в черноту)
                 Bg.ImageTransparency = Value
 
-                -- одновременно "проявляем" цвет темы под картинкой, чтобы при высокой
-                -- прозрачности было видно приятный тёмный фон темы, а не блюр-глас позади UI
                 MainFrame.Instance.BackgroundColor3 = Library.Theme.Background
-                MainFrame.Instance.BackgroundTransparency = Value -- чем выше — тем плотнее цвет темы
+                MainFrame.Instance.BackgroundTransparency = Value
 
                 if LeftTabs then
                     LeftTabs.Instance.BackgroundColor3 = Library.Theme.Background
@@ -8000,9 +7988,10 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
                     Content.Instance.BackgroundTransparency = Value
                 end
             else
-                -- без картинки — обычное поведение прозрачности темы
+                -- без картинки — обычное поведение
                 MainFrame.Instance.BackgroundTransparency = Value
                 if LeftTabs then LeftTabs.Instance.BackgroundTransparency = Value end
+                if Content  then Content.Instance.BackgroundTransparency  = Value end
             end
         end
     })
@@ -8019,7 +8008,7 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
                 MainFrame.Instance.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
             end
             if LeftTabs then LeftTabs.Instance.BackgroundTransparency = 0.15 end
-            if Content then Content.Instance.BackgroundTransparency = 0.75 end
+            if Content  then Content.Instance.BackgroundTransparency  = 0.75 end
 
             Library.Flags["UseCustomBackground"] = false
             Library.Flags["CustomBackgroundUrl"] = ""
