@@ -1,4 +1,4 @@
-local Library do ----76
+local Library do ----77
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -951,17 +951,21 @@ local Library do ----76
     BaseTransparency = BaseTransparency or 0.6
     HoverTransparency = HoverTransparency or 0.3
 
+    -- Запоминаем исходную толщину полосы, чтобы потом её восстанавливать.
+    local OriginalThickness = Instance_.ScrollBarThickness
+
     local function CanScroll()
         return Instance_.AbsoluteCanvasSize.Y > Instance_.AbsoluteWindowSize.Y + 1
     end
 
     local function UpdateScrollbar()
         if CanScroll() then
-            -- Не трогаем текущую прозрачность резко, просто возвращаем базовую,
-            -- если мышь не над скроллом (наведение обрабатывается отдельно).
+            Instance_.ScrollBarThickness = OriginalThickness
             Instance_.ScrollBarImageTransparency = BaseTransparency
         else
-            -- Скроллить нечего — полностью прячем полосу.
+            -- Не просто прячем прозрачностью — обнуляем саму толщину,
+            -- иначе в углу остаётся артефакт/пиксель от полосы скролла.
+            Instance_.ScrollBarThickness = 0
             Instance_.ScrollBarImageTransparency = 1
         end
     end
