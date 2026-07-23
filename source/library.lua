@@ -1,4 +1,4 @@
-local Library do ----71
+local Library do ----72
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2295,35 +2295,18 @@ end
                 })
 
                                                 Items["BackgroundHolder"] = Instances:Create("Frame", {
-    Parent = Library.Holder.Instance,
+    Parent = Items["MainFrame"].Instance, -- теперь ЧАЙЛД MainFrame, а не сосед
     Name = "\0",
     AnchorPoint = Vector2New(0, 0),
     BackgroundTransparency = 1,
-    Position = UDim2New(0, 0, 0, 0),
-    Size = UDim2New(0, 860, 0, 590), -- стартовый размер как у MainFrame, дальше синхронизируется
+    Position = UDim2New(0, -225, 0, 0),   -- сдвиг влево ровно на ширину LeftTabs
+    Size = UDim2New(1, 225, 1, 0),        -- ширина MainFrame + LeftTabs, растягивается сама
     ZIndex = 1,
     BorderSizePixel = 0,
     BackgroundColor3 = FromRGB(0, 0, 0)
 })
-
-Library:Connect(RunService.RenderStepped, function()
-    local MF = Items["MainFrame"].Instance
-    local LT = Items["LeftTabs"] and Items["LeftTabs"].Instance
-
-    local MinX, MinY = MF.AbsolutePosition.X, MF.AbsolutePosition.Y
-    local MaxX, MaxY = MinX + MF.AbsoluteSize.X, MinY + MF.AbsoluteSize.Y
-
-    if LT then
-        MinX = math.min(MinX, LT.AbsolutePosition.X)
-        MinY = math.min(MinY, LT.AbsolutePosition.Y)
-        MaxX = math.max(MaxX, LT.AbsolutePosition.X + LT.AbsoluteSize.X)
-        MaxY = math.max(MaxY, LT.AbsolutePosition.Y + LT.AbsoluteSize.Y)
-    end
-
-    Items["BackgroundHolder"].Instance.Position = UDim2New(0, MinX, 0, MinY)
-    Items["BackgroundHolder"].Instance.Size = UDim2New(0, MaxX - MinX, 0, MaxY - MinY)
-end)
-
+-- RenderStepped-синхронизация больше не нужна: раз это child MainFrame,
+-- позиция/размер следуют за родителем мгновенно, без полинга и задержек.
 
                                                 -- Скругление контейнера фона (совпадает с радиусом MainFrame)
 Instances:Create("UICorner", {
