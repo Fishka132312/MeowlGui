@@ -1,4 +1,4 @@
-local Library do ----52
+local Library do ----53
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -675,6 +675,60 @@ local Library do ----52
 
         Library.Font = SemiBold
     end
+
+                    -- ==================== CUSTOM BACKGROUND FUNCTIONS ====================
+Library.CustomBackground = nil
+Library.BackgroundTransparency = 0.12
+
+Library.ApplyCustomBackground = function(self, Url)
+    if self.CustomBackground then
+        self.CustomBackground:Destroy()
+    end
+
+    local MainFrame = nil
+    if Window and Window.Items and Window.Items["MainFrame"] then
+        MainFrame = Window.Items["MainFrame"].Instance
+    else
+        MainFrame = Library.Holder.Instance:FindFirstChildWhichIsA("Frame")
+    end
+
+    if not MainFrame then 
+        warn("MainFrame not found for background")
+        return 
+    end
+
+    local Bg = Instance.new("ImageLabel")
+    Bg.Name = "CustomBackground"
+    Bg.Size = UDim2.new(1, 0, 1, 0)
+    Bg.Position = UDim2.new(0, 0, 0, 0)
+    Bg.BackgroundTransparency = 1
+    Bg.Image = Url
+    Bg.ImageTransparency = self.BackgroundTransparency
+    Bg.ScaleType = Enum.ScaleType.Crop
+    Bg.ZIndex = -1          -- важно: ниже всех элементов
+    Bg.Parent = MainFrame
+
+    self.CustomBackground = Bg
+end
+
+Library.UpdateBackgroundTransparency = function(self, Value)
+    self.BackgroundTransparency = Value
+    if self.CustomBackground then
+        self.CustomBackground.ImageTransparency = Value
+    end
+end
+
+Library.ResetBackground = function(self)
+    if self.CustomBackground then
+        self.CustomBackground:Destroy()
+        self.CustomBackground = nil
+    end
+    Library:Notification({
+        Title = "Reset",
+        Description = "Фон сброшен на стандартный",
+        Duration = 3
+    })
+end
 
     Library.Holder = Instances:Create("ScreenGui", {
         Parent = gethui(),
@@ -2306,7 +2360,6 @@ end
 Items["MainFrame"]:MakeResizeable(
     Vector2New(650, 520),
     Vector2New(1000, 750),
-    OriginalSizes
 )
 
 Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
@@ -7776,13 +7829,13 @@ end)
 
         local ConfigsDropdown = ConfigsSection:Listbox({
             Flag = "ConfigsList",
-            Items = { },
+            Items = {},
             Multi = false,
             Callback = function(Value)
                 ConfigSelected = Value
             end
         })
-       
+
         ConfigsSection:Textbox({
             Flag = "ConfigsName",
             Placeholder = "Name",
@@ -7833,7 +7886,7 @@ end)
         Library:RefreshConfigsList(ConfigsDropdown)
     end
 
-    -- ==================== UI SETTINGS + CUSTOM BACKGROUND ====================
+    -- ==================== UI SETTINGS ====================
     local UISection = Page:Section({Name = "UI Settings", Side = 2}) do
         UISection:Toggle({
             Name = "Watermark",
@@ -7858,11 +7911,11 @@ end)
         })
     end
 
-    -- ==================== КАСТОМНЫЙ ФОН ====================
+    -- ==================== CUSTOM BACKGROUND ====================
     local BackgroundSection = Page:Section({Name = "Custom Background", Side = 2}) do
         BackgroundSection:Label("Background Image URL")
 
-        local BgUrlInput = BackgroundSection:Textbox({
+        BackgroundSection:Textbox({
             Name = "",
             Placeholder = "https://example.com/image.png",
             Flag = "CustomBackgroundUrl",
@@ -7905,60 +7958,6 @@ end)
             Callback = function(Value)
                 Library:UpdateBackgroundTransparency(Value)
             end
-        })
-    end
-
-    -- ==================== ФУНКЦИИ ДЛЯ КАСТОМНОГО ФОНА ====================
-    Library.CustomBackground = nil
-    Library.BackgroundTransparency = 0.12
-
-    Library.ApplyCustomBackground = function(self, Url)
-        if self.CustomBackground then
-            self.CustomBackground:Destroy()
-        end
-
-        local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
-        if not MainFrame then
-            MainFrame = Library.Holder.Instance:FindFirstChildWhichIsA("Frame")
-        end
-        if not MainFrame then return end
-
-        local Bg = Instance.new("ImageLabel")
-        Bg.Name = "CustomBackground"
-        Bg.Size = UDim2.new(1, 0, 1, 0)
-        Bg.Position = UDim2.new(0, 0, 0, 0)
-        Bg.BackgroundTransparency = 1
-        Bg.Image = Url
-        Bg.ImageTransparency = self.BackgroundTransparency
-        Bg.ScaleType = Enum.ScaleType.Crop
-        Bg.ZIndex = 0
-        Bg.Parent = MainFrame
-
-        self.CustomBackground = Bg
-
-        Library:Notification({
-            Title = "Success",
-            Description = "Фон успешно применён!",
-            Duration = 3
-        })
-    end
-
-    Library.UpdateBackgroundTransparency = function(self, Value)
-        self.BackgroundTransparency = Value
-        if self.CustomBackground then
-            self.CustomBackground.ImageTransparency = Value
-        end
-    end
-
-    Library.ResetBackground = function(self)
-        if self.CustomBackground then
-            self.CustomBackground:Destroy()
-            self.CustomBackground = nil
-        end
-        Library:Notification({
-            Title = "Reset",
-            Description = "Фон сброшен на стандартный",
-            Duration = 3
         })
     end
 
