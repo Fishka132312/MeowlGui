@@ -1,4 +1,4 @@
-local Library do ----50
+local Library do ----51
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7848,114 +7848,113 @@ end)
             Library:RefreshConfigsList(ConfigsDropdown)
         end
 
-        local BackgroundSection = Page:Section({Name = "Custom Background", Side = 2})
+        loc    -- ==================== КАСТОМНЫЙ ФОН ====================
+       -- ==================== КАСТОМНЫЙ ФОН ====================
+    local BackgroundSection = Page:Section({Name = "Custom Background", Side = 2}) do
 
-local BgEnabled = BackgroundSection:Toggle({
-    Name = "Enable Background",
-    Flag = "CustomBackgroundEnabled",
-    Default = false,
-    Callback = function(v)
-        UpdateBackground()
-    end
-})
+        BackgroundSection:Label("Background Image URL")
 
-local BgUrlInput = BackgroundSection:Textbox({
-    Name = "Link to the picture",
-    Placeholder = "https://...",
-    Flag = "CustomBackgroundUrl",
-    Default = "",
-    Callback = function() end
-})
+        local BgUrlInput = BackgroundSection:Textbox({
+            Name = "",
+            Placeholder = "https://example.com/image.png",
+            Flag = "CustomBackgroundUrl",
+            Default = "",
+            Finished = true
+        })
 
-local BgTransparency = BackgroundSection:Slider({
-    Name = "Background transparency",
-    Flag = "CustomBackgroundTransparency",
-    Min = 0,
-    Max = 1,
-    Default = 0.3,
-    Decimals = 2,
-    Callback = function(v)
-        UpdateBackground()
-    end
-})
+        BackgroundSection:Button({
+            Name = "Apply Background",
+            Callback = function()
+                local url = Library.Flags.CustomBackgroundUrl
+                
+                if url and url ~= "" and string.find(url, "http") then
+                    Library:ApplyCustomBackground(url)
+                else
+                    Library:Notification({
+                        Title = "Error",
+                        Description = "Введите корректную ссылку!",
+                        Duration = 3,
+                        Icon = "rbxassetid://7072720879"
+                    })
+                end
+            end
+        })
 
-BackgroundSection:Button({
-    Name = "Apply Background",
-    Callback = function()
-        UpdateBackground(true) -- true = принудительно скачать
-    end
-})
+        BackgroundSection:Button({
+            Name = "Reset to Default",
+            Callback = function()
+                Library:ResetBackground()
+            end
+        })
 
-BackgroundSection:Button({
-    Name = "Reset to Standard",
-    Callback = function()
-        Library.Flags.CustomBackgroundEnabled = false
-        if Library.BackgroundImage then
-            Library.BackgroundImage.Instance:Destroy()
-            Library.BackgroundImage = nil
-        end
-        BgEnabled:Set(false)
-    end
-})
-        end
-
-local function UpdateBackground(forceDownload)
-    local Enabled = Library.Flags.CustomBackgroundEnabled
-    local Url = Library.Flags.CustomBackgroundUrl
-    
-    if not Enabled or not Url or Url == "" then
-        if Library.BackgroundImage then
-            Library.BackgroundImage.Instance.Visible = false
-        end
-        return
-    end
-
-    -- Создаём ImageLabel один раз
-    if not Library.BackgroundImage then
-        Library.BackgroundImage = Instances:Create("ImageLabel", {
-            Parent = Items["MainFrame"].Instance,
-            Name = "CustomBackground",
-            BackgroundTransparency = 1,
-            Size = UDim2New(1, 0, 1, 0),
-            Position = UDim2New(0, 0, 0, 0),
-            ZIndex = 0,           -- самый задний слой
-            ImageTransparency = Library.Flags.CustomBackgroundTransparency or 0.3,
-            ScaleType = Enum.ScaleType.Crop,   -- или Tile / Fit
+        BackgroundSection:Slider({
+            Name = "Background Transparency",
+            Flag = "BackgroundTransparency",
+            Min = 0,
+            Max = 1,
+            Default = 0.12,
+            Decimals = 2,
+            Suffix = "",
+            Callback = function(Value)
+                Library:UpdateBackgroundTransparency(Value)
+            end
         })
     end
+end  -- ← Закрываешь UISection do
 
-    local Bg = Library.BackgroundImage
+-- ==================== ФУНКЦИИ ДЛЯ КАСТОМНОГО ФОНА ====================
+Library.CustomBackground = nil
+Library.BackgroundTransparency = 0.12
 
-    if forceDownload or Bg.Instance.Image == "" then
-        task.spawn(function()
-            local Success, Result = pcall(function()
-                if not isfolder(Library.Folders.Assets) then
-                    makefolder(Library.Folders.Assets)
-                end
-                
-                local FileName = "bg_" .. HttpService:GenerateGUID(false) .. ".png"
-                local FullPath = Library.Folders.Assets .. "/" .. FileName
-                
-                local ImageData = game:HttpGet(Url)
-                writefile(FullPath, ImageData)
-                
-                Bg.Instance.Image = getcustomasset(FullPath)
-                Bg.Instance.Visible = true
-                Bg.Instance.ImageTransparency = Library.Flags.CustomBackgroundTransparency or 0.3
-            end)
-            
-            if not Success then
-                warn("Не удалось загрузить фон:", Result)
-            end
-        end)
-    else
-        Bg.Instance.Visible = true
-        Bg.Instance.ImageTransparency = Library.Flags.CustomBackgroundTransparency or 0.3
+Library.ApplyCustomBackground = function(self, Url)
+    if self.CustomBackground then
+        self.CustomBackground:Destroy()
+    end
+
+    local MainFrame = Library.Holder.Instance:FindFirstChildWhichIsA("Frame") -- или Items["MainFrame"]
+    if not MainFrame then return end
+
+    local Bg = Instance.new("ImageLabel")
+    Bg.Name = "CustomBackground"
+    Bg.Size = UDim2.new(1, 0, 1, 0)
+    Bg.Position = UDim2.new(0, 0, 0, 0)
+    Bg.BackgroundTransparency = 1
+    Bg.Image = Url
+    Bg.ImageTransparency = self.BackgroundTransparency
+    Bg.ScaleType = Enum.ScaleType.Crop
+    Bg.ZIndex = 0
+    Bg.Parent = MainFrame  -- Важно: родитель — главный фрейм окна
+
+    self.CustomBackground = Bg
+
+    Library:Notification({
+        Title = "Success",
+        Description = "Фон успешно применён!",
+        Duration = 3
+    })
+end
+
+Library.UpdateBackgroundTransparency = function(self, Value)
+    self.BackgroundTransparency = Value
+    if self.CustomBackground then
+        self.CustomBackground.ImageTransparency = Value
     end
 end
 
-        return Page
+Library.ResetBackground = function(self)
+    if self.CustomBackground then
+        self.CustomBackground:Destroy()
+        self.CustomBackground = nil
     end
+    Library:Notification({
+        Title = "Reset",
+        Description = "Фон сброшен на стандартный",
+        Duration = 3
+    })
+end
+
+return Page
+end
 end
 
 getgenv().Library = Library
