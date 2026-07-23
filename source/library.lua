@@ -1,4 +1,4 @@
-local Library do ----67
+local Library do ----68
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2306,13 +2306,22 @@ end
     BackgroundColor3 = FromRGB(0, 0, 0)
 })
 
--- Постоянно копируем реальные экранные координаты MainFrame в BackgroundHolder,
--- используя AnchorPoint (0,0) + AbsolutePosition/AbsoluteSize в пикселях —
--- благодаря этому контейнер всегда точно совпадает с окном, включая драг/ресайз/центрирование.
 Library:Connect(RunService.RenderStepped, function()
     local MF = Items["MainFrame"].Instance
-    Items["BackgroundHolder"].Instance.Position = UDim2New(0, MF.AbsolutePosition.X, 0, MF.AbsolutePosition.Y)
-    Items["BackgroundHolder"].Instance.Size = UDim2New(0, MF.AbsoluteSize.X, 0, MF.AbsoluteSize.Y)
+    local LT = Items["LeftTabs"] and Items["LeftTabs"].Instance
+
+    local MinX, MinY = MF.AbsolutePosition.X, MF.AbsolutePosition.Y
+    local MaxX, MaxY = MinX + MF.AbsoluteSize.X, MinY + MF.AbsoluteSize.Y
+
+    if LT then
+        MinX = math.min(MinX, LT.AbsolutePosition.X)
+        MinY = math.min(MinY, LT.AbsolutePosition.Y)
+        MaxX = math.max(MaxX, LT.AbsolutePosition.X + LT.AbsoluteSize.X)
+        MaxY = math.max(MaxY, LT.AbsolutePosition.Y + LT.AbsoluteSize.Y)
+    end
+
+    Items["BackgroundHolder"].Instance.Position = UDim2New(0, MinX, 0, MinY)
+    Items["BackgroundHolder"].Instance.Size = UDim2New(0, MaxX - MinX, 0, MaxY - MinY)
 end)
 
                 if IsMobile then 
