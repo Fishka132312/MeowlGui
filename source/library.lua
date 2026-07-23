@@ -1,4 +1,4 @@
-local Library do ----59
+local Library do ----60
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7888,7 +7888,7 @@ end)
             Default = "",
         })
 
-        BackgroundSection:Button({
+               BackgroundSection:Button({
             Name = "Apply Background",
             Callback = function()
                 local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
@@ -7900,12 +7900,10 @@ end)
                 local useImage = Library.Flags["UseCustomBackground"] or false
                 local url = Library.Flags["CustomBackgroundUrl"] or ""
 
-                -- Удаляем старый фон
                 local OldBg = MainFrame:FindFirstChild("CustomBackground")
                 if OldBg then OldBg:Destroy() end
 
                 if useImage and url and url ~= "" then
-                    -- Делаем основной фрейм прозрачным
                     MainFrame.BackgroundTransparency = 1
 
                     local Bg = Instance.new("ImageLabel")
@@ -7914,16 +7912,18 @@ end)
                     Bg.Position = UDim2.new(0, 0, 0, 0)
                     Bg.BackgroundTransparency = 1
                     Bg.Image = url
-                    Bg.ImageTransparency = Library.Flags["BackgroundTransparency"] or 0.1
+                    Bg.ImageTransparency = Library.Flags["BackgroundTransparency"] or 0
                     Bg.ZIndex = 0
-                    Bg.ScaleType = Enum.ScaleType.Crop
+                    Bg.ScaleType = Enum.ScaleType.Fit        -- Fit — лучше для теста
+                    Bg.Visible = true
                     Bg.Parent = MainFrame
 
-                    print("✅ Custom background applied:", url)
+                    print("✅ ImageLabel created | URL:", url)
+                    print("Image property:", Bg.Image)
                 else
                     MainFrame.BackgroundTransparency = 0.12
                     MainFrame.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
-                    print("🔄 Default background restored")
+                    print("🔄 Default restored")
                 end
             end
         })
