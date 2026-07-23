@@ -3396,7 +3396,11 @@ end)
                 if Debounce then 
                     return
                 end
+                                                Bool = not not Bool
 
+    if Window.IsOpen == Bool then return end
+
+                                                
                 Window.IsOpen = Bool
 
                 Debounce = true 
@@ -3585,11 +3589,19 @@ end)
                 end
             end
 
-            Library:Connect(UserInputService.InputBegan, function(Input)
-                if tostring(Input.KeyCode) == Library.MenuKeybind or tostring(Input.UserInputType) == Library.MenuKeybind then
-                    Window:SetOpen(not Window.IsOpen)
-                end
-            end)
+            local MenuKeybindConnection = Library:Connect(UserInputService.InputBegan, function(Input)
+    if (Input.KeyCode and tostring(Input.KeyCode) == Library.MenuKeybind) 
+       or (Input.UserInputType and tostring(Input.UserInputType) == Library.MenuKeybind) then
+        
+        -- Защита от двойного нажатия
+        if tick() - (Window.LastToggle or 0) < 0.2 then
+            return
+        end
+        Window.LastToggle = tick()
+
+        Window:SetOpen(not Window.IsOpen)
+    end
+end)
 
             Window:SetCenter()
             task.wait()
