@@ -1,4 +1,4 @@
-local Library do ----74
+local Library do ----75
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -945,6 +945,43 @@ local Library do ----74
         return MousePosition.X >= Frame.AbsolutePosition.X and MousePosition.X <= Frame.AbsolutePosition.X + Frame.AbsoluteSize.X 
         and MousePosition.Y >= Frame.AbsolutePosition.Y and MousePosition.Y <= Frame.AbsolutePosition.Y + Frame.AbsoluteSize.Y
     end
+
+                                    Library.AutoHideScrollbar = function(self, ScrollFrame, BaseTransparency, HoverTransparency)
+    local Instance_ = ScrollFrame.Instance
+    BaseTransparency = BaseTransparency or 0.6
+    HoverTransparency = HoverTransparency or 0.3
+
+    local function CanScroll()
+        return Instance_.AbsoluteCanvasSize.Y > Instance_.AbsoluteWindowSize.Y + 1
+    end
+
+    local function UpdateScrollbar()
+        if CanScroll() then
+            -- Не трогаем текущую прозрачность резко, просто возвращаем базовую,
+            -- если мышь не над скроллом (наведение обрабатывается отдельно).
+            Instance_.ScrollBarImageTransparency = BaseTransparency
+        else
+            -- Скроллить нечего — полностью прячем полосу.
+            Instance_.ScrollBarImageTransparency = 1
+        end
+    end
+
+    Library:Connect(Instance_:GetPropertyChangedSignal("AbsoluteCanvasSize"), UpdateScrollbar)
+    Library:Connect(Instance_:GetPropertyChangedSignal("AbsoluteWindowSize"), UpdateScrollbar)
+    UpdateScrollbar()
+
+    Library:Connect(Instance_.MouseEnter, function()
+        if CanScroll() then
+            TweenService:Create(Instance_, TweenInfo.new(0.2), {ScrollBarImageTransparency = HoverTransparency}):Play()
+        end
+    end)
+
+    Library:Connect(Instance_.MouseLeave, function()
+        if CanScroll() then
+            TweenService:Create(Instance_, TweenInfo.new(0.2), {ScrollBarImageTransparency = BaseTransparency}):Play()
+        end
+    end)
+end
 
     Library.Lerp = function(self, Start, Finish, Time)
         return Start + (Finish - Start) * Time
@@ -2531,6 +2568,8 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
                 })
 
                 Items["LeftTabs"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
+
+                                                Library:AutoHideScrollbar(Items["LeftTabs"], 0.6, 0.3)
 
                 local LeftTabsScroll = Items["LeftTabs"].Instance
 
@@ -7941,6 +7980,14 @@ end)
 -- ==================== BACKGROUND SETTINGS ====================
 local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
+    local function HashString(Str)
+        local Hash = 5381
+        for i = 1, #Str do
+            Hash = (Hash * 33 + string.byte(Str, i)) % 4294967296
+        end
+        return tostring(Hash)
+    end
+
     local UseImage = BackgroundSection:Toggle({
         Name = "Use Custom Image",
         Flag = "UseCustomBackground",
@@ -7954,8 +8001,6 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
         Default = "",
     })
 
-    -- Насколько сильно затемняем картинку, чтобы не сливалась с текстом/иконками.
-    -- 0 = без затемнения, 1 = полностью чёрная.
     local DarknessStrength = 0.35
 
     BackgroundSection:Button({
@@ -7974,7 +8019,10 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
             local url = Library.Flags["CustomBackgroundUrl"] or ""
 
             if useImage and url and url ~= "" then
-                local FileName = Library.Folders.Assets .. "/bg_" .. tostring(#url) .. ".png"
+                -- Хешируем содержимое URL, а не длину строки,
+                -- иначе две разные ссылки одинаковой длины
+                -- будут считаться "уже скачанным" одним файлом.
+                local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
 
                 local Success, AssetId = pcall(function()
                     if not isfile(FileName) then
@@ -7996,10 +8044,10 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
                 Bg.Position = UDim2.new(0, 0, 0, 0)
                 Bg.BackgroundTransparency = 1
                 Bg.Image = AssetId
-                Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey) -- затемнение
+                Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey)
                 Bg.ImageTransparency = 0
                 Bg.ScaleType = Enum.ScaleType.Crop
-                Bg.ZIndex = -1 -- поверх DefaultBackdrop, ниже контента окна
+                Bg.ZIndex = -1
                 Bg.Visible = true
                 Bg.Parent = Holder.Instance
 
@@ -8016,7 +8064,7 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
     BackgroundSection:Slider({
         Name = "Background Transparency",
-        Flag = "CustomBackgroundTransparency", -- отдельный флаг, не конфликтует с флагом из Settings
+        Flag = "CustomBackgroundTransparency",
         Min = 0,
         Max = 1,
         Default = 0.1,
@@ -8037,8 +8085,10 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
             Window:ApplyBackgroundTransparency(0.1)
 
-            Library.Flags["UseCustomBackground"] = false
-            Library.Flags["CustomBackgroundUrl"] = ""
+            -- Используем :Set(), чтобы UI (текст поля, состояние чекбокса)
+            -- визуально обновился вместе с флагами, а не разошёлся с ними.
+            UseImage:Set(false)
+            ImageUrlInput:Set("")
         end
     })
 end
