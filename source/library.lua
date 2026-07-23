@@ -1,4 +1,4 @@
-local Library do ----40
+local Library do ----41
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2653,7 +2653,7 @@ end
                     ImageColor3 = FromRGB(255, 255, 255),
                     ScaleType = Enum.ScaleType.Fit,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 60, 0, 35),
+                    Size = UDim2New(0, 10, 0, 35),
                     Image = "rbxassetid://"..Window.Logo,
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 12, 0, 12),
