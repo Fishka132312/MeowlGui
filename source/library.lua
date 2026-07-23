@@ -1,4 +1,4 @@
-local Library do ----62
+local Library do ----63
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7872,113 +7872,160 @@ end)
             })
         end
 
-        -- ==================== BACKGROUND SETTINGS ====================
-    local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
+   -- ==================== BACKGROUND SETTINGS ====================
+local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
-        local UseImage = BackgroundSection:Toggle({
-            Name = "Use Custom Image",
-            Flag = "UseCustomBackground",
-            Default = false,
-        })
+    local UseImage = BackgroundSection:Toggle({
+        Name = "Use Custom Image",
+        Flag = "UseCustomBackground",
+        Default = false,
+    })
 
-        local ImageUrlInput = BackgroundSection:Textbox({
-            Name = "Image URL",
-            Placeholder = "https://i.imgur.com/abc123.jpg",
-            Flag = "CustomBackgroundUrl",
-            Default = "",
-        })
+    local ImageUrlInput = BackgroundSection:Textbox({
+        Name = "Image URL",
+        Placeholder = "https://i.imgur.com/abc123.jpg",
+        Flag = "CustomBackgroundUrl",
+        Default = "",
+    })
 
-           BackgroundSection:Button({
-    Name = "Apply Background",
-    Callback = function()
-        local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
-        if not MainFrame then 
-            warn("MainFrame not found")
-            return 
-        end
-
-        local useImage = Library.Flags["UseCustomBackground"] or false
-        local url = Library.Flags["CustomBackgroundUrl"] or ""
-
-        local OldBg = MainFrame:FindFirstChild("CustomBackground")
-        if OldBg then OldBg:Destroy() end
-
-        if useImage and url and url ~= "" then
-            -- Качаем картинку и сохраняем локально
-            local FileName = Library.Folders.Assets .. "/bg_" .. tostring(#url) .. ".png"
-
-            local Success, Result = pcall(function()
-                if not isfile(FileName) then
-                    local Data = game:HttpGet(url)
-                    writefile(FileName, Data)
-                end
-                return getcustomasset(FileName)
-            end)
-
-            if not Success then
-                warn("Не удалось загрузить фон: " .. tostring(Result))
-                return
-            end
-
-            MainFrame.BackgroundTransparency = 1
-
-            local Bg = Instance.new("ImageLabel")
-            Bg.Name = "CustomBackground"
-            Bg.Size = UDim2.new(1, 0, 1, 0)
-            Bg.Position = UDim2.new(0, 0, 0, 0)
-            Bg.BackgroundTransparency = 1
-            Bg.Image = Result -- <-- вот тут теперь настоящий loadable asset, а не сырой URL
-            Bg.ImageTransparency = 0
-            Bg.ZIndex = 1
-            Bg.ScaleType = Enum.ScaleType.Crop
-            Bg.Visible = true
-            Bg.Parent = MainFrame
-
-            print("✅ Фон применён:", Result)
-        else
-            MainFrame.BackgroundTransparency = 0.12
-            MainFrame.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
-            print("🔄 Default restored")
-        end
+    local function GetBgParts()
+        local MainFrame = Window.Items and Window.Items["MainFrame"]
+        local LeftTabs  = Window.Items and Window.Items["LeftTabs"]
+        local Content   = Window.Items and Window.Items["Content"]
+        return MainFrame, LeftTabs, Content
     end
-})
 
-        BackgroundSection:Slider({
-            Name = "Background Transparency",
-            Flag = "BackgroundTransparency",
-            Min = 0,
-            Max = 1,
-            Default = 0.1,
-            Decimals = 2,
-            Callback = function(Value)
-                local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
-                if not MainFrame then return end
-                
-                local Bg = MainFrame:FindFirstChild("CustomBackground")
-                if Bg then
-                    Bg.ImageTransparency = Value
-                else
-                    MainFrame.BackgroundTransparency = Value
+    BackgroundSection:Button({
+        Name = "Apply Background",
+        Callback = function()
+            local MainFrame, LeftTabs, Content = GetBgParts()
+            if not MainFrame then 
+                warn("MainFrame not found")
+                return 
+            end
+
+            local useImage = Library.Flags["UseCustomBackground"] or false
+            local url = Library.Flags["CustomBackgroundUrl"] or ""
+
+            -- убираем старые картинки перед созданием новых
+            for _, Frame in {MainFrame, LeftTabs} do
+                if Frame then
+                    local Old = Frame.Instance:FindFirstChild("CustomBackground")
+                    if Old then Old:Destroy() end
                 end
             end
-        })
 
-        BackgroundSection:Button({
-            Name = "Reset to Default",
-            Callback = function()
-                local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
-                if MainFrame then
-                    local Bg = MainFrame:FindFirstChild("CustomBackground")
-                    if Bg then Bg:Destroy() end
-                    
-                    MainFrame.BackgroundTransparency = 0.12
-                    MainFrame.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
+            if useImage and url and url ~= "" then
+                local FileName = Library.Folders.Assets .. "/bg_" .. tostring(#url) .. ".png"
+
+                local Success, AssetId = pcall(function()
+                    if not isfile(FileName) then
+                        writefile(FileName, game:HttpGet(url))
+                    end
+                    return getcustomasset(FileName)
+                end)
+
+                if not Success then
+                    warn("Не удалось загрузить фон: " .. tostring(AssetId))
+                    return
                 end
-                Library.Flags["UseCustomBackground"] = false
-                Library.Flags["CustomBackgroundUrl"] = ""
+
+                -- функция создания картинки-фона внутри любого фрейма (MainFrame или LeftTabs)
+                local function CreateBgImage(ParentInstance, TabsFrame)
+                    local Bg = Instance.new("ImageLabel")
+                    Bg.Name = "CustomBackground"
+                    Bg.Size = UDim2.new(1, 0, 1, 0)
+                    Bg.Position = UDim2.new(0, 0, 0, 0)
+                    Bg.BackgroundTransparency = 1
+                    Bg.Image = AssetId
+                    Bg.ImageTransparency = 0
+                    Bg.ScaleType = Enum.ScaleType.Crop
+                    Bg.ZIndex = 1
+                    Bg.Visible = true
+                    Bg.Parent = ParentInstance
+
+                    -- если это LeftTabs — нужно "вырезать" ту же часть общей картинки
+                    -- (тот же ScaleType.Crop + смещение через RectOffset не поддерживается для Image,
+                    -- поэтому проще класть один слой позади всего, см. ниже альтернативу)
+                    return Bg
+                end
+
+                CreateBgImage(MainFrame.Instance)
+
+                -- делаем панели прозрачными, чтобы картинка была видна и слева, и в контенте
+                MainFrame.Instance.BackgroundTransparency = 1
+                if LeftTabs then LeftTabs.Instance.BackgroundTransparency = 1 end
+                if Content then Content.Instance.BackgroundTransparency = 1 end
+
+                print("✅ Фон применён:", AssetId)
+            else
+                MainFrame.Instance.BackgroundTransparency = 0.12
+                MainFrame.Instance.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
+                if LeftTabs then LeftTabs.Instance.BackgroundTransparency = 0.15 end
+                if Content then Content.Instance.BackgroundTransparency = 0.75 end
+                print("🔄 Default restored")
             end
-        })
-    end
+        end
+    })
+
+    BackgroundSection:Slider({
+        Name = "Background Transparency",
+        Flag = "BackgroundTransparency",
+        Min = 0,
+        Max = 1,
+        Default = 0.1,
+        Decimals = 0.01,
+        Callback = function(Value)
+            local MainFrame, LeftTabs, Content = GetBgParts()
+            if not MainFrame then return end
+
+            local Bg = MainFrame.Instance:FindFirstChild("CustomBackground")
+
+            if Bg then
+                -- Value = 0 -> картинка полностью видна (ImageTransparency = 0)
+                -- Value = 1 -> картинка полностью прозрачная, видно чистую тему (не блюр/чернота)
+                Bg.ImageTransparency = Value
+
+                -- одновременно "проявляем" цвет темы под картинкой, чтобы при высокой
+                -- прозрачности было видно приятный тёмный фон темы, а не блюр-глас позади UI
+                MainFrame.Instance.BackgroundColor3 = Library.Theme.Background
+                MainFrame.Instance.BackgroundTransparency = Value -- чем выше — тем плотнее цвет темы
+
+                if LeftTabs then
+                    LeftTabs.Instance.BackgroundColor3 = Library.Theme.Background
+                    LeftTabs.Instance.BackgroundTransparency = Value
+                end
+                if Content then
+                    Content.Instance.BackgroundColor3 = Library.Theme.Background
+                    Content.Instance.BackgroundTransparency = Value
+                end
+            else
+                -- без картинки — обычное поведение прозрачности темы
+                MainFrame.Instance.BackgroundTransparency = Value
+                if LeftTabs then LeftTabs.Instance.BackgroundTransparency = Value end
+            end
+        end
+    })
+
+    BackgroundSection:Button({
+        Name = "Reset to Default",
+        Callback = function()
+            local MainFrame, LeftTabs, Content = GetBgParts()
+            if MainFrame then
+                local Bg = MainFrame.Instance:FindFirstChild("CustomBackground")
+                if Bg then Bg:Destroy() end
+
+                MainFrame.Instance.BackgroundTransparency = 0.12
+                MainFrame.Instance.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
+            end
+            if LeftTabs then LeftTabs.Instance.BackgroundTransparency = 0.15 end
+            if Content then Content.Instance.BackgroundTransparency = 0.75 end
+
+            Library.Flags["UseCustomBackground"] = false
+            Library.Flags["CustomBackgroundUrl"] = ""
+        end
+    })
+end
 
         return Page
     end
