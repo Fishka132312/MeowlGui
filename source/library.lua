@@ -1,4 +1,4 @@
-local Library do ----61
+local Library do ----62
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7888,47 +7888,60 @@ end)
             Default = "",
         })
 
-                   BackgroundSection:Button({
-            Name = "Apply Background",
-            Callback = function()
-                local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
-                if not MainFrame then 
-                    warn("MainFrame not found")
-                    return 
+           BackgroundSection:Button({
+    Name = "Apply Background",
+    Callback = function()
+        local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
+        if not MainFrame then 
+            warn("MainFrame not found")
+            return 
+        end
+
+        local useImage = Library.Flags["UseCustomBackground"] or false
+        local url = Library.Flags["CustomBackgroundUrl"] or ""
+
+        local OldBg = MainFrame:FindFirstChild("CustomBackground")
+        if OldBg then OldBg:Destroy() end
+
+        if useImage and url and url ~= "" then
+            -- Качаем картинку и сохраняем локально
+            local FileName = Library.Folders.Assets .. "/bg_" .. tostring(#url) .. ".png"
+
+            local Success, Result = pcall(function()
+                if not isfile(FileName) then
+                    local Data = game:HttpGet(url)
+                    writefile(FileName, Data)
                 end
+                return getcustomasset(FileName)
+            end)
 
-                local useImage = Library.Flags["UseCustomBackground"] or false
-                local url = Library.Flags["CustomBackgroundUrl"] or ""
-
-                local OldBg = MainFrame:FindFirstChild("CustomBackground")
-                if OldBg then OldBg:Destroy() end
-
-                if useImage and url and url ~= "" then
-                    MainFrame.BackgroundTransparency = 1
-
-                    local Bg = Instance.new("ImageLabel")
-                    Bg.Name = "CustomBackground"
-                    Bg.Size = UDim2.new(1, 0, 1, 0)
-                    Bg.Position = UDim2.new(0, 0, 0, 0)
-                    Bg.BackgroundTransparency = 1
-                    Bg.Image = url
-                    Bg.ImageTransparency = 0
-                    Bg.ZIndex = 0
-                    Bg.ScaleType = Enum.ScaleType.Fit
-                    Bg.Visible = true
-                    Bg.Parent = MainFrame
-
-                    print("✅ ImageLabel created")
-                    print("URL:", url)
-                    print("Current Image property:", Bg.Image)
-                    print("Is Image loaded?", Bg.Image ~= "")
-                else
-                    MainFrame.BackgroundTransparency = 0.12
-                    MainFrame.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
-                    print("🔄 Default restored")
-                end
+            if not Success then
+                warn("Не удалось загрузить фон: " .. tostring(Result))
+                return
             end
-        })
+
+            MainFrame.BackgroundTransparency = 1
+
+            local Bg = Instance.new("ImageLabel")
+            Bg.Name = "CustomBackground"
+            Bg.Size = UDim2.new(1, 0, 1, 0)
+            Bg.Position = UDim2.new(0, 0, 0, 0)
+            Bg.BackgroundTransparency = 1
+            Bg.Image = Result -- <-- вот тут теперь настоящий loadable asset, а не сырой URL
+            Bg.ImageTransparency = 0
+            Bg.ZIndex = 1
+            Bg.ScaleType = Enum.ScaleType.Crop
+            Bg.Visible = true
+            Bg.Parent = MainFrame
+
+            print("✅ Фон применён:", Result)
+        else
+            MainFrame.BackgroundTransparency = 0.12
+            MainFrame.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
+            print("🔄 Default restored")
+        end
+    end
+})
 
         BackgroundSection:Slider({
             Name = "Background Transparency",
