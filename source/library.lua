@@ -1,4 +1,4 @@
-local Library do ----72
+local Library do ----74
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -3008,20 +3008,23 @@ end)
                 -- Если картинки нет — трогает подложку DefaultBackdrop.
                 -- MainFrame/LeftTabs сюда больше не входят — у них нет своего фона.
                 function Window:ApplyBackgroundTransparency(Value)
-                    local Bg = Items["BackgroundHolder"].Instance:FindFirstChild("CustomBackground")
-                    local Backdrop = Items["DefaultBackdrop"]
+    local Bg = Items["BackgroundHolder"].Instance:FindFirstChild("CustomBackground")
+    local Backdrop = Items["DefaultBackdrop"]
 
-                    if Bg then
-                        Bg.ImageTransparency = Value
-                        if Backdrop then
-                            Backdrop.Instance.BackgroundTransparency = 0
-                        end
-                    else
-                        if Backdrop then
-                            Backdrop.Instance.BackgroundTransparency = Value
-                        end
-                    end
-                end
+    if Bg then
+        Bg.ImageTransparency = Value
+        if Backdrop then
+            -- Подложка фейдится вместе с картинкой,
+            -- иначе при высокой прозрачности будет видна
+            -- сплошная тёмная подложка вместо реального фона.
+            Backdrop.Instance.BackgroundTransparency = Value
+        end
+    else
+        if Backdrop then
+            Backdrop.Instance.BackgroundTransparency = Value
+        end
+    end
+end
 
                 function Window:SetTransparency()
                     local Value = Library.Flags["BackgroundTransparency"]
