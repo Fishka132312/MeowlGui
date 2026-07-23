@@ -1,4 +1,4 @@
-local Library do ----60
+local Library do ----61
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7888,7 +7888,7 @@ end)
             Default = "",
         })
 
-               BackgroundSection:Button({
+                   BackgroundSection:Button({
             Name = "Apply Background",
             Callback = function()
                 local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
@@ -7912,14 +7912,16 @@ end)
                     Bg.Position = UDim2.new(0, 0, 0, 0)
                     Bg.BackgroundTransparency = 1
                     Bg.Image = url
-                    Bg.ImageTransparency = Library.Flags["BackgroundTransparency"] or 0
+                    Bg.ImageTransparency = 0
                     Bg.ZIndex = 0
-                    Bg.ScaleType = Enum.ScaleType.Fit        -- Fit — лучше для теста
+                    Bg.ScaleType = Enum.ScaleType.Fit
                     Bg.Visible = true
                     Bg.Parent = MainFrame
 
-                    print("✅ ImageLabel created | URL:", url)
-                    print("Image property:", Bg.Image)
+                    print("✅ ImageLabel created")
+                    print("URL:", url)
+                    print("Current Image property:", Bg.Image)
+                    print("Is Image loaded?", Bg.Image ~= "")
                 else
                     MainFrame.BackgroundTransparency = 0.12
                     MainFrame.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
