@@ -1,4 +1,4 @@
-local Library do ----55
+local Library do ----56
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7872,25 +7872,23 @@ end)
             })
         end
 
-    -- ==================== BACKGROUND SETTINGS ====================
+       -- ==================== BACKGROUND SETTINGS ====================
     local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
-        -- Переключатель: использовать картинку или градиент
         local UseImage = BackgroundSection:Toggle({
             Name = "Use Custom Image",
             Flag = "UseCustomBackground",
             Default = false,
         })
 
-        -- Инпут для ссылки
         local ImageUrlInput = BackgroundSection:Textbox({
             Name = "Image URL",
-            Placeholder = "https://i.imgur.com/...",
+            Placeholder = "https://i.imgur.com/abc123.jpg",
             Flag = "CustomBackgroundUrl",
             Default = "",
         })
 
-        -- Кнопка Apply
+        -- Кнопка Apply (улучшенная)
         BackgroundSection:Button({
             Name = "Apply Background",
             Callback = function()
@@ -7900,57 +7898,61 @@ end)
                 local useImage = Library.Flags["UseCustomBackground"] or false
                 local url = Library.Flags["CustomBackgroundUrl"] or ""
 
-                -- Удаляем старый фон, если есть
+                -- Удаляем старый фон
                 local OldBg = MainFrame:FindFirstChild("CustomBackground")
                 if OldBg then OldBg:Destroy() end
 
                 if useImage and url ~= "" then
-                    -- Создаём ImageLabel как фон
                     local Bg = Instance.new("ImageLabel")
                     Bg.Name = "CustomBackground"
                     Bg.Size = UDim2.new(1, 0, 1, 0)
                     Bg.Position = UDim2.new(0, 0, 0, 0)
                     Bg.BackgroundTransparency = 1
                     Bg.Image = url
-                    Bg.ImageTransparency = 0.1        -- можно сделать позже слайдером
-                    Bg.ZIndex = 0
+                    Bg.ImageTransparency = Library.Flags["BackgroundTransparency"] or 0.1
+                    Bg.ZIndex = -1                    -- Важно: отрицательный ZIndex
+                    Bg.ScaleType = Enum.ScaleType.Crop
                     Bg.Parent = MainFrame
 
-                    -- Делаем все элементы поверх фона
-                    for _, child in ipairs(MainFrame:GetChildren()) do
-                        if child.Name ~= "CustomBackground" then
-                            child.ZIndex = child.ZIndex + 1
+                    -- Поднимаем все UI элементы поверх фона
+                    for _, child in ipairs(MainFrame:GetDescendants()) do
+                        if child:IsA("GuiObject") and child.Name ~= "CustomBackground" then
+                            if child.ZIndex < 10 then
+                                child.ZIndex = 10
+                            end
                         end
                     end
+
+                    Library:Notification({Title = "✅ Success", Description = "Background applied!", Duration = 3})
                 else
-                    -- Возвращаем обычный градиент/цвет
                     MainFrame.BackgroundColor3 = Library.Theme.Background
+                    Library:Notification({Title = "Reset", Description = "Default background restored", Duration = 2})
                 end
             end
         })
 
-        -- Слайдер прозрачности фона
+        -- Слайдер прозрачности
         BackgroundSection:Slider({
             Name = "Background Transparency",
             Flag = "BackgroundTransparency",
             Min = 0,
             Max = 1,
-            Default = 0.12,
+            Default = 0.1,
             Decimals = 2,
             Callback = function(Value)
                 local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
-                if MainFrame then
-                    local Bg = MainFrame:FindFirstChild("CustomBackground")
-                    if Bg then
-                        Bg.ImageTransparency = Value
-                    else
-                        MainFrame.BackgroundTransparency = Value
-                    end
+                if not MainFrame then return end
+                
+                local Bg = MainFrame:FindFirstChild("CustomBackground")
+                if Bg then
+                    Bg.ImageTransparency = Value
+                else
+                    MainFrame.BackgroundTransparency = Value
                 end
             end
         })
 
-        -- Кнопка "Reset to Default"
+        -- Reset
         BackgroundSection:Button({
             Name = "Reset to Default",
             Callback = function()
@@ -7958,6 +7960,7 @@ end)
                 if MainFrame then
                     local Bg = MainFrame:FindFirstChild("CustomBackground")
                     if Bg then Bg:Destroy() end
+                    
                     MainFrame.BackgroundTransparency = 0.12
                     MainFrame.BackgroundColor3 = Library.Theme.Background
                 end
