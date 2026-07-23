@@ -1,4 +1,4 @@
-local Library do ----75
+local Library do ----76
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2569,22 +2569,7 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
 
                 Items["LeftTabs"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
 
-                                                Library:AutoHideScrollbar(Items["LeftTabs"], 0.6, 0.3)
-
-                local LeftTabsScroll = Items["LeftTabs"].Instance
-
-                LeftTabsScroll.MouseEnter:Connect(function()
-    TweenService:Create(LeftTabsScroll, TweenInfo.new(0.2), {
-        ScrollBarImageTransparency = 0.3
-    }):Play()
-end)
-
-LeftTabsScroll.MouseLeave:Connect(function()
-    TweenService:Create(LeftTabsScroll, TweenInfo.new(0.2), {
-        ScrollBarImageTransparency = 0.6
-    }):Play()
-end)
-
+Library:AutoHideScrollbar(Items["LeftTabs"], 0.6, 0.3)
                                                                                                      -- ==================== УЛУЧШЕННАЯ CATEGORY SYSTEM ====================
 Window.Categories = {}
 
