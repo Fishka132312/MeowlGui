@@ -1,4 +1,4 @@
-local Library do ----68
+local Library do ----69
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7926,6 +7926,10 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
         return MainFrame, LeftTabs, Content, Holder
     end
 
+    -- Насколько сильно затемняем картинку, чтобы не сливалась с текстом/иконками.
+    -- 0 = без затемнения, 1 = полностью чёрная. Можешь подстроить под себя.
+    local DarknessStrength = 0.35
+
     BackgroundSection:Button({
         Name = "Apply Background",
         Callback = function()
@@ -7938,9 +7942,12 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
             local useImage = Library.Flags["UseCustomBackground"] or false
             local url = Library.Flags["CustomBackgroundUrl"] or ""
 
-            -- убираем старую картинку в контейнере
+            -- убираем старую картинку и подложку в контейнере
             local OldBg = Holder.Instance:FindFirstChild("CustomBackground")
             if OldBg then OldBg:Destroy() end
+
+            local OldBackdrop = Holder.Instance:FindFirstChild("CustomBackgroundBackdrop")
+            if OldBackdrop then OldBackdrop:Destroy() end
 
             if useImage and url and url ~= "" then
                 local FileName = Library.Folders.Assets .. "/bg_" .. tostring(#url) .. ".png"
@@ -7957,25 +7964,47 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
                     return
                 end
 
+                -- Подложка сплошным цветом темы. Лежит НИЖЕ картинки.
+                -- Она нужна, чтобы при увеличении прозрачности картинки
+                -- было видно ровный цвет темы, а не черноту/пустоту.
+                local Backdrop = Instance.new("Frame")
+                Backdrop.Name = "CustomBackgroundBackdrop"
+                Backdrop.Size = UDim2.new(1, 0, 1, 0)
+                Backdrop.Position = UDim2.new(0, 0, 0, 0)
+                Backdrop.BorderSizePixel = 0
+                Backdrop.BackgroundColor3 = Library.Theme.Background
+                Backdrop.BackgroundTransparency = 0
+                Backdrop.ZIndex = -1
+                Backdrop.Parent = Holder.Instance
+
                 -- ОДНА картинка в контейнере — под MainFrame и LeftTabs одновременно.
                 -- Раз она одна, шва и рассинхрона быть не может.
+                local Grey = 255 * (1 - DarknessStrength)
+
                 local Bg = Instance.new("ImageLabel")
                 Bg.Name = "CustomBackground"
                 Bg.Size = UDim2.new(1, 0, 1, 0)
                 Bg.Position = UDim2.new(0, 0, 0, 0)
                 Bg.BackgroundTransparency = 1
                 Bg.Image = AssetId
+                Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey) -- затемнение
                 Bg.ImageTransparency = 0
                 Bg.ScaleType = Enum.ScaleType.Crop
                 Bg.ZIndex = 0
                 Bg.Visible = true
                 Bg.Parent = Holder.Instance
 
-                -- Делаем MainFrame и LeftTabs прозрачными, чтобы был виден
-                -- фон контейнера, который находится позади них обоих.
+                -- MainFrame/LeftTabs/Content становятся полностью прозрачными,
+                -- чтобы был виден фон контейнера (Backdrop + Bg) позади них.
+                -- Слайдер ниже будет управлять ТОЛЬКО прозрачностью картинки,
+                -- а не этих фреймов — иначе они перекрывают картинку своим цветом.
                 MainFrame.Instance.BackgroundTransparency = 1
                 if LeftTabs then LeftTabs.Instance.BackgroundTransparency = 1 end
                 if Content  then Content.Instance.BackgroundTransparency  = 1 end
+
+                -- применяем текущее значение слайдера сразу после установки картинки
+                local CurrentTransparency = Library.Flags["BackgroundTransparency"] or 0.1
+                Bg.ImageTransparency = CurrentTransparency
 
                 print("✅ Единый фон применён в контейнере:", AssetId)
             else
@@ -8003,21 +8032,16 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
             if Bg then
                 -- Value = 0 -> картинка полностью видна
-                -- Value = 1 -> картинка прозрачная, видно цвет темы (не блюр/чернота)
+                -- Value = 1 -> картинка полностью прозрачная, виден Backdrop (цвет темы)
                 Bg.ImageTransparency = Value
 
-                MainFrame.Instance.BackgroundColor3 = Library.Theme.Background
-                MainFrame.Instance.BackgroundTransparency = Value
-
-                if LeftTabs then
-                    LeftTabs.Instance.BackgroundColor3 = Library.Theme.Background
-                    LeftTabs.Instance.BackgroundTransparency = Value
-                end
-                if Content then
-                    Content.Instance.BackgroundColor3 = Library.Theme.Background
-                    Content.Instance.BackgroundTransparency = Value
-                end
+                -- ВАЖНО: сами фреймы держим постоянно прозрачными (=1),
+                -- иначе они закрашивают картинку своим цветом при любом Value.
+                MainFrame.Instance.BackgroundTransparency = 1
+                if LeftTabs then LeftTabs.Instance.BackgroundTransparency = 1 end
+                if Content  then Content.Instance.BackgroundTransparency  = 1 end
             else
+                -- Без кастомной картинки — обычная логика прозрачности окна
                 MainFrame.Instance.BackgroundTransparency = Value
                 if LeftTabs then LeftTabs.Instance.BackgroundTransparency = Value end
                 if Content  then Content.Instance.BackgroundTransparency  = Value end
@@ -8032,6 +8056,9 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
             if Holder then
                 local Bg = Holder.Instance:FindFirstChild("CustomBackground")
                 if Bg then Bg:Destroy() end
+
+                local Backdrop = Holder.Instance:FindFirstChild("CustomBackgroundBackdrop")
+                if Backdrop then Backdrop:Destroy() end
             end
             if MainFrame then
                 MainFrame.Instance.BackgroundTransparency = 0.12
