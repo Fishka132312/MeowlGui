@@ -1,4 +1,4 @@
-local Library do ----58
+local Library do ----59
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7872,7 +7872,7 @@ end)
             })
         end
 
-         -- ==================== BACKGROUND SETTINGS ====================
+        -- ==================== BACKGROUND SETTINGS ====================
     local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
         local UseImage = BackgroundSection:Toggle({
@@ -7888,7 +7888,7 @@ end)
             Default = "",
         })
 
-                BackgroundSection:Button({
+        BackgroundSection:Button({
             Name = "Apply Background",
             Callback = function()
                 local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
@@ -7905,6 +7905,9 @@ end)
                 if OldBg then OldBg:Destroy() end
 
                 if useImage and url and url ~= "" then
+                    -- Делаем основной фрейм прозрачным
+                    MainFrame.BackgroundTransparency = 1
+
                     local Bg = Instance.new("ImageLabel")
                     Bg.Name = "CustomBackground"
                     Bg.Size = UDim2.new(1, 0, 1, 0)
@@ -7912,22 +7915,14 @@ end)
                     Bg.BackgroundTransparency = 1
                     Bg.Image = url
                     Bg.ImageTransparency = Library.Flags["BackgroundTransparency"] or 0.1
-                    Bg.ZIndex = 1                    -- ← Изменили
+                    Bg.ZIndex = 0
                     Bg.ScaleType = Enum.ScaleType.Crop
                     Bg.Parent = MainFrame
 
-                    print("✅ Background applied:", url)
-
-                    -- Поднимаем ВСЕ элементы интерфейса поверх фона
-                    for _, child in ipairs(MainFrame:GetDescendants()) do
-                        if child:IsA("GuiObject") and child.Name ~= "CustomBackground" then
-                            if child.ZIndex < 5 then
-                                child.ZIndex = 5
-                            end
-                        end
-                    end
+                    print("✅ Custom background applied:", url)
                 else
-                    MainFrame.BackgroundColor3 = Library.Theme.Background
+                    MainFrame.BackgroundTransparency = 0.12
+                    MainFrame.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
                     print("🔄 Default background restored")
                 end
             end
@@ -7942,13 +7937,13 @@ end)
             Decimals = 2,
             Callback = function(Value)
                 local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
-                if MainFrame then
-                    local Bg = MainFrame:FindFirstChild("CustomBackground")
-                    if Bg then
-                        Bg.ImageTransparency = Value
-                    else
-                        MainFrame.BackgroundTransparency = Value
-                    end
+                if not MainFrame then return end
+                
+                local Bg = MainFrame:FindFirstChild("CustomBackground")
+                if Bg then
+                    Bg.ImageTransparency = Value
+                else
+                    MainFrame.BackgroundTransparency = Value
                 end
             end
         })
@@ -7960,6 +7955,7 @@ end)
                 if MainFrame then
                     local Bg = MainFrame:FindFirstChild("CustomBackground")
                     if Bg then Bg:Destroy() end
+                    
                     MainFrame.BackgroundTransparency = 0.12
                     MainFrame.BackgroundColor3 = Library.Theme.Background or Color3.fromRGB(12, 12, 14)
                 end
