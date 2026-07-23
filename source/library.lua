@@ -1,4 +1,4 @@
-local Library do ----66
+local Library do ----67
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2297,13 +2297,23 @@ end
                                                 Items["BackgroundHolder"] = Instances:Create("Frame", {
     Parent = Library.Holder.Instance,
     Name = "\0",
+    AnchorPoint = Vector2New(0, 0),
     BackgroundTransparency = 1,
     Position = UDim2New(0, 0, 0, 0),
-    Size = UDim2New(1, 0, 1, 0),
+    Size = UDim2New(0, 860, 0, 590), -- стартовый размер как у MainFrame, дальше синхронизируется
     ZIndex = 1,
     BorderSizePixel = 0,
     BackgroundColor3 = FromRGB(0, 0, 0)
 })
+
+-- Постоянно копируем реальные экранные координаты MainFrame в BackgroundHolder,
+-- используя AnchorPoint (0,0) + AbsolutePosition/AbsoluteSize в пикселях —
+-- благодаря этому контейнер всегда точно совпадает с окном, включая драг/ресайз/центрирование.
+Library:Connect(RunService.RenderStepped, function()
+    local MF = Items["MainFrame"].Instance
+    Items["BackgroundHolder"].Instance.Position = UDim2New(0, MF.AbsolutePosition.X, 0, MF.AbsolutePosition.Y)
+    Items["BackgroundHolder"].Instance.Size = UDim2New(0, MF.AbsoluteSize.X, 0, MF.AbsoluteSize.Y)
+end)
 
                 if IsMobile then 
                     Instances:Create("UIScale", {
