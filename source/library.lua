@@ -1,4 +1,4 @@
-local Library do ----53
+local Library do ----54
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -675,60 +675,6 @@ local Library do ----53
 
         Library.Font = SemiBold
     end
-
-                    -- ==================== CUSTOM BACKGROUND FUNCTIONS ====================
-Library.CustomBackground = nil
-Library.BackgroundTransparency = 0.12
-
-Library.ApplyCustomBackground = function(self, Url)
-    if self.CustomBackground then
-        self.CustomBackground:Destroy()
-    end
-
-    local MainFrame = nil
-    if Window and Window.Items and Window.Items["MainFrame"] then
-        MainFrame = Window.Items["MainFrame"].Instance
-    else
-        MainFrame = Library.Holder.Instance:FindFirstChildWhichIsA("Frame")
-    end
-
-    if not MainFrame then 
-        warn("MainFrame not found for background")
-        return 
-    end
-
-    local Bg = Instance.new("ImageLabel")
-    Bg.Name = "CustomBackground"
-    Bg.Size = UDim2.new(1, 0, 1, 0)
-    Bg.Position = UDim2.new(0, 0, 0, 0)
-    Bg.BackgroundTransparency = 1
-    Bg.Image = Url
-    Bg.ImageTransparency = self.BackgroundTransparency
-    Bg.ScaleType = Enum.ScaleType.Crop
-    Bg.ZIndex = -1          -- важно: ниже всех элементов
-    Bg.Parent = MainFrame
-
-    self.CustomBackground = Bg
-end
-
-Library.UpdateBackgroundTransparency = function(self, Value)
-    self.BackgroundTransparency = Value
-    if self.CustomBackground then
-        self.CustomBackground.ImageTransparency = Value
-    end
-end
-
-Library.ResetBackground = function(self)
-    if self.CustomBackground then
-        self.CustomBackground:Destroy()
-        self.CustomBackground = nil
-    end
-    Library:Notification({
-        Title = "Reset",
-        Description = "Фон сброшен на стандартный",
-        Duration = 3
-    })
-end
 
     Library.Holder = Instances:Create("ScreenGui", {
         Parent = gethui(),
@@ -2360,6 +2306,7 @@ end
 Items["MainFrame"]:MakeResizeable(
     Vector2New(650, 520),
     Vector2New(1000, 750),
+    OriginalSizes
 )
 
 Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
@@ -7820,148 +7767,114 @@ end)
         end
     end
 
-   Library.CreateSettingsPage = function(self, Window, KeybindList)
-    local Page = Window:Page({Name = "Settings", Icon = "122669828593160"})
+    Library.CreateSettingsPage = function(self, Window, KeybindList)
+        local Page = Window:Page({Name = "Settings", Icon = "122669828593160"})
+        local ConfigsSection = Page:Section({Name = "Configs", Side = 1}) do 
+            local ConfigSelected = nil
 
-    -- ==================== CONFIGS SECTION ====================
-    local ConfigsSection = Page:Section({Name = "Configs", Side = 1}) do
-        local ConfigSelected = nil
-
-        local ConfigsDropdown = ConfigsSection:Listbox({
-            Flag = "ConfigsList",
-            Items = {},
-            Multi = false,
-            Callback = function(Value)
-                ConfigSelected = Value
-            end
-        })
-
-        ConfigsSection:Textbox({
-            Flag = "ConfigsName",
-            Placeholder = "Name",
-            Numeric = false,
-            Finished = false,
-            Callback = function(Value) end
-        })
-
-        ConfigsSection:Button({ Name = "Create", Callback = function()
-            local InputName = Library.Flags["ConfigsName"]
-            if InputName and InputName ~= "" then
-                if not isfolder(Library.Folders.Configs) then
-                    makefolder(Library.Folders.Configs)
+            local ConfigsDropdown = ConfigsSection:Listbox({
+                Flag = "ConfigsList", 
+                Items = { }, 
+                Multi = false,
+                Callback = function(Value)
+                    ConfigSelected = Value
                 end
-                local FinalName = InputName:find(".json") and InputName or InputName .. ".json"
-                writefile(Library.Folders.Configs .. "/" .. FinalName, Library:GetConfig())
-                Library:RefreshConfigsList(ConfigsDropdown)
-            end
-        end})
+            })
+            
+            ConfigsSection:Textbox({
+                Flag = "ConfigsName",
+                Placeholder = "Name",
+                Numeric = false,
+                Finished = false,
+                Callback = function(Value)
+                end
+            })
 
-        ConfigsSection:Button({ Name = "Delete", Callback = function()
-            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                delfile(Library.Folders.Configs .. "/" .. ConfigSelected)
-                Library:RefreshConfigsList(ConfigsDropdown)
-                ConfigSelected = nil
-            end
-        end})
+            ConfigsSection:Button({
+                Name = "Create",
+                Callback = function()
+                    local InputName = Library.Flags["ConfigsName"]
+                    if InputName and InputName ~= "" then
+                        if not isfolder(Library.Folders.Configs) then
+                            makefolder(Library.Folders.Configs)
+                        end
+                        local FinalName = InputName:find(".json") and InputName or InputName .. ".json"
+                        writefile(Library.Folders.Configs .. "/" .. FinalName, Library:GetConfig())
+                        
+                        Library:RefreshConfigsList(ConfigsDropdown)
+                    end
+                end
+            })
 
-        ConfigsSection:Button({ Name = "Load", Callback = function()
-            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected))
-            end
-        end})
+            ConfigsSection:Button({
+                Name = "Delete",
+                Callback = function()
+                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                        delfile(Library.Folders.Configs .. "/" .. ConfigSelected)
+                        Library:RefreshConfigsList(ConfigsDropdown)
+                        ConfigSelected = nil
+                    end
+                end
+            })
 
-        ConfigsSection:Button({ Name = "Save", Callback = function()
-            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                writefile(Library.Folders.Configs .. "/" .. ConfigSelected, Library:GetConfig())
-            end
-        end})
+            ConfigsSection:Button({
+                Name = "Load",
+                Callback = function()
+                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                        Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected))
+                    end
+                end
+            })
 
-        ConfigsSection:Button({ Name = "Refresh", Callback = function()
+            ConfigsSection:Button({
+                Name = "Save",
+                Callback = function()
+                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                        writefile(Library.Folders.Configs .. "/" .. ConfigSelected, Library:GetConfig())
+                    end
+                end
+            })
+
+            ConfigsSection:Button({
+                Name = "Refresh",
+                Callback = function()
+                    Library:RefreshConfigsList(ConfigsDropdown)
+                end
+            })
+            
+            if not isfolder(Library.Folders.Configs) then
+                makefolder(Library.Folders.Configs)
+            end
             Library:RefreshConfigsList(ConfigsDropdown)
-        end})
-
-        if not isfolder(Library.Folders.Configs) then
-            makefolder(Library.Folders.Configs)
         end
-        Library:RefreshConfigsList(ConfigsDropdown)
-    end
 
-    -- ==================== UI SETTINGS ====================
-    local UISection = Page:Section({Name = "UI Settings", Side = 2}) do
-        UISection:Toggle({
-            Name = "Watermark",
-            Flag = "WatermarkToggle",
-            Default = false,
-            Callback = function(Value)
-                if Library.WatermarkFrame then
-                    Library.WatermarkFrame.Instance.Visible = Value
+        local UISection = Page:Section({Name = "UI Settings", Side = 2}) do
+            UISection:Toggle({
+                Name = "Watermark",
+                Flag = "WatermarkToggle",
+                Default = false,
+                Callback = function(Value)
+                    if Library.WatermarkFrame then
+                        Library.WatermarkFrame.Instance.Visible = Value
+                    end
                 end
-            end
-        })
+            })
 
-        UISection:Toggle({
-            Name = "Keybind List",
-            Flag = "KeybindListToggle",
-            Default = false,
-            Callback = function(Value)
-                if KeybindList then
-                    KeybindList:SetVisibility(Value)
+            UISection:Toggle({
+                Name = "Keybind List",
+                Flag = "KeybindListToggle",
+                Default = false,
+                Callback = function(Value)
+                    if KeybindList then
+                        KeybindList:SetVisibility(Value)
+                    end
                 end
-            end
-        })
+            })
+        end
+
+        return Page
     end
-
-    -- ==================== CUSTOM BACKGROUND ====================
-    local BackgroundSection = Page:Section({Name = "Custom Background", Side = 2}) do
-        BackgroundSection:Label("Background Image URL")
-
-        BackgroundSection:Textbox({
-            Name = "",
-            Placeholder = "https://example.com/image.png",
-            Flag = "CustomBackgroundUrl",
-            Default = "",
-            Finished = true
-        })
-
-        BackgroundSection:Button({
-            Name = "Apply Background",
-            Callback = function()
-                local url = Library.Flags.CustomBackgroundUrl
-                if url and url ~= "" and string.find(url, "http") then
-                    Library:ApplyCustomBackground(url)
-                else
-                    Library:Notification({
-                        Title = "Error",
-                        Description = "Введите корректную ссылку!",
-                        Duration = 3,
-                        Icon = "rbxassetid://7072720879"
-                    })
-                end
-            end
-        })
-
-        BackgroundSection:Button({
-            Name = "Reset to Default",
-            Callback = function()
-                Library:ResetBackground()
-            end
-        })
-
-        BackgroundSection:Slider({
-            Name = "Background Transparency",
-            Flag = "BackgroundTransparency",
-            Min = 0,
-            Max = 1,
-            Default = 0.12,
-            Decimals = 2,
-            Suffix = "",
-            Callback = function(Value)
-                Library:UpdateBackgroundTransparency(Value)
-            end
-        })
-    end
-
-    return Page
 end
+
 getgenv().Library = Library
 return Library
