@@ -1,4 +1,4 @@
-local Library do ----54
+local Library do ----55
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7871,6 +7871,101 @@ end)
                 end
             })
         end
+
+    -- ==================== BACKGROUND SETTINGS ====================
+    local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
+
+        -- Переключатель: использовать картинку или градиент
+        local UseImage = BackgroundSection:Toggle({
+            Name = "Use Custom Image",
+            Flag = "UseCustomBackground",
+            Default = false,
+        })
+
+        -- Инпут для ссылки
+        local ImageUrlInput = BackgroundSection:Textbox({
+            Name = "Image URL",
+            Placeholder = "https://i.imgur.com/...",
+            Flag = "CustomBackgroundUrl",
+            Default = "",
+        })
+
+        -- Кнопка Apply
+        BackgroundSection:Button({
+            Name = "Apply Background",
+            Callback = function()
+                local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
+                if not MainFrame then return end
+
+                local useImage = Library.Flags["UseCustomBackground"] or false
+                local url = Library.Flags["CustomBackgroundUrl"] or ""
+
+                -- Удаляем старый фон, если есть
+                local OldBg = MainFrame:FindFirstChild("CustomBackground")
+                if OldBg then OldBg:Destroy() end
+
+                if useImage and url ~= "" then
+                    -- Создаём ImageLabel как фон
+                    local Bg = Instance.new("ImageLabel")
+                    Bg.Name = "CustomBackground"
+                    Bg.Size = UDim2.new(1, 0, 1, 0)
+                    Bg.Position = UDim2.new(0, 0, 0, 0)
+                    Bg.BackgroundTransparency = 1
+                    Bg.Image = url
+                    Bg.ImageTransparency = 0.1        -- можно сделать позже слайдером
+                    Bg.ZIndex = 0
+                    Bg.Parent = MainFrame
+
+                    -- Делаем все элементы поверх фона
+                    for _, child in ipairs(MainFrame:GetChildren()) do
+                        if child.Name ~= "CustomBackground" then
+                            child.ZIndex = child.ZIndex + 1
+                        end
+                    end
+                else
+                    -- Возвращаем обычный градиент/цвет
+                    MainFrame.BackgroundColor3 = Library.Theme.Background
+                end
+            end
+        })
+
+        -- Слайдер прозрачности фона
+        BackgroundSection:Slider({
+            Name = "Background Transparency",
+            Flag = "BackgroundTransparency",
+            Min = 0,
+            Max = 1,
+            Default = 0.12,
+            Decimals = 2,
+            Callback = function(Value)
+                local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
+                if MainFrame then
+                    local Bg = MainFrame:FindFirstChild("CustomBackground")
+                    if Bg then
+                        Bg.ImageTransparency = Value
+                    else
+                        MainFrame.BackgroundTransparency = Value
+                    end
+                end
+            end
+        })
+
+        -- Кнопка "Reset to Default"
+        BackgroundSection:Button({
+            Name = "Reset to Default",
+            Callback = function()
+                local MainFrame = Window.Items and Window.Items["MainFrame"] and Window.Items["MainFrame"].Instance
+                if MainFrame then
+                    local Bg = MainFrame:FindFirstChild("CustomBackground")
+                    if Bg then Bg:Destroy() end
+                    MainFrame.BackgroundTransparency = 0.12
+                    MainFrame.BackgroundColor3 = Library.Theme.Background
+                end
+                Library.Flags["UseCustomBackground"] = false
+                Library.Flags["CustomBackgroundUrl"] = ""
+            end
+        })
+    end
 
         return Page
     end
