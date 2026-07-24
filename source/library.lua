@@ -1,4 +1,4 @@
-local Library do ----78
+local Library do ----79
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7973,7 +7973,7 @@ end)
         end
 
 -- ==================== BACKGROUND SETTINGS ====================
-local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
+local CustomBackgroundSection = Page:Section({Name = "Custom Background", Side = 2}) do
 
     local function HashString(Str)
         local Hash = 5381
@@ -7983,13 +7983,13 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
         return tostring(Hash)
     end
 
-    local UseImage = BackgroundSection:Toggle({
+    local UseImage = CustomBackgroundSection:Toggle({
         Name = "Use Custom Image",
         Flag = "UseCustomBackground",
         Default = false,
     })
 
-    local ImageUrlInput = BackgroundSection:Textbox({
+    local ImageUrlInput = CustomBackgroundSection:Textbox({
         Name = "Image URL",
         Placeholder = "https://i.imgur.com/abc123.jpg",
         Flag = "CustomBackgroundUrl",
@@ -8007,7 +8007,7 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
     local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat"}
 
-    local PresetsDropdown = BackgroundSection:Dropdown({
+    local PresetsDropdown = CustomBackgroundSection:Dropdown({
         Name = "Presets",
         Flag = "BackgroundPreset",
         Items = PresetOrder,
@@ -8027,7 +8027,7 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
     local DarknessStrength = 0.35
 
-    BackgroundSection:Button({
+    CustomBackgroundSection:Button({
         Name = "Apply Background",
         Callback = function()
             local Holder = Window.Items and Window.Items["BackgroundHolder"]
@@ -8043,6 +8043,9 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
             local url = Library.Flags["CustomBackgroundUrl"] or ""
 
             if useImage and url and url ~= "" then
+                -- Хешируем содержимое URL, а не длину строки,
+                -- иначе две разные ссылки одинаковой длины
+                -- будут считаться "уже скачанным" одним файлом.
                 local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
 
                 local Success, AssetId = pcall(function()
@@ -8061,14 +8064,8 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
                 local Bg = Instance.new("ImageLabel")
                 Bg.Name = "CustomBackground"
-                -- Делаем картинку крупнее контейнера (запас 40%), 
-                -- чтобы было куда сдвигать при несовпадении пропорций
-                Bg.Size = UDim2.new(1.4, 0, 1.4, 0)
-                Bg.AnchorPoint = Vector2.new(0.5, 0.5)
-                Bg.Position = UDim2.new(
-                    0.5 + (Library.Flags["CustomBackgroundOffsetX"] or 0) / 100, 0,
-                    0.5 + (Library.Flags["CustomBackgroundOffsetY"] or 0) / 100, 0
-                )
+                Bg.Size = UDim2.new(1, 0, 1, 0)
+                Bg.Position = UDim2.new(0, 0, 0, 0)
                 Bg.BackgroundTransparency = 1
                 Bg.Image = AssetId
                 Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey)
@@ -8089,47 +8086,7 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
         end
     })
 
-    -- ==================== ПОЗИЦИОНИРОВАНИЕ ФОНА ====================
-    local function UpdateBackgroundPosition()
-        local Holder = Window.Items and Window.Items["BackgroundHolder"]
-        if not Holder then return end
-
-        local Bg = Holder.Instance:FindFirstChild("CustomBackground")
-        if not Bg then return end
-
-        local OffsetX = (Library.Flags["CustomBackgroundOffsetX"] or 0) / 100
-        local OffsetY = (Library.Flags["CustomBackgroundOffsetY"] or 0) / 100
-
-        Bg.Position = UDim2.new(0.5 + OffsetX, 0, 0.5 + OffsetY, 0)
-    end
-
-    local OffsetXSlider = BackgroundSection:Slider({
-        Name = "Position Horizontal",
-        Flag = "CustomBackgroundOffsetX",
-        Min = -20,
-        Max = 20,
-        Default = 0,
-        Decimals = 1,
-        Suffix = "%",
-        Callback = function(Value)
-            UpdateBackgroundPosition()
-        end
-    })
-
-    local OffsetYSlider = BackgroundSection:Slider({
-        Name = "Position Vertical",
-        Flag = "CustomBackgroundOffsetY",
-        Min = -20,
-        Max = 20,
-        Default = 0,
-        Decimals = 1,
-        Suffix = "%",
-        Callback = function(Value)
-            UpdateBackgroundPosition()
-        end
-    })
-
-    BackgroundSection:Slider({
+    CustomBackgroundSection:Slider({
         Name = "Background Transparency",
         Flag = "CustomBackgroundTransparency",
         Min = 0,
@@ -8141,7 +8098,7 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
         end
     })
 
-    BackgroundSection:Button({
+    CustomBackgroundSection:Button({
         Name = "Reset to Default",
         Callback = function()
             local Holder = Window.Items and Window.Items["BackgroundHolder"]
@@ -8152,12 +8109,72 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
 
             Window:ApplyBackgroundTransparency(0.1)
 
+            -- Используем :Set(), чтобы UI (текст поля, состояние чекбокса)
+            -- визуально обновился вместе с флагами, а не разошёлся с ними.
             UseImage:Set(false)
             ImageUrlInput:Set("")
-            OffsetXSlider:Set(0)
-            OffsetYSlider:Set(0)
         end
     })
+
+   -- ==================== COLOR SETTINGS ====================
+local ColorSection = Page:Section({Name = "Background", Side = 2}) do
+
+    local AccentColorpicker
+    local AccentGradientColorpicker
+
+    local GradientPresets = {
+        ["Blue"]   = { Color3.fromRGB(0, 116, 224),   Color3.fromRGB(0, 195, 255) },
+        ["Purple"] = { Color3.fromRGB(124, 54, 245),  Color3.fromRGB(202, 110, 255) },
+        ["Pink"]   = { Color3.fromRGB(245, 66, 191),  Color3.fromRGB(250, 142, 239) },
+        ["Green"]  = { Color3.fromRGB(0, 171, 0),     Color3.fromRGB(120, 255, 120) },
+        ["Orange"] = { Color3.fromRGB(255, 93, 48),   Color3.fromRGB(255, 169, 56) },
+        ["Red"]    = { Color3.fromRGB(200, 0, 0),     Color3.fromRGB(255, 90, 90) },
+        ["White"]  = { Color3.fromRGB(200, 200, 200), Color3.fromRGB(255, 255, 255) },
+    }
+
+    local PresetOrder = {"Blue", "Purple", "Pink", "Green", "Orange", "Red", "White"}
+
+    ColorSection:Dropdown({
+        Name = "Gradient Presets",
+        Flag = "AccentPreset",
+        Items = PresetOrder,
+        Callback = function(Value)
+            local Pair = GradientPresets[Value]
+            if not Pair then return end
+
+            Library.Theme.Accent = Pair[1]
+            Library.Theme.AccentGradient = Pair[2]
+
+            Library:ChangeTheme("Accent", Pair[1])
+            Library:ChangeTheme("AccentGradient", Pair[2])
+
+            if AccentColorpicker then
+                AccentColorpicker:Set(Pair[1])
+            end
+            if AccentGradientColorpicker then
+                AccentGradientColorpicker:Set(Pair[2])
+            end
+        end
+    })
+
+    AccentColorpicker = ColorSection:Label("First gradient color"):Colorpicker({
+        Flag = "AccentColor",
+        Default = Library.Theme.Accent,
+        Callback = function(Color)
+            Library.Theme.Accent = Color
+            Library:ChangeTheme("Accent", Color)
+        end
+    })
+
+    AccentGradientColorpicker = ColorSection:Label("Second gradient color"):Colorpicker({
+        Flag = "AccentGradientColor",
+        Default = Library.Theme.AccentGradient,
+        Callback = function(Color)
+            Library.Theme.AccentGradient = Color
+            Library:ChangeTheme("AccentGradient", Color)
+        end
+    })
+end
 end
 
         return Page
