@@ -7996,6 +7996,35 @@ local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
         Default = "",
     })
 
+    -- ==================== ПРЕСЕТЫ ФОНОВ ====================
+    local BackgroundPresets = {
+        ["None"]    = "",
+        ["Komaru"] = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
+        ["Colette"] = "https://wimg.rule34.xxx//samples/2118/sample_51a5204c1e81bddee13b7917bf9a2dab.jpg?12937938",
+        ["Blue"] = "https://img.magnific.com/free-vector/blue-wavy-background-modern-design_677411-2138.jpg?semt=ais_hybrid&w=740&q=80",
+        ["Cool Cat"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSJC4BF9BZKrLhTM1CfGXq99AmAa5LUa5xSF3fB9Iv--C4Y7_JsCfU8WM5&s=10",
+    }
+
+    local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat"}
+
+    local PresetsDropdown = BackgroundSection:Dropdown({
+        Name = "Presets",
+        Flag = "BackgroundPreset",
+        Items = PresetOrder,
+        Default = "None",
+        Callback = function(Value)
+            local Url = BackgroundPresets[Value]
+
+            if Url and Url ~= "" then
+                ImageUrlInput:Set(Url)
+                UseImage:Set(true)
+            else
+                UseImage:Set(false)
+                ImageUrlInput:Set("")
+            end
+        end
+    })
+
     local DarknessStrength = 0.35
 
     BackgroundSection:Button({
