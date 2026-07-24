@@ -2540,6 +2540,12 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
                         Parent = Items["FloatingButton"].Instance,
                         CornerRadius = UDimNew(1, 0)
                     }) 
+
+                                                    Instances:Create("UICorner", {
+    Parent = Items["FloatingButton"].Instance,
+    CornerRadius = UDimNew(1, 0)
+})
+                                                    
                                                 end
 
                 Items["PagePlaceholder"] = Instances:Create("Frame", {
