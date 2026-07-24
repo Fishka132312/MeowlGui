@@ -1,4 +1,4 @@
-local Library do ----79
+local Library do ----81
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2344,6 +2344,7 @@ end
     Size = UDim2New(1, 225, 1, 0),        -- ширина MainFrame + LeftTabs, растягивается сама
     ZIndex = 1,
     BorderSizePixel = 0,
+    ClipsDescendants = true,                                                    
     BackgroundColor3 = FromRGB(0, 0, 0)
 })
 -- RenderStepped-синхронизация больше не нужна: раз это child MainFrame,
@@ -2353,7 +2354,7 @@ end
 Instances:Create("UICorner", {
     Parent = Items["BackgroundHolder"].Instance,
     Name = "\0",
-    CornerRadius = UDimNew(0, 4)
+    CornerRadius = UDimNew(0, 6)
 })
 
 -- Постоянная подложка цвета темы.
@@ -2373,7 +2374,7 @@ Items["DefaultBackdrop"] = Instances:Create("Frame", {
 Instances:Create("UICorner", {
     Parent = Items["DefaultBackdrop"].Instance,
     Name = "\0",
-    CornerRadius = UDimNew(0, 4)
+    CornerRadius = UDimNew(0, 6)
 })
 
                                                 
@@ -4025,31 +4026,35 @@ Page.TabButton = Items["Inactive"]
                 })                
 
                 for Index = 1, Page.Columns do 
-                    local NewColumn = Instances:Create("ScrollingFrame", {
-                        Parent = Items["Page"].Instance,
-                        Name = "\0",
-                        ScrollBarImageColor3 = FromRGB(0, 0, 0),
-                        Active = true,
-                        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                        ScrollBarThickness = 0,
-                        BorderColor3 = FromRGB(0, 0, 0),
-                        BackgroundTransparency = 1,
-                        Size = UDim2New(0, 100, 0, 100),
-                        BackgroundColor3 = FromRGB(255, 255, 255),
-                        ZIndex = 2,
-                        BorderSizePixel = 0,
-                        CanvasSize = UDim2New(0, 0, 0, 0)
-                    })
-                    
-                    Instances:Create("UIListLayout", {
-                        Parent = NewColumn.Instance,
-                        Name = "\0",
-                        Padding = UDimNew(0, 5),
-                        SortOrder = Enum.SortOrder.LayoutOrder
-                    })
+    local NewColumn = Instances:Create("ScrollingFrame", {
+        Parent = Items["Page"].Instance,
+        Name = "\0",
+        Active = true,
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        ScrollBarThickness = 3, -- было 0, ставим реальную толщину, как у LeftTabs
+        BorderColor3 = FromRGB(0, 0, 0),
+        BackgroundTransparency = 1,
+        Size = UDim2New(0, 100, 0, 100),
+        BackgroundColor3 = FromRGB(255, 255, 255),
+        ZIndex = 2,
+        BorderSizePixel = 0,
+        ScrollingDirection = Enum.ScrollingDirection.Y, -- скроллим только по Y
+        CanvasSize = UDim2New(0, 0, 0, 0)
+    })
 
-                    Page.ColumnsData[Index] = NewColumn
-                end
+    Instances:Create("UIListLayout", {
+        Parent = NewColumn.Instance,
+        Name = "\0",
+        Padding = UDimNew(0, 5),
+        SortOrder = Enum.SortOrder.LayoutOrder
+    })
+
+    -- Как у LeftTabs: цвет полосы по теме + авто-скрытие, когда контент не переполняет колонку
+    NewColumn:AddToTheme({ScrollBarImageColor3 = "Accent"})
+    Library:AutoHideScrollbar(NewColumn, 0.6, 0.3)
+
+    Page.ColumnsData[Index] = NewColumn
+end
 
                 Page.Items = Items
             end
@@ -8001,11 +8006,13 @@ local CustomBackgroundSection = Page:Section({Name = "Custom Background", Side =
         ["None"]    = "",
         ["Komaru"] = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
         ["Colette"] = "https://wimg.rule34.xxx//samples/2118/sample_51a5204c1e81bddee13b7917bf9a2dab.jpg?12937938",
-        ["Blue"] = "https://img.magnific.com/free-vector/blue-wavy-background-modern-design_677411-2138.jpg?semt=ais_hybrid&w=740&q=80",
+        ["Anime Girl"] = "https://m.media-amazon.com/images/I/71k9600LL3L._AC_UF894,1000_QL80_.jpg",
         ["Cool Cat"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSJC4BF9BZKrLhTM1CfGXq99AmAa5LUa5xSF3fB9Iv--C4Y7_JsCfU8WM5&s=10",
+        ["Manul"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7DUQIPkF7LEDBmIwTvsnAqy0-x3HqnWOGtFqeuj-43VaTxs7vutkEJHct&s=10",
+        ["Green"] = "https://getwallpapers.com/wallpaper/full/c/1/d/1262088-free-download-desktop-wallpapers-backgrounds-2134x1583-samsung.jpg",
     }
 
-    local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat"}
+    local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat", "Manul", "Green"}
 
     local PresetsDropdown = CustomBackgroundSection:Dropdown({
         Name = "Presets",
@@ -8074,6 +8081,10 @@ local CustomBackgroundSection = Page:Section({Name = "Custom Background", Side =
                 Bg.ZIndex = -1
                 Bg.Visible = true
                 Bg.Parent = Holder.Instance
+
+            local BgCorner = Instance.new("UICorner")
+BgCorner.CornerRadius = UDim.new(0, 6)
+BgCorner.Parent = Bg
 
                 local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
                 Window:ApplyBackgroundTransparency(CurrentTransparency)
