@@ -1,4 +1,4 @@
-local Library do ----85
+local Library do ----86
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -899,6 +899,26 @@ end
             delfile(Library.Folders.Configs .. "/" .. Config)
         end
     end
+
+    Library.GetAutoLoadConfig = function(self)
+    local Path = Library.Folders.Directory .. "/autoload.txt"
+    if isfile(Path) then
+        local Success, Result = pcall(readfile, Path)
+        if Success and Result and Result ~= "" then
+            return Result
+        end
+    end
+    return nil
+end
+
+Library.SetAutoLoadConfig = function(self, ConfigName)
+    local Path = Library.Folders.Directory .. "/autoload.txt"
+    if ConfigName then
+        writefile(Path, ConfigName)
+    elseif isfile(Path) then
+        delfile(Path)
+    end
+end
 
     Library.RefreshConfigsList = function(self, Element)
         if not Element or not Element.Refresh then 
@@ -7918,83 +7938,131 @@ end)
     Library.CreateSettingsPage = function(self, Window, KeybindList)
         local Page = Window:Page({Name = "Settings", Icon = "122669828593160"})
         local ConfigsSection = Page:Section({Name = "Configs", Side = 1}) do 
-            local ConfigSelected = nil
+    local ConfigSelected = nil
 
-            local ConfigsDropdown = ConfigsSection:Listbox({
-                Flag = "ConfigsList", 
-                Items = { }, 
-                Multi = false,
-                Callback = function(Value)
-                    ConfigSelected = Value
-                end
-            })
-            
-            ConfigsSection:Textbox({
-                Flag = "ConfigsName",
-                Placeholder = "Name",
-                Numeric = false,
-                Finished = false,
-                Callback = function(Value)
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Create",
-                Callback = function()
-                    local InputName = Library.Flags["ConfigsName"]
-                    if InputName and InputName ~= "" then
-                        if not isfolder(Library.Folders.Configs) then
-                            makefolder(Library.Folders.Configs)
-                        end
-                        local FinalName = InputName:find(".json") and InputName or InputName .. ".json"
-                        writefile(Library.Folders.Configs .. "/" .. FinalName, Library:GetConfig())
-                        
-                        Library:RefreshConfigsList(ConfigsDropdown)
-                    end
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Delete",
-                Callback = function()
-                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                        delfile(Library.Folders.Configs .. "/" .. ConfigSelected)
-                        Library:RefreshConfigsList(ConfigsDropdown)
-                        ConfigSelected = nil
-                    end
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Load",
-                Callback = function()
-                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                        Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected))
-                    end
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Save",
-                Callback = function()
-                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                        writefile(Library.Folders.Configs .. "/" .. ConfigSelected, Library:GetConfig())
-                    end
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Refresh",
-                Callback = function()
-                    Library:RefreshConfigsList(ConfigsDropdown)
-                end
-            })
-            
-            if not isfolder(Library.Folders.Configs) then
-                makefolder(Library.Folders.Configs)
-            end
-            Library:RefreshConfigsList(ConfigsDropdown)
+    local ConfigsDropdown = ConfigsSection:Listbox({
+        Flag = "ConfigsList", 
+        Items = { }, 
+        Multi = false,
+        Callback = function(Value)
+            ConfigSelected = Value
         end
+    })
+
+    local function UpdateAutoLoadVisual()
+        local Current = Library:GetAutoLoadConfig()
+
+        for Name, OptionData in ConfigsDropdown.Options do
+            if Name == Current then
+                OptionData.OptionText.Instance.Text = "★ " .. Name
+                OptionData.OptionText.Instance.TextColor3 = Library.Theme.Accent
+            else
+                OptionData.OptionText.Instance.Text = Name
+                OptionData.OptionText.Instance.TextColor3 = Library.Theme.Text
+            end
+        end
+    end
+
+    ConfigsSection:Textbox({
+        Flag = "ConfigsName",
+        Placeholder = "Name",
+        Numeric = false,
+        Finished = false,
+        Callback = function(Value) end
+    })
+
+    ConfigsSection:Button({
+        Name = "Create",
+        Callback = function()
+            local InputName = Library.Flags["ConfigsName"]
+            if InputName and InputName ~= "" then
+                if not isfolder(Library.Folders.Configs) then
+                    makefolder(Library.Folders.Configs)
+                end
+                local FinalName = InputName:find(".json") and InputName or InputName .. ".json"
+                writefile(Library.Folders.Configs .. "/" .. FinalName, Library:GetConfig())
+
+                Library:RefreshConfigsList(ConfigsDropdown)
+                UpdateAutoLoadVisual()
+            end
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Delete",
+        Callback = function()
+            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                if Library:GetAutoLoadConfig() == ConfigSelected then
+                    Library:SetAutoLoadConfig(nil)
+                end
+
+                delfile(Library.Folders.Configs .. "/" .. ConfigSelected)
+                Library:RefreshConfigsList(ConfigsDropdown)
+                ConfigSelected = nil
+                UpdateAutoLoadVisual()
+            end
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Load",
+        Callback = function()
+            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected))
+            end
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Save",
+        Callback = function()
+            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                writefile(Library.Folders.Configs .. "/" .. ConfigSelected, Library:GetConfig())
+            end
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Auto Load",
+        Callback = function()
+            if not ConfigSelected then return end
+
+            local Current = Library:GetAutoLoadConfig()
+
+            if Current == ConfigSelected then
+                Library:SetAutoLoadConfig(nil) -- повторное нажатие на тот же конфиг - выключает
+            else
+                Library:SetAutoLoadConfig(ConfigSelected) -- старый автолоад перезатирается
+            end
+
+            UpdateAutoLoadVisual()
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Refresh",
+        Callback = function()
+            Library:RefreshConfigsList(ConfigsDropdown)
+            UpdateAutoLoadVisual()
+        end
+    })
+
+    if not isfolder(Library.Folders.Configs) then
+        makefolder(Library.Folders.Configs)
+    end
+    Library:RefreshConfigsList(ConfigsDropdown)
+    UpdateAutoLoadVisual()
+
+    -- автозагрузка при старте
+    local AutoLoadName = Library:GetAutoLoadConfig()
+    if AutoLoadName and isfile(Library.Folders.Configs .. "/" .. AutoLoadName) then
+        Library:SafeCall(function()
+            Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. AutoLoadName))
+        end)
+        ConfigsDropdown:Set(AutoLoadName)
+        UpdateAutoLoadVisual()
+    end
+end
 
         local UISection = Page:Section({Name = "UI Settings", Side = 2}) do
             UISection:Toggle({
