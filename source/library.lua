@@ -1,4 +1,4 @@
-local Library do ----83
+local Library do ----84
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2642,62 +2642,86 @@ function Window:Category(Name)
 
     TableInsert(Window.Categories, Category)
 
-    local COOLDOWN = 0.5 -- можешь поставить 1, если всё равно будет багаться
+    local COOLDOWN = 0.5
 
-    local function AnimatePage(Category, Page)
+    -- поворот стрелочки твином вместо резкой смены текста
+    local function RotateArrow(open)
+        pcall(function()
+            Tween:Create(CollapseButton, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Rotation = open and 0 or 180
+            })
+        end)
+    end
+
+    local function AnimatePage(Category, Page, staggerDelay)
         if not Page or not Page.TabButton then return end
 
         local Tab = Page.TabButton
         local tabInst = Tab.Instance
         if not tabInst or not tabInst.Parent then return end
 
-        -- токен — чтобы отложенные вызовы от старых кликов не портили новое состояние
         Page._animToken = (Page._animToken or 0) + 1
         local myToken = Page._animToken
 
-        local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+        -- каскад: ждём немного перед стартом анимации этого конкретного таба
+        if staggerDelay and staggerDelay > 0 then
+            task.wait(staggerDelay)
+            if Page._animToken ~= myToken then return end -- клик перебил, выходим
+        end
 
         if Category.Open then
             tabInst.Visible = true
-            tabInst.Size = UDim2New(1, 0, 0, 42)
+
+            -- стартуем чуть сжатым и сдвинутым, чтобы получился эффект "выезжания"
+            tabInst.Size = UDim2New(1, 0, 0, 0)
+            local originalPos = tabInst.Position
+            tabInst.Position = originalPos + UDim2New(0, -12, 0, 0)
 
             local targetTransparency = Page.Active and 0.25 or 1
+            local growInfo = TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+            local fadeInfo = TweenInfo.new(0.24, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
             pcall(function()
-                Tween:Create(Tab, tweenInfo, { BackgroundTransparency = targetTransparency })
+                Tween:Create(Tab, growInfo, {
+                    BackgroundTransparency = targetTransparency,
+                    Size = UDim2New(1, 0, 0, 42),
+                    Position = originalPos
+                })
             end)
 
             pcall(function()
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, tweenInfo, { TextTransparency = 0 })
+                        Tween:Create(desc, fadeInfo, { TextTransparency = 0 })
                     elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, tweenInfo, { ImageTransparency = 0 })
+                        Tween:Create(desc, fadeInfo, { ImageTransparency = 0 })
                     end
                 end
             end)
 
         else
+            local shrinkInfo = TweenInfo.new(0.24, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+            local fadeInfo = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
             pcall(function()
                 for _, desc in ipairs(tabInst:GetDescendants()) do
                     if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, tweenInfo, { TextTransparency = 1 })
+                        Tween:Create(desc, fadeInfo, { TextTransparency = 1 })
                     elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, tweenInfo, { ImageTransparency = 1 })
+                        Tween:Create(desc, fadeInfo, { ImageTransparency = 1 })
                     end
                 end
             end)
 
             pcall(function()
-                Tween:Create(Tab, tweenInfo, {
+                Tween:Create(Tab, shrinkInfo, {
                     BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 0)
+                    Size = UDim2New(1, 0, 0, 0),
+                    Position = tabInst.Position - UDim2New(0, -12, 0, 0)
                 })
             end)
 
-            -- НЕ полагаемся на .Completed — просто ждём то же время, что и твин,
-            -- и проверяем, что за это время не пришёл более новый вызов анимации
-            task.delay(tweenInfo.Time, function()
+            task.delay(shrinkInfo.Time, function()
                 if Page._animToken == myToken and not Category.Open and tabInst and tabInst.Parent then
                     tabInst.Visible = false
                 end
@@ -2711,26 +2735,45 @@ function Window:Category(Name)
 
         Category.Open = not Category.Open
 
-        CollapseButton.Instance.Text = Category.Open and "▲" or "▼"
+        RotateArrow(Category.Open)
 
         local headerAlpha = Category.Open and 0 or 0.45
-        CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            TextTransparency = headerAlpha
-        })
-        CollapseButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        CategoryButton:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             TextTransparency = headerAlpha
         })
 
-        for _, Page in ipairs(Category.Elements) do
+        -- лёгкий "нажим" заголовка для тактильного отклика
+        pcall(function()
+            Tween:Create(CategoryFrame, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundTransparency = 0.9
+            })
+            task.delay(0.12, function()
+                pcall(function()
+                    Tween:Create(CategoryFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundTransparency = 1
+                    })
+                end)
+            end)
+        end)
+
+        -- каскад: при открытии — сверху вниз, при закрытии — снизу вверх
+        local STAGGER_STEP = 0.045
+        local count = #Category.Elements
+
+        for i, Page in ipairs(Category.Elements) do
+            local delayIndex = Category.Open and (i - 1) or (count - i)
+            local staggerDelay = delayIndex * STAGGER_STEP
+
             task.spawn(function()
-                local ok, err = pcall(AnimatePage, Category, Page)
+                local ok, err = pcall(AnimatePage, Category, Page, staggerDelay)
                 if not ok then
                     warn("[Category] AnimatePage error: " .. tostring(err))
                 end
             end)
         end
 
-        task.delay(COOLDOWN, function()
+        local totalTime = COOLDOWN + (count * STAGGER_STEP)
+        task.delay(totalTime, function()
             Category._debounce = false
         end)
     end
