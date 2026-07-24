@@ -1,4 +1,4 @@
-local Library do ----82
+local Library do ----89
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -899,6 +899,26 @@ end
             delfile(Library.Folders.Configs .. "/" .. Config)
         end
     end
+
+    Library.GetAutoLoadConfig = function(self)
+    local Path = Library.Folders.Directory .. "/autoload.txt"
+    if isfile(Path) then
+        local Success, Result = pcall(readfile, Path)
+        if Success and Result and Result ~= "" then
+            return Result
+        end
+    end
+    return nil
+end
+
+Library.SetAutoLoadConfig = function(self, ConfigName)
+    local Path = Library.Folders.Directory .. "/autoload.txt"
+    if ConfigName then
+        writefile(Path, ConfigName)
+    elseif isfile(Path) then
+        delfile(Path)
+    end
+end
 
     Library.RefreshConfigsList = function(self, Element)
         if not Element or not Element.Refresh then 
@@ -2595,12 +2615,12 @@ function Window:Category(Name)
     local Category = {
         Name = Name,
         Open = true,
-        Elements = {},           -- сюда пушь свои Page
+        Elements = {},
         Frame = nil,
-        ContentFrame = nil
+        ContentFrame = nil,
+        _debounce = false, -- флаг кулдауна
     }
 
-    -- Контейнер категории
     local CategoryFrame = Instances:Create("Frame", {
         Parent = Items["LeftTabs"].Instance,
         Name = "\0",
@@ -2626,7 +2646,7 @@ function Window:Category(Name)
     local CollapseButton = Instances:Create("TextButton", {
         Parent = CategoryFrame.Instance,
         Name = "\0",
-        Text = "▲",                    -- ИЗНАЧАЛЬНО СМОТРИТ ВВЕРХ (открыто)
+        Text = "▲",
         FontFace = Library.Font,
         TextColor3 = FromRGB(200, 200, 200),
         TextSize = 16,
@@ -2642,92 +2662,128 @@ function Window:Category(Name)
 
     TableInsert(Window.Categories, Category)
 
-    local function ToggleCategory()
-    Category.Open = not Category.Open
+    local COOLDOWN = 0.5
 
-    -- Стрелка: открыто = ▲ (вверх), закрыто = ▼ (вниз)
-    CollapseButton.Instance.Text = Category.Open and "▲" or "▼"
+    local function AnimatePage(Category, Page, staggerDelay)
+        if not Page or not Page.TabButton then return end
 
-    -- Плавное затемнение заголовка категории
-    local headerAlpha = Category.Open and 0 or 0.45
-    CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        TextTransparency = headerAlpha
-    })
-    CollapseButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        TextTransparency = headerAlpha
-    })
+        local Tab = Page.TabButton
+        local tabInst = Tab.Instance
+        if not tabInst or not tabInst.Parent then return end
 
-    task.spawn(function()
-        for _, Page in ipairs(Category.Elements) do
-            if not Page or not Page.TabButton then continue end
+        Page._animToken = (Page._animToken or 0) + 1
+        local myToken = Page._animToken
 
-            local Tab = Page.TabButton
-            local tabInst = Tab.Instance
-
-            if Category.Open then
-                -- ==================== ОТКРЫТИЕ ====================
-                tabInst.Visible = true
-                tabInst.Size = UDim2New(1, 0, 0, 42) -- сразу возвращаем нормальный размер
-
-                local targetTransparency = Page.Active and 0.25 or 1
-
-                Tween:Create(Tab, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                    BackgroundTransparency = targetTransparency
-                })
-
-                for _, desc in ipairs(tabInst:GetDescendants()) do
-                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
-                            TextTransparency = 0
-                        }, true)
-                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
-                            ImageTransparency = 0
-                        }, true)
-                    end
-                end
-
-            else
-                -- ==================== ЗАКРЫТИЕ (плавно и без дёрганья) ====================
-                local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-
-                -- Фейдим текст и иконки
-                for _, desc in ipairs(tabInst:GetDescendants()) do
-                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                        Tween:Create(desc, tweenInfo, { TextTransparency = 1 }, true)
-                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                        Tween:Create(desc, tweenInfo, { ImageTransparency = 1 }, true)
-                    end
-                end
-
-                -- Плавно сжимаем таб до 0 высоты (именно это даёт эффект "наезжания")
-                local sizeTween = Tween:Create(Tab, tweenInfo, {
-                    BackgroundTransparency = 1,
-                    Size = UDim2New(1, 0, 0, 0)
-                })
-
-                -- Когда анимация полностью закончилась — скрываем
-                sizeTween.Completed:Connect(function()
-                    if not Category.Open and tabInst and tabInst.Parent then
-                        tabInst.Visible = false
-                        -- Размер НЕ восстанавливаем здесь! Оставляем 0, пока категория закрыта
-                    end
-                end)
-            end
+        if staggerDelay and staggerDelay > 0 then
+            task.wait(staggerDelay)
+            if Page._animToken ~= myToken then return end
         end
-    end)
-end
+
+        if Category.Open then
+            tabInst.Visible = true
+
+            tabInst.Size = UDim2New(1, 0, 0, 0)
+            local originalPos = tabInst.Position
+            tabInst.Position = originalPos + UDim2New(0, -8, 0, 0)
+
+            local targetTransparency = Page.Active and 0.25 or 1
+            local growInfo = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local fadeInfo = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+            pcall(function()
+                Tween:Create(Tab, growInfo, {
+                    BackgroundTransparency = targetTransparency,
+                    Size = UDim2New(1, 0, 0, 42),
+                    Position = originalPos
+                })
+            end)
+
+            pcall(function()
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, fadeInfo, { TextTransparency = 0 })
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, fadeInfo, { ImageTransparency = 0 })
+                    end
+                end
+            end)
+
+        else
+            local shrinkInfo = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+            local fadeInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+            pcall(function()
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, fadeInfo, { TextTransparency = 1 })
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, fadeInfo, { ImageTransparency = 1 })
+                    end
+                end
+            end)
+
+            pcall(function()
+                Tween:Create(Tab, shrinkInfo, {
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 0),
+                    Position = tabInst.Position - UDim2New(0, -8, 0, 0)
+                })
+            end)
+
+            task.delay(shrinkInfo.Time, function()
+                if Page._animToken == myToken and not Category.Open and tabInst and tabInst.Parent then
+                    tabInst.Visible = false
+                end
+            end)
+        end
+    end
+
+    local function ToggleCategory()
+        if Category._debounce then return end
+        Category._debounce = true
+
+        Category.Open = not Category.Open
+
+        -- стрелочка меняется мгновенно, без анимации
+        CollapseButton.Instance.Text = Category.Open and "▲" or "▼"
+
+        local headerAlpha = Category.Open and 0 or 0.45
+        CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            TextTransparency = headerAlpha
+        })
+
+        -- каскад: при открытии — сверху вниз, при закрытии — снизу вверх
+        local STAGGER_STEP = 0.03
+        local count = #Category.Elements
+
+        for i, Page in ipairs(Category.Elements) do
+            local delayIndex = Category.Open and (i - 1) or (count - i)
+            local staggerDelay = delayIndex * STAGGER_STEP
+
+            task.spawn(function()
+                local ok, err = pcall(AnimatePage, Category, Page, staggerDelay)
+                if not ok then
+                    warn("[Category] AnimatePage error: " .. tostring(err))
+                end
+            end)
+        end
+
+        local totalTime = COOLDOWN + (count * STAGGER_STEP)
+        task.delay(totalTime, function()
+            Category._debounce = false
+        end)
+    end
 
     CollapseButton:Connect("InputBegan", function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-        ToggleCategory()
-    end
-end)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+            ToggleCategory()
+        end
+    end)
     CategoryButton:Connect("InputBegan", function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-        ToggleCategory()
-    end
-end)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+            ToggleCategory()
+        end
+    end)
 
     return Category
 end
@@ -7879,86 +7935,128 @@ end)
         end
     end
 
-    Library.CreateSettingsPage = function(self, Window, KeybindList)
+     Library.CreateSettingsPage = function(self, Window, KeybindList)
         local Page = Window:Page({Name = "Settings", Icon = "122669828593160"})
+
+        local ConfigsDropdown
+        local UpdateAutoLoadVisual
+
         local ConfigsSection = Page:Section({Name = "Configs", Side = 1}) do 
-            local ConfigSelected = nil
+    local ConfigSelected = nil
 
-            local ConfigsDropdown = ConfigsSection:Listbox({
-                Flag = "ConfigsList", 
-                Items = { }, 
-                Multi = false,
-                Callback = function(Value)
-                    ConfigSelected = Value
-                end
-            })
-            
-            ConfigsSection:Textbox({
-                Flag = "ConfigsName",
-                Placeholder = "Name",
-                Numeric = false,
-                Finished = false,
-                Callback = function(Value)
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Create",
-                Callback = function()
-                    local InputName = Library.Flags["ConfigsName"]
-                    if InputName and InputName ~= "" then
-                        if not isfolder(Library.Folders.Configs) then
-                            makefolder(Library.Folders.Configs)
-                        end
-                        local FinalName = InputName:find(".json") and InputName or InputName .. ".json"
-                        writefile(Library.Folders.Configs .. "/" .. FinalName, Library:GetConfig())
-                        
-                        Library:RefreshConfigsList(ConfigsDropdown)
-                    end
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Delete",
-                Callback = function()
-                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                        delfile(Library.Folders.Configs .. "/" .. ConfigSelected)
-                        Library:RefreshConfigsList(ConfigsDropdown)
-                        ConfigSelected = nil
-                    end
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Load",
-                Callback = function()
-                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                        Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected))
-                    end
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Save",
-                Callback = function()
-                    if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
-                        writefile(Library.Folders.Configs .. "/" .. ConfigSelected, Library:GetConfig())
-                    end
-                end
-            })
-
-            ConfigsSection:Button({
-                Name = "Refresh",
-                Callback = function()
-                    Library:RefreshConfigsList(ConfigsDropdown)
-                end
-            })
-            
-            if not isfolder(Library.Folders.Configs) then
-                makefolder(Library.Folders.Configs)
-            end
-            Library:RefreshConfigsList(ConfigsDropdown)
+    ConfigsDropdown = ConfigsSection:Listbox({
+        Flag = "ConfigsList", 
+        Items = { }, 
+        Multi = false,
+        Callback = function(Value)
+            ConfigSelected = Value
         end
+    })
+
+    UpdateAutoLoadVisual = function()
+        local Current = Library:GetAutoLoadConfig()
+
+        for Name, OptionData in ConfigsDropdown.Options do
+            if Name == Current then
+                OptionData.OptionText.Instance.Text = "★ " .. Name
+                OptionData.OptionText.Instance.TextColor3 = Library.Theme.Accent
+            else
+                OptionData.OptionText.Instance.Text = Name
+                OptionData.OptionText.Instance.TextColor3 = Library.Theme.Text
+            end
+        end
+    end
+
+    ConfigsSection:Textbox({
+        Flag = "ConfigsName",
+        Placeholder = "Name",
+        Numeric = false,
+        Finished = false,
+        Callback = function(Value) end
+    })
+
+    ConfigsSection:Button({
+        Name = "Create",
+        Callback = function()
+            local InputName = Library.Flags["ConfigsName"]
+            if InputName and InputName ~= "" then
+                if not isfolder(Library.Folders.Configs) then
+                    makefolder(Library.Folders.Configs)
+                end
+                local FinalName = InputName:find(".json") and InputName or InputName .. ".json"
+                writefile(Library.Folders.Configs .. "/" .. FinalName, Library:GetConfig())
+
+                Library:RefreshConfigsList(ConfigsDropdown)
+                UpdateAutoLoadVisual()
+            end
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Delete",
+        Callback = function()
+            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                if Library:GetAutoLoadConfig() == ConfigSelected then
+                    Library:SetAutoLoadConfig(nil)
+                end
+
+                delfile(Library.Folders.Configs .. "/" .. ConfigSelected)
+                Library:RefreshConfigsList(ConfigsDropdown)
+                ConfigSelected = nil
+                UpdateAutoLoadVisual()
+            end
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Load",
+        Callback = function()
+            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected))
+            end
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Save",
+        Callback = function()
+            if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected) then
+                writefile(Library.Folders.Configs .. "/" .. ConfigSelected, Library:GetConfig())
+            end
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Auto Load",
+        Callback = function()
+            if not ConfigSelected then return end
+
+            local Current = Library:GetAutoLoadConfig()
+
+            if Current == ConfigSelected then
+                Library:SetAutoLoadConfig(nil) -- повторное нажатие на тот же конфиг - выключает
+            else
+                Library:SetAutoLoadConfig(ConfigSelected) -- старый автолоад перезатирается
+            end
+
+            UpdateAutoLoadVisual()
+        end
+    })
+
+    ConfigsSection:Button({
+        Name = "Refresh",
+        Callback = function()
+            Library:RefreshConfigsList(ConfigsDropdown)
+            UpdateAutoLoadVisual()
+        end
+    })
+
+    if not isfolder(Library.Folders.Configs) then
+        makefolder(Library.Folders.Configs)
+    end
+    Library:RefreshConfigsList(ConfigsDropdown)
+    UpdateAutoLoadVisual()
+end
 
         local UISection = Page:Section({Name = "UI Settings", Side = 2}) do
             UISection:Toggle({
@@ -8194,6 +8292,15 @@ local ColorSection = Page:Section({Name = "Background", Side = 2}) do
     })
 end
 end
+
+ local AutoLoadName = Library:GetAutoLoadConfig()
+        if AutoLoadName and isfile(Library.Folders.Configs .. "/" .. AutoLoadName) then
+            Library:SafeCall(function()
+                Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. AutoLoadName))
+            end)
+            ConfigsDropdown:Set(AutoLoadName)
+            UpdateAutoLoadVisual()
+        end
 
         return Page
     end
