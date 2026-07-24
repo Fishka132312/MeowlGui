@@ -1,4 +1,4 @@
-local Library do ----81
+local Library do ----82
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -58,6 +58,7 @@ local Library do ----81
     Library = {
         Theme =  { },
         ToClean = { },
+        PostLoadHooks = { },
 
         MenuKeybind = tostring(Enum.KeyCode.Insert), 
 
@@ -864,28 +865,34 @@ local Library do ----81
     end
 
     Library.LoadConfig = function(self, Config)
-        local Decoded = HttpService:JSONDecode(Config)
+    local Decoded = HttpService:JSONDecode(Config)
 
-        local Success, Result = Library:SafeCall(function()
-            for Index, Value in Decoded do 
-                local SetFunction = Library.SetFlags[Index]
+    local Success, Result = Library:SafeCall(function()
+        for Index, Value in Decoded do 
+            local SetFunction = Library.SetFlags[Index]
 
-                if not SetFunction then
-                    continue
-                end
-
-                if type(Value) == "table" and Value.Key then 
-                    SetFunction(Value)
-                elseif type(Value) == "table" and Value.Color then
-                    SetFunction(Value.Color, Value.Alpha)
-                else
-                    SetFunction(Value)
-                end
+            if not SetFunction then
+                continue
             end
-        end)
 
-        return Success, Result
-    end
+            if type(Value) == "table" and Value.Key then 
+                SetFunction(Value)
+            elseif type(Value) == "table" and Value.Color then
+                SetFunction(Value.Color, Value.Alpha)
+            else
+                SetFunction(Value)
+            end
+        end
+
+        -- ДОБАВИТЬ: после того как все флаги восстановлены,
+        -- прогоняем "постобработчики" (например, пересоздание кастомного фона)
+        for _, Hook in Library.PostLoadHooks do
+            Library:SafeCall(Hook)
+        end
+    end)
+
+    return Success, Result
+end
 
     Library.DeleteConfig = function(self, Config)
         if isfile(Library.Folders.Configs .. "/" .. Config) then 
@@ -8034,68 +8041,68 @@ local CustomBackgroundSection = Page:Section({Name = "Custom Background", Side =
 
     local DarknessStrength = 0.35
 
-    CustomBackgroundSection:Button({
-        Name = "Apply Background",
-        Callback = function()
-            local Holder = Window.Items and Window.Items["BackgroundHolder"]
-            if not Holder then
-                warn("BackgroundHolder not found")
-                return
+-- Вынесли содержимое кнопки в отдельную функцию
+local function ApplyBackgroundFunc()
+    local Holder = Window.Items and Window.Items["BackgroundHolder"]
+    if not Holder then
+        warn("BackgroundHolder not found")
+        return
+    end
+
+    local OldBg = Holder.Instance:FindFirstChild("CustomBackground")
+    if OldBg then OldBg:Destroy() end
+
+    local useImage = Library.Flags["UseCustomBackground"] or false
+    local url = Library.Flags["CustomBackgroundUrl"] or ""
+
+    if useImage and url and url ~= "" then
+        local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
+
+        local Success, AssetId = pcall(function()
+            if not isfile(FileName) then
+                writefile(FileName, game:HttpGet(url))
             end
+            return getcustomasset(FileName)
+        end)
 
-            local OldBg = Holder.Instance:FindFirstChild("CustomBackground")
-            if OldBg then OldBg:Destroy() end
-
-            local useImage = Library.Flags["UseCustomBackground"] or false
-            local url = Library.Flags["CustomBackgroundUrl"] or ""
-
-            if useImage and url and url ~= "" then
-                -- Хешируем содержимое URL, а не длину строки,
-                -- иначе две разные ссылки одинаковой длины
-                -- будут считаться "уже скачанным" одним файлом.
-                local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
-
-                local Success, AssetId = pcall(function()
-                    if not isfile(FileName) then
-                        writefile(FileName, game:HttpGet(url))
-                    end
-                    return getcustomasset(FileName)
-                end)
-
-                if not Success then
-                    warn("Не удалось загрузить фон: " .. tostring(AssetId))
-                    return
-                end
-
-                local Grey = 255 * (1 - DarknessStrength)
-
-                local Bg = Instance.new("ImageLabel")
-                Bg.Name = "CustomBackground"
-                Bg.Size = UDim2.new(1, 0, 1, 0)
-                Bg.Position = UDim2.new(0, 0, 0, 0)
-                Bg.BackgroundTransparency = 1
-                Bg.Image = AssetId
-                Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey)
-                Bg.ImageTransparency = 0
-                Bg.ScaleType = Enum.ScaleType.Crop
-                Bg.ZIndex = -1
-                Bg.Visible = true
-                Bg.Parent = Holder.Instance
-
-            local BgCorner = Instance.new("UICorner")
-BgCorner.CornerRadius = UDim.new(0, 6)
-BgCorner.Parent = Bg
-
-                local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
-                Window:ApplyBackgroundTransparency(CurrentTransparency)
-
-                print("✅ Фон применён:", AssetId)
-            else
-                Window:ApplyBackgroundTransparency(Library.Flags["CustomBackgroundTransparency"] or 0.1)
-                print("🔄 Кастомная картинка отключена")
-            end
+        if not Success then
+            warn("Не удалось загрузить фон: " .. tostring(AssetId))
+            return
         end
-    })
+
+        local Grey = 255 * (1 - DarknessStrength)
+
+        local Bg = Instance.new("ImageLabel")
+        Bg.Name = "CustomBackground"
+        Bg.Size = UDim2.new(1, 0, 1, 0)
+        Bg.Position = UDim2.new(0, 0, 0, 0)
+        Bg.BackgroundTransparency = 1
+        Bg.Image = AssetId
+        Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey)
+        Bg.ImageTransparency = 0
+        Bg.ScaleType = Enum.ScaleType.Crop
+        Bg.ZIndex = -1
+        Bg.Visible = true
+        Bg.Parent = Holder.Instance
+
+        local BgCorner = Instance.new("UICorner")
+        BgCorner.CornerRadius = UDim.new(0, 6)
+        BgCorner.Parent = Bg
+
+        local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
+        Window:ApplyBackgroundTransparency(CurrentTransparency)
+    else
+        Window:ApplyBackgroundTransparency(Library.Flags["CustomBackgroundTransparency"] or 0.1)
+    end
+end
+
+CustomBackgroundSection:Button({
+    Name = "Apply Background",
+    Callback = ApplyBackgroundFunc -- кнопка теперь просто вызывает функцию
+})
+
+-- ГЛАВНОЕ: регистрируем эту же функцию как автозапуск после LoadConfig
+table.insert(Library.PostLoadHooks, ApplyBackgroundFunc)
 
     CustomBackgroundSection:Slider({
         Name = "Background Transparency",
