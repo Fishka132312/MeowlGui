@@ -1,4 +1,4 @@
-local Library do ----80
+local Library do ----81
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2344,6 +2344,7 @@ end
     Size = UDim2New(1, 225, 1, 0),        -- ширина MainFrame + LeftTabs, растягивается сама
     ZIndex = 1,
     BorderSizePixel = 0,
+    ClipsDescendants = true,                                                    
     BackgroundColor3 = FromRGB(0, 0, 0)
 })
 -- RenderStepped-синхронизация больше не нужна: раз это child MainFrame,
@@ -2353,7 +2354,7 @@ end
 Instances:Create("UICorner", {
     Parent = Items["BackgroundHolder"].Instance,
     Name = "\0",
-    CornerRadius = UDimNew(0, 4)
+    CornerRadius = UDimNew(0, 6)
 })
 
 -- Постоянная подложка цвета темы.
@@ -2373,7 +2374,7 @@ Items["DefaultBackdrop"] = Instances:Create("Frame", {
 Instances:Create("UICorner", {
     Parent = Items["DefaultBackdrop"].Instance,
     Name = "\0",
-    CornerRadius = UDimNew(0, 4)
+    CornerRadius = UDimNew(0, 6)
 })
 
                                                 
@@ -8080,6 +8081,10 @@ local CustomBackgroundSection = Page:Section({Name = "Custom Background", Side =
                 Bg.ZIndex = -1
                 Bg.Visible = true
                 Bg.Parent = Holder.Instance
+
+            local BgCorner = Instance.new("UICorner")
+BgCorner.CornerRadius = UDim.new(0, 6)
+BgCorner.Parent = Bg
 
                 local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
                 Window:ApplyBackgroundTransparency(CurrentTransparency)
