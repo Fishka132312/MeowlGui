@@ -2839,16 +2839,23 @@ end
                 })  Items["SubTitle"]:AddToTheme({TextColor3 = "Text"})
 
                 Items["Content"] = Instances:Create("Frame", {
-                    Parent = Items["MainFrame"].Instance,
-                    Name = "\0",
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    BackgroundTransparency = 1,
-                    Position = UDim2New(0, 0, 0, 55),
-                    Size = UDim2New(1, 0, 1, -55),
-                    ZIndex = 2,
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(27, 25, 29)
-                })  Items["Content"]:AddToTheme({BackgroundColor3 = "Background"})
+    Parent = Items["MainFrame"].Instance,
+    Name = "\0",
+    BorderColor3 = FromRGB(0, 0, 0),
+    BackgroundTransparency = 0.75,
+    Position = UDim2New(0, 6, 0, 55),      -- было (0, 0, 0, 55): отступ 6px слева
+    Size = UDim2New(1, -12, 1, -61),       -- было (1, 0, 1, -55): -6 слева, -6 справа, -6 снизу
+    ZIndex = 2,
+    BorderSizePixel = 0,
+    ClipsDescendants = true,               -- чтобы контент не вылезал за скругление
+    BackgroundColor3 = FromRGB(27, 25, 29)
+})  Items["Content"]:AddToTheme({BackgroundColor3 = "Background"})
+
+Instances:Create("UICorner", {
+    Parent = Items["Content"].Instance,
+    Name = "\0",
+    CornerRadius = UDimNew(0, 8)
+})
 
                 Items["CloseButton"] = Instances:Create("TextButton", {
                     Parent = Items["MainFrame"].Instance,
