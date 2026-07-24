@@ -1,4 +1,4 @@
-local Library do 
+local Library do ----77
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -72,9 +72,9 @@ local Library do
         FadeSpeed = 0.2,
 
         Folders = {
-            Directory = "lyapossss",
-            Configs = "lyapossss/Configs",
-            Assets = "lyapossss/Assets",
+            Directory = "MeowlLibrary",
+            Configs = "MeowlLibrary/Configs",
+            Assets = "MeowlLibrary/Assets",
         },
 
         -- Ignore below
@@ -946,6 +946,47 @@ local Library do
         and MousePosition.Y >= Frame.AbsolutePosition.Y and MousePosition.Y <= Frame.AbsolutePosition.Y + Frame.AbsoluteSize.Y
     end
 
+                                    Library.AutoHideScrollbar = function(self, ScrollFrame, BaseTransparency, HoverTransparency)
+    local Instance_ = ScrollFrame.Instance
+    BaseTransparency = BaseTransparency or 0.6
+    HoverTransparency = HoverTransparency or 0.3
+
+    -- Запоминаем исходную толщину полосы, чтобы потом её восстанавливать.
+    local OriginalThickness = Instance_.ScrollBarThickness
+
+    local function CanScroll()
+        return Instance_.AbsoluteCanvasSize.Y > Instance_.AbsoluteWindowSize.Y + 1
+    end
+
+    local function UpdateScrollbar()
+        if CanScroll() then
+            Instance_.ScrollBarThickness = OriginalThickness
+            Instance_.ScrollBarImageTransparency = BaseTransparency
+        else
+            -- Не просто прячем прозрачностью — обнуляем саму толщину,
+            -- иначе в углу остаётся артефакт/пиксель от полосы скролла.
+            Instance_.ScrollBarThickness = 0
+            Instance_.ScrollBarImageTransparency = 1
+        end
+    end
+
+    Library:Connect(Instance_:GetPropertyChangedSignal("AbsoluteCanvasSize"), UpdateScrollbar)
+    Library:Connect(Instance_:GetPropertyChangedSignal("AbsoluteWindowSize"), UpdateScrollbar)
+    UpdateScrollbar()
+
+    Library:Connect(Instance_.MouseEnter, function()
+        if CanScroll() then
+            TweenService:Create(Instance_, TweenInfo.new(0.2), {ScrollBarImageTransparency = HoverTransparency}):Play()
+        end
+    end)
+
+    Library:Connect(Instance_.MouseLeave, function()
+        if CanScroll() then
+            TweenService:Create(Instance_, TweenInfo.new(0.2), {ScrollBarImageTransparency = BaseTransparency}):Play()
+        end
+    end)
+end
+
     Library.Lerp = function(self, Start, Finish, Time)
         return Start + (Finish - Start) * Time
     end
@@ -1673,9 +1714,11 @@ local Library do
                 Colorpicker:Update()
             end
 
-            Items["ColorpickerButton"]:Connect("MouseButton1Down", function()
-                Colorpicker:SetOpen(not Colorpicker.IsOpen)
-            end)
+           Items["ColorpickerButton"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Colorpicker:SetOpen(not Colorpicker.IsOpen)
+    end
+end)
 
             Items["Palette"]:Connect("InputBegan", function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
@@ -1788,14 +1831,15 @@ local Library do
                         Alpha = Colorpicker.Alpha,
                     }
     
-                    SavedColor:Connect("MouseButton1Down", function()
-                        local NewColorData = Colorpicker.SavedColors[SaveIndex]
-                        Colorpicker:Set(NewColorData.Color, NewColorData.Alpha)
-                    end)
-
-                    SavedColor:Tween(nil, {BackgroundTransparency = 0})
-                --end
-            end
+                    SavedColor:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        local NewColorData = Colorpicker.SavedColors[SaveIndex]
+        Colorpicker:Set(NewColorData.Color, NewColorData.Alpha)
+    end
+end)
+SavedColor:Tween(nil, {BackgroundTransparency = 0})
+--end
+end
 
             local Colors = {
                 ["Orange"] = FromRGB(245, 114, 66),
@@ -2279,18 +2323,60 @@ local Library do
 
             local Items = { } do
                 Items["MainFrame"] = Instances:Create("Frame", {
-                    Parent = Library.Holder.Instance,
+                   Parent = Library.Holder.Instance,
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(0.5, 0.5),
-                    BackgroundTransparency = 0.12,
-                    Position = UDim2New(0.5519999861717224, 0, 0.5, 0),
-                    Size = UDim2New(0, 677, 0, 644),
+                    BackgroundTransparency = 1, -- НАВСЕГДА прозрачный, фон рисует BackgroundHolder
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    Size = UDim2New(0, 860, 0, 590),
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(27, 25, 29)
-                })  Items["MainFrame"]:AddToTheme({BackgroundColor3 = "Background"})
+                })
 
+                                                Items["BackgroundHolder"] = Instances:Create("Frame", {
+    Parent = Items["MainFrame"].Instance, -- теперь ЧАЙЛД MainFrame, а не сосед
+    Name = "\0",
+    AnchorPoint = Vector2New(0, 0),
+    BackgroundTransparency = 1,
+    Position = UDim2New(0, -225, 0, 0),   -- сдвиг влево ровно на ширину LeftTabs
+    Size = UDim2New(1, 225, 1, 0),        -- ширина MainFrame + LeftTabs, растягивается сама
+    ZIndex = 1,
+    BorderSizePixel = 0,
+    BackgroundColor3 = FromRGB(0, 0, 0)
+})
+-- RenderStepped-синхронизация больше не нужна: раз это child MainFrame,
+-- позиция/размер следуют за родителем мгновенно, без полинга и задержек.
+
+                                                -- Скругление контейнера фона (совпадает с радиусом MainFrame)
+Instances:Create("UICorner", {
+    Parent = Items["BackgroundHolder"].Instance,
+    Name = "\0",
+    CornerRadius = UDimNew(0, 4)
+})
+
+-- Постоянная подложка цвета темы.
+-- Она теперь ЕДИНСТВЕННЫЙ источник фона окна — MainFrame и LeftTabs
+-- больше никогда не закрашивают себя сами (см. патчи 1 и 2).
+Items["DefaultBackdrop"] = Instances:Create("Frame", {
+    Parent = Items["BackgroundHolder"].Instance,
+    Name = "DefaultBackdrop",
+    Size = UDim2New(1, 0, 1, 0),
+    Position = UDim2New(0, 0, 0, 0),
+    BorderSizePixel = 0,
+    ZIndex = -2,
+    BackgroundTransparency = 0,
+    BackgroundColor3 = FromRGB(12, 12, 14)
+})  Items["DefaultBackdrop"]:AddToTheme({BackgroundColor3 = "Background"})
+
+Instances:Create("UICorner", {
+    Parent = Items["DefaultBackdrop"].Instance,
+    Name = "\0",
+    CornerRadius = UDimNew(0, 4)
+})
+
+                                                
                 if IsMobile then 
                     Instances:Create("UIScale", {
                         Parent = Items["MainFrame"].Instance,
@@ -2299,21 +2385,40 @@ local Library do
                     })                    
                 end
 
-                Items["MainFrame"]:MakeResizeable(Vector2New(Items["MainFrame"].Instance.AbsoluteSize.X, Items["MainFrame"].Instance.AbsoluteSize.Y), Vector2New(9999, 9999), OriginalSizes)
+            
+Items["MainFrame"]:MakeResizeable(
+    Vector2New(650, 520),
+    Vector2New(1000, 750),
+    OriginalSizes
+)
+
+Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
+                                                
                 Library:MakeBlurred(Items["MainFrame"], Window)
                 
-                Items["LeftTabs"] = Instances:Create("Frame", {
-                    Parent = Items["MainFrame"].Instance,
-                    Name = "\0",
-                    Visible = true,
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    AnchorPoint = Vector2New(1, 0),
-                    BackgroundTransparency = 0.15,
-                    Size = UDim2New(0, 225, 1, 0),
-                    ZIndex = 2,
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(27, 25, 29)
-                })  Items["LeftTabs"]:AddToTheme({BackgroundColor3 = "Background"})
+                Items["LeftTabs"] = Instances:Create("ScrollingFrame", {
+    Parent = Items["MainFrame"].Instance,
+    Name = "\0",
+    Visible = true,
+    BorderColor3 = FromRGB(0, 0, 0),
+    AnchorPoint = Vector2New(1, 0),
+    BackgroundTransparency = 1, -- НАВСЕГДА прозрачный, фон рисует BackgroundHolder
+    Size = UDim2New(0, 225, 1, 0),
+    ZIndex = 2,
+    BorderSizePixel = 0,
+    BackgroundColor3 = FromRGB(27, 25, 29),
+    
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    CanvasSize = UDim2New(0, 0, 0, 0),
+    ScrollBarThickness = 3,
+    ScrollBarImageTransparency = 0.6,
+    ScrollBarImageColor3 = FromRGB(255, 255, 255),
+    ScrollingDirection = Enum.ScrollingDirection.Y,
+    
+    MidImage = "rbxassetid://3570695787",
+    TopImage = "rbxassetid://3570695787",
+    BottomImage = "rbxassetid://3570695787",
+})
 
                 Library:MakeBlurred(Items["LeftTabs"], Window)
 
@@ -2436,16 +2541,12 @@ local Library do
                         CornerRadius = UDimNew(1, 0)
                     }) 
 
-                    Instances:Create("UIGradient", {
-                        Parent = Items["FloatingLogo"].Instance,
-                        Name = "\0",
-                        Enabled = true,
-                        Rotation = -115,
-                        Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(143, 143, 143))}
-                    }):AddToTheme({Color = function()
-                        return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
-                    end})
-                end
+                                                    Instances:Create("UICorner", {
+    Parent = Items["FloatingButton"].Instance,
+    CornerRadius = UDimNew(1, 0)
+})
+                                                    
+                                                end
 
                 Items["PagePlaceholder"] = Instances:Create("Frame", {
                     Parent = Items["MainFrame"].Instance,
@@ -2476,11 +2577,156 @@ local Library do
                     PaddingLeft = UDimNew(0, 12)
                 })
 
+                Items["LeftTabs"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
+
+Library:AutoHideScrollbar(Items["LeftTabs"], 0.6, 0.3)
+                                                                                                     -- ==================== УЛУЧШЕННАЯ CATEGORY SYSTEM ====================
+Window.Categories = {}
+
+function Window:Category(Name)
+    local Category = {
+        Name = Name,
+        Open = true,
+        Elements = {},           -- сюда пушь свои Page
+        Frame = nil,
+        ContentFrame = nil
+    }
+
+    -- Контейнер категории
+    local CategoryFrame = Instances:Create("Frame", {
+        Parent = Items["LeftTabs"].Instance,
+        Name = "\0",
+        BackgroundTransparency = 1,
+        Size = UDim2New(1, 0, 0, 42),
+        BorderSizePixel = 0,
+        ZIndex = 2
+    })
+
+    local CategoryButton = Instances:Create("TextButton", {
+        Parent = CategoryFrame.Instance,
+        Name = "\0",
+        Text = "   " .. Name,
+        FontFace = Library.Font,
+        TextColor3 = FromRGB(255, 255, 255),
+        TextSize = 15,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1,
+        Size = UDim2New(1, -45, 0, 42),
+        ZIndex = 3,
+    }) CategoryButton:AddToTheme({TextColor3 = "Text"})
+
+    local CollapseButton = Instances:Create("TextButton", {
+        Parent = CategoryFrame.Instance,
+        Name = "\0",
+        Text = "▲",                    -- ИЗНАЧАЛЬНО СМОТРИТ ВВЕРХ (открыто)
+        FontFace = Library.Font,
+        TextColor3 = FromRGB(200, 200, 200),
+        TextSize = 16,
+        BackgroundTransparency = 1,
+        Size = UDim2New(0, 30, 0, 42),
+        Position = UDim2New(1, -35, 0, 0),
+        ZIndex = 3,
+    })
+
+    Category.Frame = CategoryFrame
+    Category.CollapseButton = CollapseButton
+    Category.Button = CategoryButton
+
+    TableInsert(Window.Categories, Category)
+
+    local function ToggleCategory()
+    Category.Open = not Category.Open
+
+    -- Стрелка: открыто = ▲ (вверх), закрыто = ▼ (вниз)
+    CollapseButton.Instance.Text = Category.Open and "▲" or "▼"
+
+    -- Плавное затемнение заголовка категории
+    local headerAlpha = Category.Open and 0 or 0.45
+    CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = headerAlpha
+    })
+    CollapseButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = headerAlpha
+    })
+
+    task.spawn(function()
+        for _, Page in ipairs(Category.Elements) do
+            if not Page or not Page.TabButton then continue end
+
+            local Tab = Page.TabButton
+            local tabInst = Tab.Instance
+
+            if Category.Open then
+                -- ==================== ОТКРЫТИЕ ====================
+                tabInst.Visible = true
+                tabInst.Size = UDim2New(1, 0, 0, 42) -- сразу возвращаем нормальный размер
+
+                local targetTransparency = Page.Active and 0.25 or 1
+
+                Tween:Create(Tab, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    BackgroundTransparency = targetTransparency
+                })
+
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                            TextTransparency = 0
+                        }, true)
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+                            ImageTransparency = 0
+                        }, true)
+                    end
+                end
+
+            else
+                -- ==================== ЗАКРЫТИЕ (плавно и без дёрганья) ====================
+                local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+                -- Фейдим текст и иконки
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, tweenInfo, { TextTransparency = 1 }, true)
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, tweenInfo, { ImageTransparency = 1 }, true)
+                    end
+                end
+
+                -- Плавно сжимаем таб до 0 высоты (именно это даёт эффект "наезжания")
+                local sizeTween = Tween:Create(Tab, tweenInfo, {
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 0)
+                })
+
+                -- Когда анимация полностью закончилась — скрываем
+                sizeTween.Completed:Connect(function()
+                    if not Category.Open and tabInst and tabInst.Parent then
+                        tabInst.Visible = false
+                        -- Размер НЕ восстанавливаем здесь! Оставляем 0, пока категория закрыта
+                    end
+                end)
+            end
+        end
+    end)
+end
+
+    CollapseButton:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        ToggleCategory()
+    end
+end)
+    CategoryButton:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        ToggleCategory()
+    end
+end)
+
+    return Category
+end
                 Items["Logo"] = Instances:Create("ImageLabel", {
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
                     ImageColor3 = FromRGB(255, 255, 255),
-                    ScaleType = Enum.ScaleType.Fit,
                     BorderColor3 = FromRGB(0, 0, 0),
                     Size = UDim2New(0, 35, 0, 35),
                     Image = "rbxassetid://"..Window.Logo,
@@ -2490,16 +2736,8 @@ local Library do
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 }) 
+                                                Items["Logo"].Instance.ImageColor3 = Color3.fromRGB(255, 255, 255) -- белый, чтобы логотип был в оригинальных цветах
 
-                Instances:Create("UIGradient", {
-                    Parent = Items["Logo"].Instance,
-                    Name = "\0",
-                    Enabled = true,
-                    Rotation = -115,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(143, 143, 143))}
-                }):AddToTheme({Color = function()
-                    return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
-                end})
                 
                 Items["Title"] = Instances:Create("TextLabel", {
                     Parent = Items["MainFrame"].Instance,
@@ -2588,10 +2826,11 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["CloseIcon"]:AddToTheme({ImageColor3 = "Text"})        
                 
-                Items["CloseButton"]:Connect("MouseButton1Down", function()
-                    Library:Unload()
-                end)
-
+                Items["CloseButton"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Library:Unload()
+    end
+end)
                 Items["CloseIconAccent"] = Instances:Create("Frame", {
                     Parent = Items["CloseButton"].Instance,
                     Name = "\0",
@@ -2621,8 +2860,9 @@ local Library do
                     Parent = Items["LeftTabs"].Instance,
                     Name = "\0",
                     CornerRadius = UDimNew(0, 4)
-                })      
-                
+                })
+
+             
                 do
                     Items["LeftBottomPixels"] = Instances:Create("Frame", {
                         Parent = Items["MainFrame"].Instance,
@@ -2797,16 +3037,40 @@ local Library do
                     })  Items["___12"]:AddToTheme({BackgroundColor3 = "Background"})                                      
                 end
 
+                -- Единая функция управления прозрачностью фона.
+                -- Если есть кастомная картинка — трогает ТОЛЬКО её (Bg.ImageTransparency).
+                -- Если картинки нет — трогает подложку DefaultBackdrop.
+                -- MainFrame/LeftTabs сюда больше не входят — у них нет своего фона.
+                function Window:ApplyBackgroundTransparency(Value)
+    local Bg = Items["BackgroundHolder"].Instance:FindFirstChild("CustomBackground")
+    local Backdrop = Items["DefaultBackdrop"]
+
+    if Bg then
+        Bg.ImageTransparency = Value
+        if Backdrop then
+            -- Подложка фейдится вместе с картинкой,
+            -- иначе при высокой прозрачности будет видна
+            -- сплошная тёмная подложка вместо реального фона.
+            Backdrop.Instance.BackgroundTransparency = Value
+        end
+    else
+        if Backdrop then
+            Backdrop.Instance.BackgroundTransparency = Value
+        end
+    end
+end
+
                 function Window:SetTransparency()
-                    Items["MainFrame"].Instance.BackgroundTransparency = Library.Flags["BackgroundTransparency"] 
-                    Items["LeftTabs"].Instance.BackgroundTransparency = Library.Flags["BackgroundTransparency"]  
+                    local Value = Library.Flags["BackgroundTransparency"]
+                    Window:ApplyBackgroundTransparency(Value)
+
                     if IsMobile then
-                        Items["FloatingButton"].Instance.BackgroundTransparency = Library.Flags["BackgroundTransparency"]  
+                        Items["FloatingButton"].Instance.BackgroundTransparency = Value
                     end
 
-                    for _, Value in Items do 
+                    for _, Value2 in Items do 
                         if _:find("___") then
-                            Value.Instance.BackgroundTransparency = tonumber(Library.Flags["BackgroundTransparency"])
+                            Value2.Instance.BackgroundTransparency = tonumber(Value)
                         end
                     end
                 end
@@ -3143,9 +3407,11 @@ local Library do
                         end)
                     end
     
-                    SettingsItems["CloseButton"]:Connect("MouseButton1Down", function()
-                        Settings:SetOpen(false)
-                    end)
+                    SettingsItems["CloseButton"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Settings:SetOpen(false)
+    end
+end)
     
                     Items["SettingsButton"]:Connect("InputBegan", function(Input)
                         if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
@@ -3229,7 +3495,11 @@ local Library do
                 if Debounce then 
                     return
                 end
+                                                Bool = not not Bool
 
+    if Window.IsOpen == Bool then return end
+
+                                                
                 Window.IsOpen = Bool
 
                 Debounce = true 
@@ -3418,11 +3688,19 @@ local Library do
                 end
             end
 
-            Library:Connect(UserInputService.InputBegan, function(Input)
-                if tostring(Input.KeyCode) == Library.MenuKeybind or tostring(Input.UserInputType) == Library.MenuKeybind then
-                    Window:SetOpen(not Window.IsOpen)
-                end
-            end)
+            local MenuKeybindConnection = Library:Connect(UserInputService.InputBegan, function(Input)
+    if (Input.KeyCode and tostring(Input.KeyCode) == Library.MenuKeybind) 
+       or (Input.UserInputType and tostring(Input.UserInputType) == Library.MenuKeybind) then
+        
+        -- Защита от двойного нажатия
+        if tick() - (Window.LastToggle or 0) < 0.2 then
+            return
+        end
+        Window.LastToggle = tick()
+
+        Window:SetOpen(not Window.IsOpen)
+    end
+end)
 
             Window:SetCenter()
             task.wait()
@@ -3658,7 +3936,9 @@ local Library do
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(124, 163, 255)
                 })  Items["Inactive"]:AddToTheme({BackgroundColor3 = "Accent"})
-                
+
+Page.TabButton = Items["Inactive"]
+
                 Instances:Create("UICorner", {
                     Parent = Items["Inactive"].Instance,
                     Name = "\0",
@@ -3835,23 +4115,29 @@ local Library do
                 end)
             end
 
-            Items["Inactive"]:Connect("MouseButton1Down", function()
-                for Index, Value in Page.Window.Pages do 
-                    if Value == Page and Page.Active then
-                        return
-                    end
-
-                    Value:Turn(Value == Page)
-                end
-            end)
-
-            if #Page.Window.Pages == 0 then 
-                Page:Turn(true)
+            Items["Inactive"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        for Index, Value in Page.Window.Pages do 
+            if Value == Page and Page.Active then
+                return
             end
-            
-            TableInsert(Page.Window.Pages, Page)
-            return setmetatable(Page, Library.Pages)
+            Value:Turn(Value == Page)
         end
+    end
+end)
+if #Page.Window.Pages == 0 then 
+    Page:Turn(true)
+end
+            
+TableInsert(Page.Window.Pages, Page)
+
+-- === Регистрация страницы в категорию ===
+if Data.Category then
+    table.insert(Data.Category.Elements, Page)
+end
+
+return setmetatable(Page, Library.Pages)
+end
 
         Library.Pages.GlobalChat = function(self, Side)
             local GlobalChat = { }
@@ -4385,13 +4671,15 @@ local Library do
                 end
             end
 
-            Items["SendButton"]:Connect("MouseButton1Down", function()
-                if GlobalChat:GetTypedMessage() == "" then
-                    return
-                end
-                
-                OnMessagePressed()
-            end)
+            Items["SendButton"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        if GlobalChat:GetTypedMessage() == "" then
+            return
+        end
+        
+        OnMessagePressed()
+    end
+end)
 
             Items["Messages"]:Connect("ChildAdded", function()
                 task.wait()
@@ -4803,9 +5091,11 @@ local Library do
                 end
             end
 
-            Items["Toggle"]:Connect("MouseButton1Down", function()
-                Section:ToggleBackground()
-            end)
+            Items["Toggle"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Section:ToggleBackground()
+    end
+end)
 
             Section.Page.Sections[Section.Name] = Section
 
@@ -5206,9 +5496,11 @@ local Library do
                     end)
                 end
 
-                SettingsItem["Button"]:Connect("MouseButton1Down", function()
-                    Settings:SetOpen(false)
-                end)
+                SettingsItem["Button"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Settings:SetOpen(false)
+    end
+end)
 
                 SettingsItem["SettingsIcon"]:Connect("InputBegan", function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
@@ -5460,9 +5752,11 @@ local Library do
                 end
             end
 
-            Items["Button"]:Connect("MouseButton1Down", function()
-                Button:Press()
-            end)
+            Items["Button"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Button:Press()
+    end
+end)
 
             return Button
         end
@@ -5687,13 +5981,17 @@ local Library do
                 end
             end
 
-            Items["Plus"]:Connect("MouseButton1Down", function()
-                Slider:Set(Slider.Value + Slider.Decimals)
-            end)
+            Items["Plus"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Slider:Set(Slider.Value + Slider.Decimals)
+    end
+end)
 
-            Items["Minus"]:Connect("MouseButton1Down", function()
-                Slider:Set(Slider.Value - Slider.Decimals)
-            end)
+Items["Minus"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Slider:Set(Slider.Value - Slider.Decimals)
+    end
+end)
 
             local InputChanged 
             
@@ -6281,9 +6579,11 @@ local Library do
                     end
                 end
 
-                OptionData.Button:Connect("MouseButton1Down", function()
-                    OptionData:Set()
-                end)
+                OptionData.Button:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        OptionData:Set()
+    end
+end)
 
                 Dropdown.Options[OptionData.Name] = OptionData
                 Dropdown.OptionsWithIndexes[#Dropdown.OptionsWithIndexes+1] = OptionData
@@ -6321,9 +6621,11 @@ local Library do
                 end
             end
 
-            Items["RealDropdown"]:Connect("MouseButton1Down", function()
-                Dropdown:SetOpen(not Dropdown.IsOpen)
-            end)
+            Items["RealDropdown"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Dropdown:SetOpen(not Dropdown.IsOpen)
+    end
+end)
 
             Library:Connect(UserInputService.InputBegan, function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
@@ -6884,40 +7186,42 @@ local Library do
                 Keybind.Picking = false
             end
 
-            Items["KeyButton"]:Connect("MouseButton1Click", function()
-                Keybind.Picking = true 
+           Items["KeyButton"]:Connect("InputBegan", function(TapInput)
+    if TapInput.UserInputType == Enum.UserInputType.MouseButton1 or TapInput.UserInputType == Enum.UserInputType.Touch then
+        Keybind.Picking = true 
 
-                Items["KeyButton"].Instance.Text = "."
-                Library:Thread(function()
-                    local Count = 1
+        Items["KeyButton"].Instance.Text = "."
+        Library:Thread(function()
+            local Count = 1
 
-                    while true do 
-                        if not Keybind.Picking then 
-                            break
-                        end
+            while true do 
+                if not Keybind.Picking then 
+                    break
+                end
 
-                        if Count == 4 then
-                            Count = 1
-                        end
+                if Count == 4 then
+                    Count = 1
+                end
 
-                        Items["KeyButton"].Instance.Text = Count == 1 and "." or Count == 2 and ".." or Count == 3 and "..."
-                        Count += 1
-                        task.wait(0.35)
-                    end
-                end)
+                Items["KeyButton"].Instance.Text = Count == 1 and "." or Count == 2 and ".." or Count == 3 and "..."
+                Count += 1
+                task.wait(0.35)
+            end
+        end)
 
-                local InputBegan
-                InputBegan = UserInputService.InputBegan:Connect(function(Input)
-                    if Input.UserInputType == Enum.UserInputType.Keyboard then 
-                        Keybind:Set(Input.KeyCode)
-                    else
-                        Keybind:Set(Input.UserInputType)
-                    end
+        local InputBegan
+        InputBegan = UserInputService.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.Keyboard then 
+                Keybind:Set(Input.KeyCode)
+            else
+                Keybind:Set(Input.UserInputType)
+            end
 
-                    InputBegan:Disconnect()
-                    InputBegan = nil
-                end)
-            end)
+            InputBegan:Disconnect()
+            InputBegan = nil
+        end)
+    end
+end)
 
             Library:Connect(UserInputService.InputBegan, function(Input)
                 if Keybind.Value == "None" then
@@ -6975,20 +7279,26 @@ local Library do
                 end
             end)
 
-            Items["Toggle"]:Connect("MouseButton1Down", function()
-                Keybind.ModeSelected = "Toggle"
-                Keybind:SetMode("Toggle")
-            end)
+            Items["Toggle"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Keybind.ModeSelected = "Toggle"
+        Keybind:SetMode("Toggle")
+    end
+end)
 
-            Items["Hold"]:Connect("MouseButton1Down", function()
-                Keybind.ModeSelected = "Hold"
-                Keybind:SetMode("Hold")
-            end)
+Items["Hold"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Keybind.ModeSelected = "Hold"
+        Keybind:SetMode("Hold")
+    end
+end)
 
-            Items["Always"]:Connect("MouseButton1Down", function()
-                Keybind.ModeSelected = "Always"
-                Keybind:SetMode("Always")
-            end)
+Items["Always"]:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        Keybind.ModeSelected = "Always"
+        Keybind:SetMode("Always")
+    end
+end)
 
             if Keybind.Default then 
                 Keybind:Set({
@@ -7492,9 +7802,11 @@ local Library do
                     end
                 end
 
-                OptionData.Button:Connect("MouseButton1Down", function()
-                    OptionData:Set()
-                end)
+                OptionData.Button:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        OptionData:Set()
+    end
+end)
 
                 Dropdown.Options[OptionData.Name] = OptionData
                 return OptionData
@@ -7659,6 +7971,151 @@ local Library do
                 end
             })
         end
+
+-- ==================== BACKGROUND SETTINGS ====================
+local BackgroundSection = Page:Section({Name = "Background", Side = 2}) do
+
+    local function HashString(Str)
+        local Hash = 5381
+        for i = 1, #Str do
+            Hash = (Hash * 33 + string.byte(Str, i)) % 4294967296
+        end
+        return tostring(Hash)
+    end
+
+    local UseImage = BackgroundSection:Toggle({
+        Name = "Use Custom Image",
+        Flag = "UseCustomBackground",
+        Default = false,
+    })
+
+    local ImageUrlInput = BackgroundSection:Textbox({
+        Name = "Image URL",
+        Placeholder = "https://i.imgur.com/abc123.jpg",
+        Flag = "CustomBackgroundUrl",
+        Default = "",
+    })
+
+    -- ==================== ПРЕСЕТЫ ФОНОВ ====================
+    local BackgroundPresets = {
+        ["None"]    = "",
+        ["Komaru"] = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
+        ["Colette"] = "https://wimg.rule34.xxx//samples/2118/sample_51a5204c1e81bddee13b7917bf9a2dab.jpg?12937938",
+        ["Blue"] = "https://img.magnific.com/free-vector/blue-wavy-background-modern-design_677411-2138.jpg?semt=ais_hybrid&w=740&q=80",
+        ["Cool Cat"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSJC4BF9BZKrLhTM1CfGXq99AmAa5LUa5xSF3fB9Iv--C4Y7_JsCfU8WM5&s=10",
+    }
+
+    local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat"}
+
+    local PresetsDropdown = BackgroundSection:Dropdown({
+        Name = "Presets",
+        Flag = "BackgroundPreset",
+        Items = PresetOrder,
+        Default = "None",
+        Callback = function(Value)
+            local Url = BackgroundPresets[Value]
+
+            if Url and Url ~= "" then
+                ImageUrlInput:Set(Url)
+                UseImage:Set(true)
+            else
+                UseImage:Set(false)
+                ImageUrlInput:Set("")
+            end
+        end
+    })
+
+    local DarknessStrength = 0.35
+
+    BackgroundSection:Button({
+        Name = "Apply Background",
+        Callback = function()
+            local Holder = Window.Items and Window.Items["BackgroundHolder"]
+            if not Holder then
+                warn("BackgroundHolder not found")
+                return
+            end
+
+            local OldBg = Holder.Instance:FindFirstChild("CustomBackground")
+            if OldBg then OldBg:Destroy() end
+
+            local useImage = Library.Flags["UseCustomBackground"] or false
+            local url = Library.Flags["CustomBackgroundUrl"] or ""
+
+            if useImage and url and url ~= "" then
+                -- Хешируем содержимое URL, а не длину строки,
+                -- иначе две разные ссылки одинаковой длины
+                -- будут считаться "уже скачанным" одним файлом.
+                local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
+
+                local Success, AssetId = pcall(function()
+                    if not isfile(FileName) then
+                        writefile(FileName, game:HttpGet(url))
+                    end
+                    return getcustomasset(FileName)
+                end)
+
+                if not Success then
+                    warn("Не удалось загрузить фон: " .. tostring(AssetId))
+                    return
+                end
+
+                local Grey = 255 * (1 - DarknessStrength)
+
+                local Bg = Instance.new("ImageLabel")
+                Bg.Name = "CustomBackground"
+                Bg.Size = UDim2.new(1, 0, 1, 0)
+                Bg.Position = UDim2.new(0, 0, 0, 0)
+                Bg.BackgroundTransparency = 1
+                Bg.Image = AssetId
+                Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey)
+                Bg.ImageTransparency = 0
+                Bg.ScaleType = Enum.ScaleType.Crop
+                Bg.ZIndex = -1
+                Bg.Visible = true
+                Bg.Parent = Holder.Instance
+
+                local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
+                Window:ApplyBackgroundTransparency(CurrentTransparency)
+
+                print("✅ Фон применён:", AssetId)
+            else
+                Window:ApplyBackgroundTransparency(Library.Flags["CustomBackgroundTransparency"] or 0.1)
+                print("🔄 Кастомная картинка отключена")
+            end
+        end
+    })
+
+    BackgroundSection:Slider({
+        Name = "Background Transparency",
+        Flag = "CustomBackgroundTransparency",
+        Min = 0,
+        Max = 1,
+        Default = 0.1,
+        Decimals = 0.01,
+        Callback = function(Value)
+            Window:ApplyBackgroundTransparency(Value)
+        end
+    })
+
+    BackgroundSection:Button({
+        Name = "Reset to Default",
+        Callback = function()
+            local Holder = Window.Items and Window.Items["BackgroundHolder"]
+            if Holder then
+                local Bg = Holder.Instance:FindFirstChild("CustomBackground")
+                if Bg then Bg:Destroy() end
+            end
+
+            Window:ApplyBackgroundTransparency(0.1)
+
+            -- Используем :Set(), чтобы UI (текст поля, состояние чекбокса)
+            -- визуально обновился вместе с флагами, а не разошёлся с ними.
+            UseImage:Set(false)
+            ImageUrlInput:Set("")
+        end
+    })
+end
 
         return Page
     end
