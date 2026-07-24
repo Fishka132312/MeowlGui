@@ -1,4 +1,4 @@
-local Library do ----88
+local Library do ----89
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -7938,7 +7938,6 @@ end)
      Library.CreateSettingsPage = function(self, Window, KeybindList)
         local Page = Window:Page({Name = "Settings", Icon = "122669828593160"})
 
-        -- вынесено наружу, чтобы было доступно в конце всей функции CreateSettingsPage
         local ConfigsDropdown
         local UpdateAutoLoadVisual
 
@@ -8057,13 +8056,6 @@ end)
     end
     Library:RefreshConfigsList(ConfigsDropdown)
     UpdateAutoLoadVisual()
-
-    -- автозагрузка ОТСЮДА УБРАНА.
-    -- Причина: на этом моменте элементы CustomBackgroundSection ещё не созданы,
-    -- поэтому Library.SetFlags["UseCustomBackground"] и т.д. ещё не существуют,
-    -- и LoadConfig молча пропускает эти флаги (continue).
-    -- Автозагрузка теперь вызывается в самом конце функции CreateSettingsPage,
-    -- после того как CustomBackgroundSection/ColorSection полностью построены.
 end
 
         local UISection = Page:Section({Name = "UI Settings", Side = 2}) do
@@ -8300,6 +8292,15 @@ local ColorSection = Page:Section({Name = "Background", Side = 2}) do
     })
 end
 end
+
+ local AutoLoadName = Library:GetAutoLoadConfig()
+        if AutoLoadName and isfile(Library.Folders.Configs .. "/" .. AutoLoadName) then
+            Library:SafeCall(function()
+                Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. AutoLoadName))
+            end)
+            ConfigsDropdown:Set(AutoLoadName)
+            UpdateAutoLoadVisual()
+        end
 
         return Page
     end
