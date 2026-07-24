@@ -1,4 +1,4 @@
-local Library do ----89
+local Library do ----90
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2435,10 +2435,11 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
     ZIndex = 2,
     BorderSizePixel = 0,
     BackgroundColor3 = FromRGB(27, 25, 29),
+                                                        ScrollingEnabled = false,
     
     AutomaticCanvasSize = Enum.AutomaticSize.Y,
     CanvasSize = UDim2New(0, 0, 0, 0),
-    ScrollBarThickness = 3,
+    ScrollBarThickness = 0,
     ScrollBarImageTransparency = 0.6,
     ScrollBarImageColor3 = FromRGB(255, 255, 255),
     ScrollingDirection = Enum.ScrollingDirection.Y,
@@ -2607,7 +2608,7 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
 
                 Items["LeftTabs"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
 
-Library:AutoHideScrollbar(Items["LeftTabs"], 0.6, 0.3)
+--Library:AutoHideScrollbar(Items["LeftTabs"], 0.6, 0.3)
                                                                                                      -- ==================== УЛУЧШЕННАЯ CATEGORY SYSTEM ====================
 Window.Categories = {}
 
@@ -2946,7 +2947,7 @@ end)
                         Name = "\0",
                         BorderColor3 = FromRGB(0, 0, 0),
                         AnchorPoint = Vector2New(0, 1),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.11999999731779099,
                         Position = UDim2New(0, 2, 1, 0),
                         Size = UDim2New(0, 1, 0, 1),
                         BorderSizePixel = 0,
@@ -2958,7 +2959,7 @@ end)
                         Name = "\0",
                         BorderColor3 = FromRGB(0, 0, 0),
                         AnchorPoint = Vector2New(0, 1),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.11999999731779099,
                         Position = UDim2New(0, 4, 1, 0),
                         Size = UDim2New(0, 1, 0, 1),
                         BorderSizePixel = 0,
@@ -2970,7 +2971,7 @@ end)
                         Name = "\0",
                         BorderColor3 = FromRGB(0, 0, 0),
                         AnchorPoint = Vector2New(0, 1),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.11999999731779099,
                         Position = UDim2New(0, 3, 1, 0),
                         Size = UDim2New(0, 1, 0, 1),
                         BorderSizePixel = 0,
@@ -2982,7 +2983,7 @@ end)
                         Name = "\0",
                         BorderColor3 = FromRGB(0, 0, 0),
                         AnchorPoint = Vector2New(0, 1),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.11999999731779099,
                         Position = UDim2New(0, 3, 1, -1),
                         Size = UDim2New(0, 1, 0, 1),
                         BorderSizePixel = 0,
@@ -2994,7 +2995,7 @@ end)
                         Name = "\0",
                         BorderColor3 = FromRGB(0, 0, 0),
                         AnchorPoint = Vector2New(0, 1),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.11999999731779099,
                         Position = UDim2New(0, 4, 1, -1),
                         Size = UDim2New(0, 1, 0, 1),
                         BorderSizePixel = 0,
@@ -3006,7 +3007,7 @@ end)
                         Name = "\0",
                         BorderColor3 = FromRGB(0, 0, 0),
                         AnchorPoint = Vector2New(0, 1),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.11999999731779099,
                         Position = UDim2New(0, 5, 1, 0),
                         Size = UDim2New(0, 1, 0, 1),
                         BorderSizePixel = 0,
@@ -3035,7 +3036,7 @@ end)
                         Position = UDim2New(0, 2, 0, 0),
                         BorderColor3 = FromRGB(0, 0, 0),
                         ZIndex = 2,
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.12,
                         BorderSizePixel = 0,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })  Items["___7"]:AddToTheme({BackgroundColor3 = "Background"})   
@@ -3044,7 +3045,7 @@ end)
                         Parent = Items["LeftTopPixels"].Instance,
                         Name = "\0",
                         Size = UDim2New(0, 1, 0, 1),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.12,
                         Position = UDim2New(0, 3, 0, 0),
                         BorderColor3 = FromRGB(0, 0, 0),
                         ZIndex = 2,
@@ -3057,7 +3058,7 @@ end)
                         Name = "\0",
                         Size = UDim2New(0, 1, 0, 1),
                         Position = UDim2New(0, 4, 0, 0),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.12,
                         BorderColor3 = FromRGB(0, 0, 0),
                         ZIndex = 2,
                         BorderSizePixel = 0,
@@ -3070,7 +3071,7 @@ end)
                         Size = UDim2New(0, 1, 0, 1),
                         Position = UDim2New(0, 5, 0, 0),
                         BorderColor3 = FromRGB(0, 0, 0),
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.12,
                         ZIndex = 2,
                         BorderSizePixel = 0,
                         BackgroundColor3 = FromRGB(255, 255, 255)
@@ -3083,7 +3084,7 @@ end)
                         Position = UDim2New(0, 3, 0, 1),
                         BorderColor3 = FromRGB(0, 0, 0),
                         ZIndex = 2,
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.12,
                         BorderSizePixel = 0,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })  Items["___11"]:AddToTheme({BackgroundColor3 = "Background"})   
@@ -3095,7 +3096,7 @@ end)
                         Position = UDim2New(0, 4, 0, 1),
                         BorderColor3 = FromRGB(0, 0, 0),
                         ZIndex = 2,
-                        BackgroundTransparency = 1,
+                        BackgroundTransparency = 0.12,
                         BorderSizePixel = 0,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })  Items["___12"]:AddToTheme({BackgroundColor3 = "Background"})                                      
