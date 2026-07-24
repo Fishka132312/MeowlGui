@@ -1,4 +1,4 @@
-local Library do ----79
+local Library do ----80
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -4025,31 +4025,35 @@ Page.TabButton = Items["Inactive"]
                 })                
 
                 for Index = 1, Page.Columns do 
-                    local NewColumn = Instances:Create("ScrollingFrame", {
-                        Parent = Items["Page"].Instance,
-                        Name = "\0",
-                        ScrollBarImageColor3 = FromRGB(0, 0, 0),
-                        Active = true,
-                        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                        ScrollBarThickness = 0,
-                        BorderColor3 = FromRGB(0, 0, 0),
-                        BackgroundTransparency = 1,
-                        Size = UDim2New(0, 100, 0, 100),
-                        BackgroundColor3 = FromRGB(255, 255, 255),
-                        ZIndex = 2,
-                        BorderSizePixel = 0,
-                        CanvasSize = UDim2New(0, 0, 0, 0)
-                    })
-                    
-                    Instances:Create("UIListLayout", {
-                        Parent = NewColumn.Instance,
-                        Name = "\0",
-                        Padding = UDimNew(0, 5),
-                        SortOrder = Enum.SortOrder.LayoutOrder
-                    })
+    local NewColumn = Instances:Create("ScrollingFrame", {
+        Parent = Items["Page"].Instance,
+        Name = "\0",
+        Active = true,
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        ScrollBarThickness = 3, -- было 0, ставим реальную толщину, как у LeftTabs
+        BorderColor3 = FromRGB(0, 0, 0),
+        BackgroundTransparency = 1,
+        Size = UDim2New(0, 100, 0, 100),
+        BackgroundColor3 = FromRGB(255, 255, 255),
+        ZIndex = 2,
+        BorderSizePixel = 0,
+        ScrollingDirection = Enum.ScrollingDirection.Y, -- скроллим только по Y
+        CanvasSize = UDim2New(0, 0, 0, 0)
+    })
 
-                    Page.ColumnsData[Index] = NewColumn
-                end
+    Instances:Create("UIListLayout", {
+        Parent = NewColumn.Instance,
+        Name = "\0",
+        Padding = UDimNew(0, 5),
+        SortOrder = Enum.SortOrder.LayoutOrder
+    })
+
+    -- Как у LeftTabs: цвет полосы по теме + авто-скрытие, когда контент не переполняет колонку
+    NewColumn:AddToTheme({ScrollBarImageColor3 = "Accent"})
+    Library:AutoHideScrollbar(NewColumn, 0.6, 0.3)
+
+    Page.ColumnsData[Index] = NewColumn
+end
 
                 Page.Items = Items
             end
