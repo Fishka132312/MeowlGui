@@ -4766,7 +4766,7 @@ end)
                     BorderColor3 = FromRGB(0, 0, 0),
                     Size = UDim2New(0, 21, 0, 20),
                     AnchorPoint = Vector2New(0, 0.5),
-                    Image = "rbxassetid://"..Section.Icon,
+                    Image = Library:ResolveImage(Section.Icon),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 15, 0.5, 0),
                     ZIndex = 2,
