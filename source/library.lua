@@ -762,6 +762,110 @@ local Library do ----92
         return getcustomasset(self.Folders.Assets .. "/" .. ImageData[1])
     end
 
+                    -- ==================== IMAGE RESOLVER ====================
+Library.ImageCache = { }
+
+local function HashString(Str)
+    local Hash = 5381
+    for Index = 1, StringLen(Str) do
+        Hash = (Hash * 33 + Str:byte(Index)) % 4294967296
+    end
+    return StringFormat("%x", Hash)
+end
+
+local function GetExtension(Url)
+    local Clean = Url:match("^([^?#]+)") or Url
+    local Ext = Clean:match("%.(%a%a%a?%a?)$")
+    Ext = Ext and StringLower(Ext) or nil
+
+    if Ext == "png" or Ext == "jpg" or Ext == "jpeg" or Ext == "bmp" or Ext == "tga" then
+        return Ext
+    end
+
+    return "png"
+end
+
+Library.DownloadImage = function(self, Url)
+    if self.ImageCache[Url] then
+        return self.ImageCache[Url]
+    end
+
+    if not (isfile and writefile and getcustomasset) then
+        warn("[Library] Исполнитель не умеет getcustomasset")
+        return nil
+    end
+
+    local Path = StringFormat("%s/web_%s.%s", self.Folders.Assets, HashString(Url), GetExtension(Url))
+
+    if not isfile(Path) then
+        local Success, Body = pcall(function()
+            if request then
+                return request({ Url = Url, Method = "GET" }).Body
+            end
+            return game:HttpGet(Url, true)
+        end)
+
+        if not Success or not Body or StringLen(Body) < 8 then
+            warn("[Library] Не скачалось: " .. tostring(Url))
+            return nil
+        end
+
+        if not pcall(writefile, Path, Body) then
+            warn("[Library] Не записалось: " .. Path)
+            return nil
+        end
+    end
+
+    local Ok, Asset = pcall(getcustomasset, Path)
+    if not Ok or not Asset then
+        warn("[Library] getcustomasset упал: " .. Path)
+        return nil
+    end
+
+    self.ImageCache[Url] = Asset
+    return Asset
+end
+
+Library.ResolveImage = function(self, Image, Fallback)
+    Fallback = Fallback or ""
+
+    if Image == nil then
+        return Fallback
+    end
+
+    if type(Image) == "number" then
+        return "rbxassetid://" .. Image
+    end
+
+    if type(Image) ~= "string" then
+        return Fallback
+    end
+
+    local Value = Image:match("^%s*(.-)%s*$")
+
+    if Value == "" then
+        return Fallback
+    end
+
+    if Value:sub(1, 13) == "rbxassetid://" then
+        return Value
+    end
+
+    if StringFind(Value, "roblox.com/asset", 1, true) then
+        return Value
+    end
+
+    if Value:match("^%d+$") then
+        return "rbxassetid://" .. Value
+    end
+
+    if Value:sub(1, 7) == "http://" or Value:sub(1, 8) == "https://" then
+        return self:DownloadImage(Value) or Fallback
+    end
+
+    return Fallback
+end
+
     Library.Round = function(self, Number, Float)
         local Multiplier = 1 / (Float or 1)
         return MathFloor(Number * Multiplier) / Multiplier
@@ -2258,7 +2362,7 @@ end
                     ImageColor3 = FromRGB(255, 255, 255),
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(1, 0),
-                    Image = "rbxassetid://"..Data.Icon,
+                    Image = Library:ResolveImage(Data.Icon),
                     BackgroundTransparency = 1,
                     Position = UDim2New(1, 0, 0, 0),
                     Size = UDim2New(0, 16, 0, 16),
@@ -2554,7 +2658,7 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
                         Parent = Items["FloatingButton"].Instance,
                         BorderColor3 = FromRGB(0, 0, 0),
                         Name = "\0",
-                        Image = "rbxassetid://" .. Window.Logo,
+                        Image = Library:ResolveImage(Window.Logo),
                         BackgroundTransparency = 1,
                         AnchorPoint = Vector2New(0.5, 0.5),
                         Position = UDim2New(0.5, 0, 0.5, 0),
@@ -2793,7 +2897,7 @@ end
                     ImageColor3 = FromRGB(255, 255, 255),
                     BorderColor3 = FromRGB(0, 0, 0),
                     Size = UDim2New(0, 35, 0, 35),
-                    Image = "rbxassetid://"..Window.Logo,
+                    Image = Library:ResolveImage(Window.Logo),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 12, 0, 12),
                     ZIndex = 2,
@@ -3854,7 +3958,7 @@ Page.TabButton = Items["Inactive"]
                     BorderColor3 = FromRGB(0, 0, 0),
                     Size = UDim2New(0, 18, 0, 18),
                     AnchorPoint = Vector2New(0, 0.5),
-                    Image = "rbxassetid://"..Page.Icon,
+                    Image = Library:ResolveImage(Page.Icon),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 16, 0.5, 0),
                     ZIndex = 2,
