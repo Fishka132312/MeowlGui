@@ -1,4 +1,4 @@
-local Library do ----82
+local Library do ----83
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2651,11 +2651,11 @@ function Window:Category(Name)
         local tabInst = Tab.Instance
         if not tabInst or not tabInst.Parent then return end
 
-        -- отключаем старое соединение Completed, если оно висело с прошлого раза
-        if Page._collapseConn then
-            Page._collapseConn:Disconnect()
-            Page._collapseConn = nil
-        end
+        -- токен — чтобы отложенные вызовы от старых кликов не портили новое состояние
+        Page._animToken = (Page._animToken or 0) + 1
+        local myToken = Page._animToken
+
+        local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
         if Category.Open then
             tabInst.Visible = true
@@ -2663,49 +2663,50 @@ function Window:Category(Name)
 
             local targetTransparency = Page.Active and 0.25 or 1
 
-            local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+            pcall(function()
+                Tween:Create(Tab, tweenInfo, { BackgroundTransparency = targetTransparency })
+            end)
 
-            -- твин самого таба
-            Tween:Create(Tab, tweenInfo, { BackgroundTransparency = targetTransparency })
-
-            -- твины текста/иконок идут ПАРАЛЛЕЛЬНО, с той же длительностью — не дёргаются
-            for _, desc in ipairs(tabInst:GetDescendants()) do
-                if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                    Tween:Create(desc, tweenInfo, { TextTransparency = 0 })
-                elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                    Tween:Create(desc, tweenInfo, { ImageTransparency = 0 })
+            pcall(function()
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, tweenInfo, { TextTransparency = 0 })
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, tweenInfo, { ImageTransparency = 0 })
+                    end
                 end
-            end
+            end)
+
         else
-            local tweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-
-            for _, desc in ipairs(tabInst:GetDescendants()) do
-                if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                    Tween:Create(desc, tweenInfo, { TextTransparency = 1 })
-                elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
-                    Tween:Create(desc, tweenInfo, { ImageTransparency = 1 })
+            pcall(function()
+                for _, desc in ipairs(tabInst:GetDescendants()) do
+                    if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                        Tween:Create(desc, tweenInfo, { TextTransparency = 1 })
+                    elseif desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+                        Tween:Create(desc, tweenInfo, { ImageTransparency = 1 })
+                    end
                 end
-            end
+            end)
 
-            local sizeTween = Tween:Create(Tab, tweenInfo, {
-                BackgroundTransparency = 1,
-                Size = UDim2New(1, 0, 0, 0)
-            })
+            pcall(function()
+                Tween:Create(Tab, tweenInfo, {
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 0)
+                })
+            end)
 
-            Page._collapseConn = sizeTween.Completed:Connect(function()
-                if not Category.Open and tabInst and tabInst.Parent then
+            -- НЕ полагаемся на .Completed — просто ждём то же время, что и твин,
+            -- и проверяем, что за это время не пришёл более новый вызов анимации
+            task.delay(tweenInfo.Time, function()
+                if Page._animToken == myToken and not Category.Open and tabInst and tabInst.Parent then
                     tabInst.Visible = false
-                end
-                if Page._collapseConn then
-                    Page._collapseConn:Disconnect()
-                    Page._collapseConn = nil
                 end
             end)
         end
     end
 
     local function ToggleCategory()
-        if Category._debounce then return end -- кулдаун активен, игнорим клик
+        if Category._debounce then return end
         Category._debounce = true
 
         Category.Open = not Category.Open
@@ -2720,8 +2721,6 @@ function Window:Category(Name)
             TextTransparency = headerAlpha
         })
 
-        -- каждый Page анимируется в своей корутине и обёрнут в pcall,
-        -- чтобы ошибка на одном табе не мешала остальным
         for _, Page in ipairs(Category.Elements) do
             task.spawn(function()
                 local ok, err = pcall(AnimatePage, Category, Page)
