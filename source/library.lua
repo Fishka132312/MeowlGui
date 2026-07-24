@@ -8005,11 +8005,13 @@ local CustomBackgroundSection = Page:Section({Name = "Custom Background", Side =
         ["None"]    = "",
         ["Komaru"] = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
         ["Colette"] = "https://wimg.rule34.xxx//samples/2118/sample_51a5204c1e81bddee13b7917bf9a2dab.jpg?12937938",
-        ["Blue"] = "https://img.magnific.com/free-vector/blue-wavy-background-modern-design_677411-2138.jpg?semt=ais_hybrid&w=740&q=80",
+        ["Anime Girl"] = "https://m.media-amazon.com/images/I/71k9600LL3L._AC_UF894,1000_QL80_.jpg",
         ["Cool Cat"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSJC4BF9BZKrLhTM1CfGXq99AmAa5LUa5xSF3fB9Iv--C4Y7_JsCfU8WM5&s=10",
+        ["Manul"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7DUQIPkF7LEDBmIwTvsnAqy0-x3HqnWOGtFqeuj-43VaTxs7vutkEJHct&s=10",
+        ["Green"] = "https://getwallpapers.com/wallpaper/full/c/1/d/1262088-free-download-desktop-wallpapers-backgrounds-2134x1583-samsung.jpg",
     }
 
-    local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat"}
+    local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat", "Manul", "Green"}
 
     local PresetsDropdown = CustomBackgroundSection:Dropdown({
         Name = "Presets",
