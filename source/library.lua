@@ -1,4 +1,4 @@
-local Library do ----84
+local Library do ----85
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -2644,15 +2644,6 @@ function Window:Category(Name)
 
     local COOLDOWN = 0.5
 
-    -- поворот стрелочки твином вместо резкой смены текста
-    local function RotateArrow(open)
-        pcall(function()
-            Tween:Create(CollapseButton, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Rotation = open and 0 or 180
-            })
-        end)
-    end
-
     local function AnimatePage(Category, Page, staggerDelay)
         if not Page or not Page.TabButton then return end
 
@@ -2663,23 +2654,21 @@ function Window:Category(Name)
         Page._animToken = (Page._animToken or 0) + 1
         local myToken = Page._animToken
 
-        -- каскад: ждём немного перед стартом анимации этого конкретного таба
         if staggerDelay and staggerDelay > 0 then
             task.wait(staggerDelay)
-            if Page._animToken ~= myToken then return end -- клик перебил, выходим
+            if Page._animToken ~= myToken then return end
         end
 
         if Category.Open then
             tabInst.Visible = true
 
-            -- стартуем чуть сжатым и сдвинутым, чтобы получился эффект "выезжания"
             tabInst.Size = UDim2New(1, 0, 0, 0)
             local originalPos = tabInst.Position
-            tabInst.Position = originalPos + UDim2New(0, -12, 0, 0)
+            tabInst.Position = originalPos + UDim2New(0, -8, 0, 0)
 
             local targetTransparency = Page.Active and 0.25 or 1
-            local growInfo = TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-            local fadeInfo = TweenInfo.new(0.24, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+            local growInfo = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local fadeInfo = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
             pcall(function()
                 Tween:Create(Tab, growInfo, {
@@ -2700,8 +2689,8 @@ function Window:Category(Name)
             end)
 
         else
-            local shrinkInfo = TweenInfo.new(0.24, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-            local fadeInfo = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local shrinkInfo = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+            local fadeInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
             pcall(function()
                 for _, desc in ipairs(tabInst:GetDescendants()) do
@@ -2717,7 +2706,7 @@ function Window:Category(Name)
                 Tween:Create(Tab, shrinkInfo, {
                     BackgroundTransparency = 1,
                     Size = UDim2New(1, 0, 0, 0),
-                    Position = tabInst.Position - UDim2New(0, -12, 0, 0)
+                    Position = tabInst.Position - UDim2New(0, -8, 0, 0)
                 })
             end)
 
@@ -2735,29 +2724,16 @@ function Window:Category(Name)
 
         Category.Open = not Category.Open
 
-        RotateArrow(Category.Open)
+        -- стрелочка меняется мгновенно, без анимации
+        CollapseButton.Instance.Text = Category.Open and "▲" or "▼"
 
         local headerAlpha = Category.Open and 0 or 0.45
-        CategoryButton:Tween(TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        CategoryButton:Tween(TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             TextTransparency = headerAlpha
         })
 
-        -- лёгкий "нажим" заголовка для тактильного отклика
-        pcall(function()
-            Tween:Create(CategoryFrame, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundTransparency = 0.9
-            })
-            task.delay(0.12, function()
-                pcall(function()
-                    Tween:Create(CategoryFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        BackgroundTransparency = 1
-                    })
-                end)
-            end)
-        end)
-
         -- каскад: при открытии — сверху вниз, при закрытии — снизу вверх
-        local STAGGER_STEP = 0.045
+        local STAGGER_STEP = 0.03
         local count = #Category.Elements
 
         for i, Page in ipairs(Category.Elements) do
