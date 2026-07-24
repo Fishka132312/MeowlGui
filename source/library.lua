@@ -2842,7 +2842,7 @@ end
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
-                    BackgroundTransparency = 0.75,
+                    BackgroundTransparency = 1,
                     Position = UDim2New(0, 0, 0, 55),
                     Size = UDim2New(1, 0, 1, -55),
                     ZIndex = 2,
