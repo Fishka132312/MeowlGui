@@ -2534,8 +2534,9 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
     Visible = true,
     BorderColor3 = FromRGB(0, 0, 0),
     AnchorPoint = Vector2New(1, 0),
-    BackgroundTransparency = 1, -- НАВСЕГДА прозрачный, фон рисует BackgroundHolder
-    Size = UDim2New(0, 225, 1, 0),
+    BackgroundTransparency = 0.75,        -- было 1: теперь такая же "тень", как у Content
+Position = UDim2New(0, -6, 0, 6),     -- отступ 6px справа и 6px сверху
+Size = UDim2New(0, 213, 1, -12),      -- было (0, 225, 1, 0): 225 -6 слева -6 справа, высота -12
     ZIndex = 2,
     BorderSizePixel = 0,
     BackgroundColor3 = FromRGB(27, 25, 29),
@@ -2709,7 +2710,7 @@ Items["MainFrame"].Instance.Size = UDim2New(0, 860, 0, 590)
                     PaddingLeft = UDimNew(0, 12)
                 })
 
-                Items["LeftTabs"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
+                Items["LeftTabs"]:AddToTheme({ScrollBarImageColor3 = "Accent", BackgroundColor3 = "Background"})
 
 Library:AutoHideScrollbar(Items["LeftTabs"], 0.6, 0.3)
                                                                                                      -- ==================== УЛУЧШЕННАЯ CATEGORY SYSTEM ====================
@@ -3034,7 +3035,7 @@ end)
                 Instances:Create("UICorner", {
                     Parent = Items["LeftTabs"].Instance,
                     Name = "\0",
-                    CornerRadius = UDimNew(0, 4)
+                    CornerRadius = UDimNew(0, 8)
                 })
 
                 -- Единая функция управления прозрачностью фона.
