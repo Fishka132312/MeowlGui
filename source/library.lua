@@ -1,4 +1,4 @@
-local Library do ----107
+local Library do ----108
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -1057,8 +1057,10 @@ Library.FontLight = Light     -- SubTitle, hint-текст
         end
 
         for Index, Value in self.Threads do 
-            coroutine.close(Value)
-        end
+    if coroutine.status(Value) ~= "running" then
+        coroutine.close(Value)
+    end
+end
 
         if self.Holder then 
             self.Holder:Clean()
@@ -1483,12 +1485,16 @@ end
     Library.Tooltip = nil
 
     Library.AddTooltip = function(self, Object, Text)
-        if not Object or not Text or Text == "" then
-            return
-        end
+    if not Object or not Text or Text == "" then
+        return
+    end
 
-        if not Library.Tooltip then
-            Library.Tooltip = Instances:Create("TextLabel", {
+    if IsMobile then
+        return
+    end
+
+    if not Library.Tooltip then
+        Library.Tooltip = Instances:Create("TextLabel", {
                 Parent = Library.Holder.Instance,
                 Name = "\0",
                 FontFace = Library.Font,
@@ -2757,6 +2763,8 @@ end
 
         Library.Notification = function(self, Data)
             local Items = { } do 
+												Data = Data or { }  
+                Data.Duration = tonumber(Data.Duration) or 5
                 Items["Notification"] = Instances:Create("Frame", {
                     Parent = Library.NotifHolder.Instance,
                     Name = "\0",
@@ -4056,6 +4064,10 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
 
                 if not Window.IsOpen then
                     Library:CloseOpenFrames()
+
+                    if Library.Tooltip then
+                        Library.Tooltip.Instance.Visible = false
+                    end
                 end
 
                 Debounce = true 
@@ -5277,7 +5289,7 @@ end
                 Page = self,
 
                 Name = Data.Name or Data.name or "Section",
-                Description = Data.Description or Data.Description or "",
+                Description = Data.Description or Data.description or "",
                 Icon = Data.Icon or Data.icon or "123944728972740",
                 Side = Data.Side or Data.side or 1,
                 EnableToggle = Data.EnableToggle or Data.enabletoggle or false,
@@ -7679,10 +7691,10 @@ end
                 Flag = Data.Flag or Data.flag or Library:NextFlag(),
                 Default = Data.Default or Data.default or Enum.KeyCode.RightShift,
                 Callback = Data.Callback or Data.callback or function() end,
-                Mode = Data.Mode or Data.mode or Enum.KeyCode.RightShift,
+                Mode = Data.Mode or Data.mode or "Toggle",
 
                 Value = "",
-                ModeSelected = "",
+                ModeSelected = Data.Mode or Data.mode or "Toggle",
                 Toggled = false,
                 Picking = false
             }
@@ -8879,6 +8891,7 @@ end)
                 Tooltip = "Changes the whole interface color scheme in one click",
                 Flag = "ThemePreset",
                 Items = ThemeOrder,
+		        OptionHolderSize = 220,
                 Callback = function(Value)
                     Library:SetThemePreset(Value)
 
