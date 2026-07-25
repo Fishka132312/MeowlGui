@@ -1,4 +1,4 @@
-local Library do ----108
+local Library do ----109
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -4032,8 +4032,18 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                     Flag = "MenuBind",
                     Default = Enum.KeyCode.Z,
                     Callback = function(Value)
-                        if Window.SetOpen then
-                            Window:SetOpen(Value)
+                        if not Window.SetOpen then return end
+
+                        local BindData = Library.Flags and Library.Flags["MenuBind"]
+                        local Mode = (type(BindData) == "table" and BindData.Mode) or "Toggle"
+
+                        if Mode == "Hold" then
+                            Window:SetOpen(Value and true or false)
+                        elseif Mode == "Always" then
+                            Window:SetOpen(true)
+                        else
+                            -- тогглим от РЕАЛЬНОГО состояния окна, а не от Toggled кейбинда
+                            Window:SetOpen(not Window.IsOpen)
                         end
                     end
                 })
@@ -4269,6 +4279,18 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
             end
 
             local MenuKeybindConnection = Library:Connect(UserInputService.InputBegan, function(Input)
+    if Input.UserInputState ~= nil and Input.UserInputState ~= Enum.UserInputState.Begin then
+        return
+    end
+
+    local BindData = Library.Flags and Library.Flags["MenuBind"]
+    local BindKey = (type(BindData) == "table" and BindData.Key) or nil
+
+    -- если эта же клавиша уже обрабатывается элементом Menu Keybind - выходим
+    if BindKey and (tostring(Input.KeyCode) == BindKey or tostring(Input.UserInputType) == BindKey) then
+        return
+    end
+
     if (Input.KeyCode and tostring(Input.KeyCode) == Library.MenuKeybind) 
        or (Input.UserInputType and tostring(Input.UserInputType) == Library.MenuKeybind) then
         
@@ -4284,7 +4306,16 @@ end)
 
             Window:SetCenter()
             task.wait()
+            Window.IsOpen = false
             Window:SetOpen(true)
+
+            -- синхронизируем состояние кейбинда с тем, что меню уже открыто
+            task.defer(function()
+                local BindData = Library.Flags and Library.Flags["MenuBind"]
+                if type(BindData) == "table" then
+                    BindData.Toggled = true
+                end
+            end)
             return setmetatable(Window, Library)
         end
 
