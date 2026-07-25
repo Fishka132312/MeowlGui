@@ -1,4 +1,4 @@
-local Library do ----101
+local Library do ----107
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -58,6 +58,10 @@ local ViewportSize = Camera.ViewportSize
 local IsSmallScreen = ViewportSize.X < 900 or ViewportSize.Y < 500
 -- глобальный масштаб UI, дальше всё пляшет от него
 local UIScaleFactor = IsMobile and math.clamp(ViewportSize.X / 1280, 0.55, 0.95) or 1
+-- минимальный тач-таргет: на телефоне палец требует >= 40px
+local function Touch(Mobile, PC)
+    return IsMobile and Mobile or PC
+end
 
     Library = {
         Theme =  { },
@@ -203,7 +207,307 @@ local UIScaleFactor = IsMobile and math.clamp(ViewportSize.X / 1280, 0.55, 0.95)
 ["Section Background 2"] = FromRGB(23, 25, 31),
 ["Accent"] = FromRGB(59, 130, 246),           -- ярче, читается на тёмном
 ["Element"] = FromRGB(30, 33, 41)             -- было 16 = сливалось с фоном
-        }
+        },
+        ["Midnight"] = {
+            ["AccentGradient"] = FromRGB(129, 140, 248),
+            ["Background 2"] = FromRGB(7, 8, 14),
+            ["Background"] = FromRGB(12, 13, 22),
+            ["Text"] = FromRGB(233, 236, 245),
+            ["Outline"] = FromRGB(38, 41, 58),
+            ["Section Top"] = FromRGB(23, 25, 38),
+            ["Section Background"] = FromRGB(16, 17, 28),
+            ["Section Background 2"] = FromRGB(20, 22, 34),
+            ["Accent"] = FromRGB(99, 102, 241),
+            ["Element"] = FromRGB(28, 30, 45)
+        },
+        ["Ocean"] = {
+            ["AccentGradient"] = FromRGB(94, 234, 212),
+            ["Background 2"] = FromRGB(6, 14, 18),
+            ["Background"] = FromRGB(10, 20, 26),
+            ["Text"] = FromRGB(226, 244, 245),
+            ["Outline"] = FromRGB(32, 52, 60),
+            ["Section Top"] = FromRGB(19, 34, 42),
+            ["Section Background"] = FromRGB(13, 25, 31),
+            ["Section Background 2"] = FromRGB(17, 30, 37),
+            ["Accent"] = FromRGB(20, 184, 166),
+            ["Element"] = FromRGB(24, 42, 50)
+        },
+        ["Rose"] = {
+            ["AccentGradient"] = FromRGB(251, 146, 190),
+            ["Background 2"] = FromRGB(16, 8, 12),
+            ["Background"] = FromRGB(22, 13, 18),
+            ["Text"] = FromRGB(247, 235, 241),
+            ["Outline"] = FromRGB(58, 36, 46),
+            ["Section Top"] = FromRGB(38, 22, 30),
+            ["Section Background"] = FromRGB(27, 16, 22),
+            ["Section Background 2"] = FromRGB(32, 19, 26),
+            ["Accent"] = FromRGB(244, 63, 118),
+            ["Element"] = FromRGB(45, 27, 36)
+        },
+        ["Mono"] = {
+            ["AccentGradient"] = FromRGB(212, 212, 216),
+            ["Background 2"] = FromRGB(9, 9, 11),
+            ["Background"] = FromRGB(15, 15, 17),
+            ["Text"] = FromRGB(244, 244, 245),
+            ["Outline"] = FromRGB(44, 44, 48),
+            ["Section Top"] = FromRGB(28, 28, 31),
+            ["Section Background"] = FromRGB(19, 19, 22),
+            ["Section Background 2"] = FromRGB(24, 24, 27),
+            ["Accent"] = FromRGB(161, 161, 170),
+            ["Element"] = FromRGB(33, 33, 37)
+        },
+        ["Ember"] = {
+            ["AccentGradient"] = FromRGB(253, 186, 116),
+            ["Background 2"] = FromRGB(14, 10, 8),
+            ["Background"] = FromRGB(20, 15, 12),
+            ["Text"] = FromRGB(245, 240, 235),
+            ["Outline"] = FromRGB(56, 42, 33),
+            ["Section Top"] = FromRGB(36, 27, 21),
+            ["Section Background"] = FromRGB(25, 19, 15),
+            ["Section Background 2"] = FromRGB(30, 23, 18),
+            ["Accent"] = FromRGB(249, 115, 22),
+            ["Element"] = FromRGB(43, 32, 25)
+        },
+        ["Amethyst"] = {
+    ["AccentGradient"] = FromRGB(216, 160, 255),
+    ["Background 2"] = FromRGB(13, 8, 18),
+    ["Background"] = FromRGB(19, 12, 26),
+    ["Text"] = FromRGB(240, 235, 248),
+    ["Outline"] = FromRGB(56, 38, 74),
+    ["Section Top"] = FromRGB(35, 23, 47),
+    ["Section Background"] = FromRGB(25, 16, 34),
+    ["Section Background 2"] = FromRGB(30, 20, 40),
+    ["Accent"] = FromRGB(168, 85, 247),
+    ["Element"] = FromRGB(42, 28, 56)
+},
+["Emerald"] = {
+    ["AccentGradient"] = FromRGB(110, 231, 183),
+    ["Background 2"] = FromRGB(6, 14, 11),
+    ["Background"] = FromRGB(10, 20, 16),
+    ["Text"] = FromRGB(230, 247, 240),
+    ["Outline"] = FromRGB(31, 58, 47),
+    ["Section Top"] = FromRGB(19, 36, 29),
+    ["Section Background"] = FromRGB(13, 26, 21),
+    ["Section Background 2"] = FromRGB(16, 31, 25),
+    ["Accent"] = FromRGB(16, 185, 129),
+    ["Element"] = FromRGB(23, 44, 35)
+},
+["Crimson"] = {
+    ["AccentGradient"] = FromRGB(248, 113, 113),
+    ["Background 2"] = FromRGB(16, 7, 7),
+    ["Background"] = FromRGB(23, 11, 11),
+    ["Text"] = FromRGB(247, 233, 233),
+    ["Outline"] = FromRGB(66, 33, 33),
+    ["Section Top"] = FromRGB(41, 20, 20),
+    ["Section Background"] = FromRGB(30, 14, 14),
+    ["Section Background 2"] = FromRGB(35, 17, 17),
+    ["Accent"] = FromRGB(220, 38, 38),
+    ["Element"] = FromRGB(49, 24, 24)
+},
+["Sakura"] = {
+    ["AccentGradient"] = FromRGB(252, 190, 222),
+    ["Background 2"] = FromRGB(18, 12, 16),
+    ["Background"] = FromRGB(25, 17, 22),
+    ["Text"] = FromRGB(250, 238, 245),
+    ["Outline"] = FromRGB(70, 48, 61),
+    ["Section Top"] = FromRGB(44, 30, 39),
+    ["Section Background"] = FromRGB(32, 22, 28),
+    ["Section Background 2"] = FromRGB(38, 26, 33),
+    ["Accent"] = FromRGB(236, 110, 173),
+    ["Element"] = FromRGB(53, 36, 46)
+},
+["Cyber"] = {
+    ["AccentGradient"] = FromRGB(34, 211, 238),
+    ["Background 2"] = FromRGB(10, 7, 16),
+    ["Background"] = FromRGB(15, 11, 24),
+    ["Text"] = FromRGB(240, 236, 250),
+    ["Outline"] = FromRGB(46, 32, 69),
+    ["Section Top"] = FromRGB(28, 20, 43),
+    ["Section Background"] = FromRGB(20, 14, 31),
+    ["Section Background 2"] = FromRGB(24, 17, 37),
+    ["Accent"] = FromRGB(232, 62, 168),
+    ["Element"] = FromRGB(34, 24, 52)
+},
+["Arctic"] = {
+    ["AccentGradient"] = FromRGB(224, 242, 254),
+    ["Background 2"] = FromRGB(10, 14, 18),
+    ["Background"] = FromRGB(15, 20, 26),
+    ["Text"] = FromRGB(238, 246, 252),
+    ["Outline"] = FromRGB(46, 58, 74),
+    ["Section Top"] = FromRGB(28, 36, 47),
+    ["Section Background"] = FromRGB(20, 26, 34),
+    ["Section Background 2"] = FromRGB(24, 31, 40),
+    ["Accent"] = FromRGB(125, 211, 252),
+    ["Element"] = FromRGB(34, 43, 56)
+},
+["Toxic"] = {
+    ["AccentGradient"] = FromRGB(217, 249, 157),
+    ["Background 2"] = FromRGB(9, 13, 5),
+    ["Background"] = FromRGB(14, 19, 8),
+    ["Text"] = FromRGB(238, 247, 228),
+    ["Outline"] = FromRGB(42, 56, 26),
+    ["Section Top"] = FromRGB(26, 35, 16),
+    ["Section Background"] = FromRGB(18, 25, 11),
+    ["Section Background 2"] = FromRGB(22, 30, 13),
+    ["Accent"] = FromRGB(163, 230, 53),
+    ["Element"] = FromRGB(31, 42, 19)
+},
+["Sunset"] = {
+    ["AccentGradient"] = FromRGB(253, 186, 116),
+    ["Background 2"] = FromRGB(16, 9, 7),
+    ["Background"] = FromRGB(23, 14, 11),
+    ["Text"] = FromRGB(250, 238, 232),
+    ["Outline"] = FromRGB(66, 41, 32),
+    ["Section Top"] = FromRGB(41, 25, 20),
+    ["Section Background"] = FromRGB(30, 18, 14),
+    ["Section Background 2"] = FromRGB(35, 22, 17),
+    ["Accent"] = FromRGB(251, 113, 133),
+    ["Element"] = FromRGB(49, 30, 24)
+},
+["Coffee"] = {
+    ["AccentGradient"] = FromRGB(231, 196, 155),
+    ["Background 2"] = FromRGB(14, 11, 8),
+    ["Background"] = FromRGB(20, 16, 12),
+    ["Text"] = FromRGB(245, 238, 229),
+    ["Outline"] = FromRGB(58, 47, 36),
+    ["Section Top"] = FromRGB(36, 29, 22),
+    ["Section Background"] = FromRGB(26, 21, 16),
+    ["Section Background 2"] = FromRGB(31, 25, 19),
+    ["Accent"] = FromRGB(193, 138, 89),
+    ["Element"] = FromRGB(44, 35, 27)
+},
+["Void"] = {
+    ["AccentGradient"] = FromRGB(160, 160, 160),
+    ["Background 2"] = FromRGB(0, 0, 0),
+    ["Background"] = FromRGB(6, 6, 6),
+    ["Text"] = FromRGB(250, 250, 250),
+    ["Outline"] = FromRGB(40, 40, 40),
+    ["Section Top"] = FromRGB(18, 18, 18),
+    ["Section Background"] = FromRGB(10, 10, 10),
+    ["Section Background 2"] = FromRGB(14, 14, 14),
+    ["Accent"] = FromRGB(255, 255, 255),
+    ["Element"] = FromRGB(24, 24, 24)
+},
+["Lavender"] = {
+    ["AccentGradient"] = FromRGB(216, 206, 255),
+    ["Background 2"] = FromRGB(12, 10, 18),
+    ["Background"] = FromRGB(18, 15, 26),
+    ["Text"] = FromRGB(240, 237, 250),
+    ["Outline"] = FromRGB(53, 46, 74),
+    ["Section Top"] = FromRGB(33, 28, 47),
+    ["Section Background"] = FromRGB(23, 20, 34),
+    ["Section Background 2"] = FromRGB(28, 24, 40),
+    ["Accent"] = FromRGB(167, 139, 250),
+    ["Element"] = FromRGB(39, 34, 56)
+},
+["Gold"] = {
+    ["AccentGradient"] = FromRGB(253, 224, 71),
+    ["Background 2"] = FromRGB(15, 12, 5),
+    ["Background"] = FromRGB(21, 17, 8),
+    ["Text"] = FromRGB(250, 244, 228),
+    ["Outline"] = FromRGB(61, 50, 26),
+    ["Section Top"] = FromRGB(38, 31, 16),
+    ["Section Background"] = FromRGB(27, 22, 11),
+    ["Section Background 2"] = FromRGB(32, 26, 13),
+    ["Accent"] = FromRGB(234, 179, 8),
+    ["Element"] = FromRGB(45, 37, 19)
+},
+["Matrix"] = {
+    ["AccentGradient"] = FromRGB(134, 255, 163),
+    ["Background 2"] = FromRGB(2, 7, 3),
+    ["Background"] = FromRGB(5, 12, 6),
+    ["Text"] = FromRGB(208, 255, 214),
+    ["Outline"] = FromRGB(20, 45, 24),
+    ["Section Top"] = FromRGB(11, 25, 13),
+    ["Section Background"] = FromRGB(7, 17, 9),
+    ["Section Background 2"] = FromRGB(9, 21, 11),
+    ["Accent"] = FromRGB(0, 230, 60),
+    ["Element"] = FromRGB(14, 31, 17)
+},
+["Blood"] = {
+    ["AccentGradient"] = FromRGB(239, 68, 84),
+    ["Background 2"] = FromRGB(12, 3, 4),
+    ["Background"] = FromRGB(18, 6, 7),
+    ["Text"] = FromRGB(245, 225, 227),
+    ["Outline"] = FromRGB(56, 21, 25),
+    ["Section Top"] = FromRGB(33, 12, 14),
+    ["Section Background"] = FromRGB(24, 8, 10),
+    ["Section Background 2"] = FromRGB(28, 10, 12),
+    ["Accent"] = FromRGB(185, 28, 40),
+    ["Element"] = FromRGB(40, 15, 18)
+},
+["Aqua"] = {
+    ["AccentGradient"] = FromRGB(103, 232, 249),
+    ["Background 2"] = FromRGB(5, 13, 16),
+    ["Background"] = FromRGB(9, 19, 23),
+    ["Text"] = FromRGB(228, 246, 250),
+    ["Outline"] = FromRGB(29, 57, 68),
+    ["Section Top"] = FromRGB(17, 35, 42),
+    ["Section Background"] = FromRGB(12, 25, 30),
+    ["Section Background 2"] = FromRGB(15, 30, 36),
+    ["Accent"] = FromRGB(6, 182, 212),
+    ["Element"] = FromRGB(21, 43, 51)
+},
+["Grape"] = {
+    ["AccentGradient"] = FromRGB(196, 181, 253),
+    ["Background 2"] = FromRGB(11, 7, 20),
+    ["Background"] = FromRGB(16, 11, 29),
+    ["Text"] = FromRGB(238, 234, 250),
+    ["Outline"] = FromRGB(48, 34, 84),
+    ["Section Top"] = FromRGB(29, 21, 52),
+    ["Section Background"] = FromRGB(21, 15, 38),
+    ["Section Background 2"] = FromRGB(25, 18, 45),
+    ["Accent"] = FromRGB(139, 92, 246),
+    ["Element"] = FromRGB(35, 25, 63)
+},
+["Steel"] = {
+    ["AccentGradient"] = FromRGB(148, 163, 184),
+    ["Background 2"] = FromRGB(10, 12, 15),
+    ["Background"] = FromRGB(15, 18, 22),
+    ["Text"] = FromRGB(241, 245, 249),
+    ["Outline"] = FromRGB(46, 54, 66),
+    ["Section Top"] = FromRGB(28, 33, 41),
+    ["Section Background"] = FromRGB(20, 24, 29),
+    ["Section Background 2"] = FromRGB(24, 28, 35),
+    ["Accent"] = FromRGB(100, 116, 139),
+    ["Element"] = FromRGB(34, 40, 49)
+},
+["Peach"] = {
+    ["AccentGradient"] = FromRGB(254, 202, 182),
+    ["Background 2"] = FromRGB(17, 11, 9),
+    ["Background"] = FromRGB(24, 16, 13),
+    ["Text"] = FromRGB(252, 240, 234),
+    ["Outline"] = FromRGB(69, 47, 39),
+    ["Section Top"] = FromRGB(43, 29, 24),
+    ["Section Background"] = FromRGB(31, 21, 17),
+    ["Section Background 2"] = FromRGB(37, 25, 20),
+    ["Accent"] = FromRGB(251, 146, 120),
+    ["Element"] = FromRGB(51, 35, 29)
+},
+["Nebula"] = {
+    ["AccentGradient"] = FromRGB(244, 114, 182),
+    ["Background 2"] = FromRGB(9, 8, 20),
+    ["Background"] = FromRGB(14, 12, 29),
+    ["Text"] = FromRGB(236, 234, 252),
+    ["Outline"] = FromRGB(43, 37, 84),
+    ["Section Top"] = FromRGB(26, 22, 52),
+    ["Section Background"] = FromRGB(18, 16, 38),
+    ["Section Background 2"] = FromRGB(22, 19, 45),
+    ["Accent"] = FromRGB(129, 80, 240),
+    ["Element"] = FromRGB(31, 27, 63)
+},
+["Mint"] = {
+    ["AccentGradient"] = FromRGB(167, 243, 208),
+    ["Background 2"] = FromRGB(7, 14, 12),
+    ["Background"] = FromRGB(11, 20, 17),
+    ["Text"] = FromRGB(232, 250, 243),
+    ["Outline"] = FromRGB(35, 58, 50),
+    ["Section Top"] = FromRGB(21, 36, 31),
+    ["Section Background"] = FromRGB(15, 26, 22),
+    ["Section Background 2"] = FromRGB(18, 31, 27),
+    ["Accent"] = FromRGB(52, 211, 153),
+    ["Element"] = FromRGB(26, 44, 38)
+},
     }
 
     Library.Theme = TableClone(Themes["Preset"])
@@ -898,6 +1202,35 @@ end
         return MathFloor(Number * Multiplier) / Multiplier
     end
 
+    Library.CloseOpenFrames = function(self)
+        local function Sweep()
+            local Frames = { }
+
+            for _, Frame in Library.OpenFrames do
+                TableInsert(Frames, Frame)
+            end
+
+            for _, Frame in Frames do
+                Library:SafeCall(function()
+                    Frame:SetOpen(false)
+                end)
+            end
+        end
+
+        Sweep()
+
+        task.spawn(function()
+            for Attempt = 1, 4 do
+                if next(Library.OpenFrames) == nil then
+                    return
+                end
+
+                task.wait(0.15)
+                Sweep()
+            end
+        end)
+    end
+
     Library.Thread = function(self, Function)
         local NewThread = coroutine.create(Function)
         
@@ -1129,12 +1462,102 @@ end
                     end
 
                     if not Moved then
+                        if Library.ClickSound then
+                            Library:SafeCall(function()
+                                local Sound = InstanceNew("Sound")
+                                Sound.SoundId = Library.ClickSoundId
+                                Sound.Volume = Library.ClickSoundVolume
+                                Sound.PlayOnRemove = true
+                                Sound.Parent = Library.Holder.Instance
+                                Sound:Destroy()
+                            end)
+                        end
+
                         Callback(Input)
                     end
                 end
             end)
         end)
     end
+
+    Library.Tooltip = nil
+
+    Library.AddTooltip = function(self, Object, Text)
+        if not Object or not Text or Text == "" then
+            return
+        end
+
+        if not Library.Tooltip then
+            Library.Tooltip = Instances:Create("TextLabel", {
+                Parent = Library.Holder.Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                Text = "",
+                TextColor3 = FromRGB(240, 242, 245),
+                BackgroundColor3 = FromRGB(14, 15, 19),
+                BackgroundTransparency = 0.05,
+                BorderSizePixel = 0,
+                AutomaticSize = Enum.AutomaticSize.XY,
+                Visible = false,
+                ZIndex = 250,
+                TextSize = Library.TextSize.Normal
+            })  Library.Tooltip:AddToTheme({BackgroundColor3 = "Background", TextColor3 = "Text"})
+
+            Instances:Create("UICorner", {
+                Parent = Library.Tooltip.Instance,
+                Name = "\0",
+                CornerRadius = UDimNew(0, 5)
+            })
+
+            Instances:Create("UIPadding", {
+                Parent = Library.Tooltip.Instance,
+                Name = "\0",
+                PaddingTop = UDimNew(0, 5),
+                PaddingBottom = UDimNew(0, 5),
+                PaddingLeft = UDimNew(0, 8),
+                PaddingRight = UDimNew(0, 8)
+            })
+
+            Instances:Create("UIStroke", {
+                Parent = Library.Tooltip.Instance,
+                Name = "\0",
+                Color = FromRGB(42, 44, 52),
+                Thickness = 1
+            })
+        end
+
+        Object:OnHover(function()
+            Library.Tooltip.Instance.Text = Text
+            Library.Tooltip.Instance.Visible = true
+        end)
+
+        Object:OnHoverLeave(function()
+            Library.Tooltip.Instance.Visible = false
+        end)
+
+        Library:Connect(Object.Instance.MouseMoved, function(X, Y)
+            if Library.Tooltip and Library.Tooltip.Instance.Visible then
+                Library.Tooltip.Instance.Position = UDim2New(0, X + 16, 0, Y + 16)
+            end
+        end)
+    end
+
+    Library.SetThemePreset = function(self, Name)
+        local Preset = Themes[Name]
+
+        if not Preset then
+            return
+        end
+
+        for Key, Color in Preset do
+            Library.Theme[Key] = Color
+            Library:ChangeTheme(Key, Color)
+        end
+    end
+
+    Library.ClickSound = true
+    Library.ClickSoundId = "rbxassetid://6042053626"
+    Library.ClickSoundVolume = 0.35
 
                                     Library.AutoHideScrollbar = function(self, ScrollFrame, BaseTransparency, HoverTransparency)
     local Instance_ = ScrollFrame.Instance
@@ -3631,10 +4054,26 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                                                 
                 Window.IsOpen = Bool
 
+                if not Window.IsOpen then
+                    Library:CloseOpenFrames()
+                end
+
                 Debounce = true 
 
                 if Window.IsOpen then 
                     Items["MainFrame"].Instance.Visible = true 
+
+                    local AnimScale = Items["MainFrame"].Instance:FindFirstChild("OpenScale")
+
+                    if not AnimScale then
+                        AnimScale = InstanceNew("UIScale")
+                        AnimScale.Name = "OpenScale"
+                        AnimScale.Parent = Items["MainFrame"].Instance
+                    end
+
+                    AnimScale.Scale = 0.93
+
+                    Tween:Create(AnimScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}, true)
                 end
 
                 local Descendants = Items["MainFrame"].Instance:GetDescendants()
@@ -5730,6 +6169,8 @@ end
                 Toggle:Set(Value)
             end
 
+            Library:AddTooltip(Items["Toggle"], Data.Tooltip)
+
             Toggle.Section.Elements[#Toggle.Section.Elements+1] = Toggle
 
             return Toggle 
@@ -5758,7 +6199,7 @@ end
                     Text = "",
                     AutoButtonColor = false,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 32),
+                    Size = UDim2New(1, 0, 0, Touch(44, 32)),
                     ZIndex = 2,
                     TextSize = Library.TextSize.Normal,
                     BackgroundColor3 = FromRGB(27, 26, 29)
@@ -5873,6 +6314,8 @@ end
                     Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Text, ImageTransparency = 0.3})
                 end
             end
+
+            Library:AddTooltip(Items["Button"], Data.Tooltip)
 
             Library:TapConnect(Items["Button"], function()
                 Button:Press()
@@ -6185,6 +6628,8 @@ end
             Library.SetFlags[Slider.Flag] = function(Value)
                 Slider:Set(Value)
             end
+
+            Library:AddTooltip(Items["RealSlider"], Data.Tooltip)
 
             Slider.Section.Elements[#Slider.Section.Elements+1] = Slider
             return Slider 
@@ -6802,6 +7247,8 @@ end
                 Dropdown:Set(Value)
             end
 
+            Library:AddTooltip(Items["RealDropdown"], Data.Tooltip)
+
             Dropdown.Section.Elements[#Dropdown.Section.Elements+1] = Dropdown
             return Dropdown
         end
@@ -6941,6 +7388,283 @@ end
 
             Label.Section.Elements[#Label.Section.Elements+1] = Label
             return Label
+        end
+
+        Library.Sections.Divider = function(self)
+            local Divider = {
+                Window = self.Window,
+                Page = self.Page,
+                Section = self,
+                Name = "Divider"
+            }
+
+            local Items = { } do
+                Items["Divider"] = Instances:Create("Frame", {
+                    Parent = Divider.Section.Items["Content"].Instance,
+                    Name = "\0",
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 10),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                Items["Line"] = Instances:Create("Frame", {
+                    Parent = Items["Divider"].Instance,
+                    Name = "\0",
+                    BackgroundTransparency = 0.35,
+                    AnchorPoint = Vector2New(0, 0.5),
+                    Position = UDim2New(0, 0, 0.5, 0),
+                    Size = UDim2New(1, 0, 0, 1),
+                    BorderSizePixel = 0,
+                    ZIndex = 2,
+                    BackgroundColor3 = FromRGB(42, 44, 52)
+                })  Items["Line"]:AddToTheme({BackgroundColor3 = "Outline"})
+            end
+
+            function Divider:SetVisibility(Bool)
+                Items["Divider"].Instance.Visible = Bool
+            end
+
+            function Divider:RefreshPosition(Bool)
+            end
+
+            Divider.Items = Items
+            Divider.Section.Elements[#Divider.Section.Elements+1] = Divider
+            return Divider
+        end
+
+        Library.Sections.Paragraph = function(self, Data)
+            Data = Data or { }
+
+            local Paragraph = {
+                Window = self.Window,
+                Page = self.Page,
+                Section = self,
+
+                Name = Data.Name or Data.name or "Paragraph",
+                Text = Data.Text or Data.text or ""
+            }
+
+            local Items = { } do
+                Items["Paragraph"] = Instances:Create("Frame", {
+                    Parent = Paragraph.Section.Items["Content"].Instance,
+                    Name = "\0",
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 20),
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                Instances:Create("UIListLayout", {
+                    Parent = Items["Paragraph"].Instance,
+                    Name = "\0",
+                    Padding = UDimNew(0, 3),
+                    SortOrder = Enum.SortOrder.LayoutOrder
+                })
+
+                Items["Title"] = Instances:Create("TextLabel", {
+                    Parent = Items["Paragraph"].Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    Text = Paragraph.Name,
+                    TextColor3 = FromRGB(240, 240, 240),
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Size = UDim2New(1, 0, 0, 16),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    ZIndex = 2,
+                    TextSize = Library.TextSize.Normal,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
+
+                Items["Body"] = Instances:Create("TextLabel", {
+                    Parent = Items["Paragraph"].Instance,
+                    Name = "\0",
+                    FontFace = Library.FontRegular,
+                    Text = Paragraph.Text,
+                    TextColor3 = FromRGB(240, 240, 240),
+                    TextTransparency = 0.35,
+                    TextWrapped = true,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Top,
+                    Size = UDim2New(1, 0, 0, 0),
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    ZIndex = 2,
+                    TextSize = Library.TextSize.Normal,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  Items["Body"]:AddToTheme({TextColor3 = "Text"})
+            end
+
+            function Paragraph:SetText(Text)
+                Paragraph.Text = tostring(Text)
+                Items["Body"].Instance.Text = Paragraph.Text
+            end
+
+            function Paragraph:SetVisibility(Bool)
+                Items["Paragraph"].Instance.Visible = Bool
+            end
+
+            function Paragraph:RefreshPosition(Bool)
+            end
+
+            Paragraph.Items = Items
+            Paragraph.Section.Elements[#Paragraph.Section.Elements+1] = Paragraph
+            return Paragraph
+        end
+
+        Library.Sections.ProgressBar = function(self, Data)
+            Data = Data or { }
+
+            local Progress = {
+                Window = self.Window,
+                Page = self.Page,
+                Section = self,
+
+                Name = Data.Name or Data.name or "Progress",
+                Min = Data.Min or Data.min or 0,
+                Max = Data.Max or Data.max or 100,
+                Suffix = Data.Suffix or Data.suffix or "%",
+                Default = Data.Default or Data.default or 0,
+
+                Value = 0
+            }
+
+            local Items = { } do
+                Items["Progress"] = Instances:Create("Frame", {
+                    Parent = Progress.Section.Items["Content"].Instance,
+                    Name = "\0",
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 30),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                Items["Text"] = Instances:Create("TextLabel", {
+                    Parent = Items["Progress"].Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    Text = Progress.Name,
+                    TextColor3 = FromRGB(240, 240, 240),
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Size = UDim2New(1, 0, 0, 14),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    ZIndex = 2,
+                    TextSize = Library.TextSize.Normal,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+
+                Items["Track"] = Instances:Create("Frame", {
+                    Parent = Items["Progress"].Instance,
+                    Name = "\0",
+                    Position = UDim2New(0, 0, 0, 20),
+                    Size = UDim2New(1, 0, 0, 6),
+                    BorderSizePixel = 0,
+                    ZIndex = 2,
+                    BackgroundColor3 = FromRGB(30, 33, 41)
+                })  Items["Track"]:AddToTheme({BackgroundColor3 = "Element"})
+
+                Instances:Create("UICorner", {
+                    Parent = Items["Track"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
+
+                Items["Fill"] = Instances:Create("Frame", {
+                    Parent = Items["Track"].Instance,
+                    Name = "\0",
+                    Size = UDim2New(0, 0, 1, 0),
+                    BorderSizePixel = 0,
+                    ZIndex = 3,
+                    BackgroundColor3 = FromRGB(59, 130, 246)
+                })  Items["Fill"]:AddToTheme({BackgroundColor3 = "Accent"})
+
+                Instances:Create("UICorner", {
+                    Parent = Items["Fill"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
+            end
+
+            function Progress:Set(Value)
+                Value = MathClamp(tonumber(Value) or 0, Progress.Min, Progress.Max)
+                Progress.Value = Value
+
+                local Alpha = (Value - Progress.Min) / math.max(Progress.Max - Progress.Min, 1)
+
+                Items["Fill"]:Tween(nil, {Size = UDim2New(Alpha, 0, 1, 0)})
+                Items["Text"].Instance.Text = Progress.Name .. " - " .. tostring(Library:Round(Value, 1)) .. Progress.Suffix
+            end
+
+            function Progress:SetVisibility(Bool)
+                Items["Progress"].Instance.Visible = Bool
+            end
+
+            function Progress:RefreshPosition(Bool)
+            end
+
+            Progress:Set(Progress.Default)
+
+            Progress.Items = Items
+            Progress.Section.Elements[#Progress.Section.Elements+1] = Progress
+            return Progress
+        end
+
+        Library.Sections.Image = function(self, Data)
+            Data = Data or { }
+
+            local Image = {
+                Window = self.Window,
+                Page = self.Page,
+                Section = self,
+
+                Name = Data.Name or Data.name or "Image",
+                Id = Data.Id or Data.id or Data.Image or "",
+                Height = Data.Height or Data.height or 90,
+                Rounded = Data.Rounded ~= false
+            }
+
+            local Items = { } do
+                Items["Image"] = Instances:Create("ImageLabel", {
+                    Parent = Image.Section.Items["Content"].Instance,
+                    Name = "\0",
+                    Image = Library:ResolveImage(Image.Id),
+                    ImageColor3 = FromRGB(255, 255, 255),
+                    ScaleType = Enum.ScaleType.Crop,
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, Image.Height),
+                    BorderSizePixel = 0,
+                    ZIndex = 2,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                if Image.Rounded then
+                    Instances:Create("UICorner", {
+                        Parent = Items["Image"].Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 6)
+                    })
+                end
+            end
+
+            function Image:Set(Id)
+                Image.Id = Id
+                Items["Image"].Instance.Image = Library:ResolveImage(Id)
+            end
+
+            function Image:SetVisibility(Bool)
+                Items["Image"].Instance.Visible = Bool
+            end
+
+            function Image:RefreshPosition(Bool)
+            end
+
+            Image.Items = Items
+            Image.Section.Elements[#Image.Section.Elements+1] = Image
+            return Image
         end
 
         Library.Sections.Keybind = function(self, Data)
@@ -7580,6 +8304,8 @@ end)
                 Textbox:Set(Value)
             end
 
+            Library:AddTooltip(Items["Textbox"], Data.Tooltip)
+
             Textbox.Section.Elements[#Textbox.Section.Elements+1] = Textbox
             return Textbox
         end
@@ -8001,6 +8727,382 @@ end)
         end
     end
 
+
+     Library.CreateUiPage = function(self, Window)
+        local Page = Window:Page({Name = "UI", Icon = "122669828593160"})
+
+        local AccentColorpicker
+        local AccentGradientColorpicker
+        local InterfaceColorpicker
+        local UseImage
+        local ImageUrlInput
+        local ApplyBackgroundFunc
+
+        local ThemeOrder = {
+    "Preset", "Midnight", "Ocean", "Rose", "Mono", "Ember",
+    "Amethyst", "Emerald", "Crimson", "Sakura", "Cyber",
+    "Arctic", "Toxic", "Sunset", "Coffee", "Void",
+    "Lavender", "Gold", "Matrix", "Blood", "Aqua",
+    "Grape", "Steel", "Peach", "Nebula", "Mint"
+}
+
+        local BackgroundPresets = {
+            ["None"]       = "",
+            ["Komaru"]     = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
+            ["Colette"]    = "https://wimg.rule34.xxx//samples/2118/sample_51a5204c1e81bddee13b7917bf9a2dab.jpg?12937938",
+            ["Cool Cat"]   = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSJC4BF9BZKrLhTM1CfGXq99AmAa5LUa5xSF3fB9Iv--C4Y7_JsCfU8WM5&s=10",
+            ["Manul"]      = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7DUQIPkF7LEDBmIwTvsnAqy0-x3HqnWOGtFqeuj-43VaTxs7vutkEJHct&s=10",
+            ["Kimono girl"]     = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1148510/4c6bd678919010d9f7cd7fd691eec647ce972634.jpg",
+            ["Pink Forest"]    = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/592660/08b604ae36bf422340ece2500abe06f74db32d21.jpg",
+            ["Cherry blossom"] = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1451160/b62b4c80386fcfe43305119da5a175cd60c762ef.jpg",
+            ["Sky 2"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/251410/a19ecc90dd9ba74cc4f2555309494bad7f181b36.jpg",
+            ["Meteor Shower"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/386480/119a5e4828facc5f55a992cb27d4a4b25dd57241.jpg",
+            ["hellolady09"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/783120/af467105962854ada8e20e5d76e5fdf3080c3a15.jpg",
+            ["waiter"]     = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1740000/836c12da5ed7086e3aa23be74b8f7dfd021ee3cd.jpg",
+            ["Violet space!"]    = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/683830/814ae91d5b72ed0ab13abfd7bedc1d1eb759101a.jpg",
+            ["Cloudy Sky"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/963690/16e8267f1d5da51ed0eb24f46184f44fc4338541.jpg",
+            ["Maid"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1148510/c71963b9fba8b79bc480e363d16f9faac5f44445.jpg",
+            ["暗泽之上，荼蘼盛开"]     = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/645690/06e52a6057125c91e4d88fd00e1f486bdee9a654.jpg",
+            ["Kama"]    = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/574310/3ef665fb33673b4dd67dbe6395f7841534cc6500.jpg",
+            ["Twilight Forest"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/359940/38501ffcc231fb7a519c6d7a531cada4edcc42ed.jpg",
+            ["Omensight's Voden"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/455820/035b78eff6f984ec077bf01c8a7bbc12629eed72.jpg",
+            ["xuemei background"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1138080/5c5fe7fb30ef98ebb3fe5a333f985056f668f5fd.jpg",
+            ["Red Moon Rising"] = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/485630/100bfd0fb764b30751b39e2b7b1e0bc1aa5f8792.jpg",
+            ["The Dimension"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/454230/a4eb017fae148680b9e48a39ac857e34ddf0cc68.jpg",
+            ["Space clouds"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/469890/efe44b17b3c844055387e904a558a1801b4288b9.jpg",
+            ["Idol"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1328530/71ed3e4f9b0bbf7a01fd1a9c864a2081a3ef0e5c.jpg",
+            ["Shunsetsuhen"]     = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1031480/2f34e01a7188eb567595e0f2938d84650db50904.jpg",
+            ["Draetheus V"]    = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/277430/8180d4ba76bb9eefccd9ccad5b4c4dd1228ba302.jpg",
+            ["Rest my Hero"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1054050/e77a2dfc806e924ca9ac8adf5d45c497d6d19c92.jpg",
+            ["Shy"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1740000/b3bc5a3202bb4519e3fc7091c1cd6b46b52dec08.jpg",
+            ["Artistic Maiden"]     = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/685680/1d56ee485ec1d347a6122353a76baec76d05bf4e.jpg",
+            ["Stellar"]    = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/374050/176e2db29a385b70d31dddca063556ef1111ec02.jpg",
+            ["Green space!"] = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/683830/7a59920d91b49e211ecdcb7f0f7f655af3925298.jpg",
+            ["Paragon"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1328670/c63422cc646706b8cc99bca0a626caaf0a190633.jpg",
+            ["Gazing Sun"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/582270/3ef3f78606fc5ce8d668f6a1ac0e5e13e1d24727.jpg",
+            ["Eden"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/315810/183c2345205822bbbd38e7cc464f9927339cf889.jpg",
+            ["Vanilla, Chocolat"]   = "https://c4.wallpaperflare.com/wallpaper/851/80/843/vanilla-neko-para-neko-para-anime-anime-girls-wallpaper-preview.jpg",
+            ["The Coffin of andy and Leyley"]      = "https://wallpaperaccess.com/full/25774870.jpg",
+            ["Space 1"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/251410/a6317be5d9441ed221855af911e0e6cadea274c3.jpg",
+            ["Forest Sunrise"] = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/359940/3667ec44115994012f6bc9b9811cf104f639c7a0.jpg",
+            ["Patricia"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/1010600/3d8713ffcda749bd51aad31695cadb195e13fdc8.jpg",
+            ["Forest"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/960990/02fff5d870d64d22355ce8c82dc93ec3d9dd476c.jpg",
+            ["Distant Galaxy"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/372480/17468a65ef0c259e2f74bd713008d7b9725843f2.jpg",
+            ["NGC 1275"]     = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/377570/9bc4053156b36ed26b9399e0c916dc2e58d70a76.jpeg",
+            ["Singing is the best"]    = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/943980/c72bade163febce3264916971f153e9b13741742.jpg",
+            ["homeparty"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/820770/a674a281510f6be4ab9765537a05f74c8cf55250.jpg",
+            ["Twin Moons"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/313630/56c44cbe838d1c7ffc6033cbf05aadc1afb82705.jpg",
+            ["Nyan Space"]     = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/415420/65ac4e5dda94a9c69b262bd17444d6108a4eadce.jpg",
+            ["Spirit Dance"]    = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/785840/24fe2ce3389df1dd18919a9628a7f52ff08abc46.jpg",
+            ["Sakura Magical Beach"] = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/581520/667f4d1663a55b5f18073e6e8065603e416e8dc4.jpg",
+            ["Aisia Mayfield"]   = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/487430/24563675b825e23ca4ca05dd2e648d83ea06d9ed.jpg",
+            ["USSR"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/244410/630436567ca4f651f18b597c752247e2cca6ce74.jpg",
+            ["Frozen Skies"]      = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/389650/65bae7f0e62cd8c96d83819e1bd67c507399a495.jpg",
+        }
+
+        local BackgroundOrder = {
+	"None",
+	"Komaru",
+	"Colette",
+	"Cool Cat",
+	"Manul",
+	"Kimono girl",
+	"Pink Forest",
+	"Cherry blossom",
+	"Sky 2",
+	"Meteor Shower",
+	"hellolady09",
+	"waiter",
+	"Violet space!",
+	"Cloudy Sky",
+	"Maid",
+	"暗泽之上，荼蘼盛开",
+	"Kama",
+	"Twilight Forest",
+	"Omensight's Voden",
+	"xuemei background",
+	"Red Moon Rising",
+	"The Dimension",
+	"Space clouds",
+	"Idol",
+	"Shunsetsuhen",
+	"Draetheus V",
+	"Rest my Hero",
+	"Shy",
+	"Artistic Maiden",
+	"Stellar",
+	"Green space!",
+	"Paragon",
+	"Gazing Sun",
+	"Eden",
+	"Vanilla, Chocolat",
+	"The Coffin of andy and Leyley",
+	"Space 1",
+	"Forest Sunrise",
+	"Patricia",
+	"Forest",
+	"Distant Galaxy",
+	"NGC 1275",
+	"Singing is the best",
+	"homeparty",
+	"Twin Moons",
+	"Nyan Space",
+	"Spirit Dance",
+	"Sakura Magical Beach",
+	"Aisia Mayfield",
+	"USSR",
+	"Frozen Skies",
+}
+
+        local DarknessStrength = 0.35
+
+        local function HashString(Str)
+            local Hash = 5381
+            for i = 1, #Str do
+                Hash = (Hash * 33 + string.byte(Str, i)) % 4294967296
+            end
+            return tostring(Hash)
+        end
+
+        -- ==================== SIDE 1 : PRESETS ====================
+        local PresetsSection = Page:Section({Name = "Presets", Side = 1}) do
+
+            PresetsSection:Paragraph({
+                Name = "Theme Presets",
+                Text = "Ready-to-use menu presets that let you quickly switch between different interface styles, layouts, and visual themes without having to set everything up manually each time."
+            })
+
+            PresetsSection:Divider()
+
+            PresetsSection:Dropdown({
+                Name = "Theme Preset",
+                Tooltip = "Changes the whole interface color scheme in one click",
+                Flag = "ThemePreset",
+                Items = ThemeOrder,
+                Callback = function(Value)
+                    Library:SetThemePreset(Value)
+
+                    if AccentColorpicker then
+                        AccentColorpicker:Set(Library.Theme.Accent)
+                    end
+                    if AccentGradientColorpicker then
+                        AccentGradientColorpicker:Set(Library.Theme.AccentGradient)
+                    end
+                    if InterfaceColorpicker then
+                        InterfaceColorpicker:Set(Library.Theme.Element)
+                    end
+                end
+            })
+
+            PresetsSection:Divider()
+
+            PresetsSection:Dropdown({
+                Name = "Background Presets",
+                Tooltip = "Ready background images. None returns the default background",
+                Flag = "BackgroundPreset",
+                Items = BackgroundOrder,
+                Default = "None",
+                Callback = function(Value)
+                    local Url = BackgroundPresets[Value]
+
+                    if not ImageUrlInput or not UseImage then
+                        return
+                    end
+
+                    if Url and Url ~= "" then
+                        ImageUrlInput:Set(Url)
+                        UseImage:Set(true)
+                    else
+                        UseImage:Set(false)
+                        ImageUrlInput:Set("")
+                    end
+
+                    if ApplyBackgroundFunc then
+                        ApplyBackgroundFunc()
+                    end
+                end
+            })
+        end
+
+        -- ==================== SIDE 2 : CUSTOM ====================
+        local CustomSection = Page:Section({Name = "Customization", Side = 2}) do
+
+            CustomSection:Paragraph({
+                Name = "Manual",
+                Text = "Fine tune the accent gradient, repaint the whole interface and set your own background link. After pasting a link press Apply Background."
+            })
+
+            CustomSection:Divider()
+
+            AccentColorpicker = CustomSection:Label("First gradient color"):Colorpicker({
+                Flag = "AccentColor",
+                Default = Library.Theme.Accent,
+                Callback = function(Color)
+                    Library.Theme.Accent = Color
+                    Library:ChangeTheme("Accent", Color)
+                end
+            })
+
+            AccentGradientColorpicker = CustomSection:Label("Second gradient color"):Colorpicker({
+                Flag = "AccentGradientColor",
+                Default = Library.Theme.AccentGradient,
+                Callback = function(Color)
+                    Library.Theme.AccentGradient = Color
+                    Library:ChangeTheme("AccentGradient", Color)
+                end
+            })
+
+            local function ApplyInterfaceColor(Color)
+                local H, S, V = Color:ToHSV()
+
+                -- бaзoвыe ypовни яpкoсти тeмнoй тeмы
+                local Levels = {
+                    ["Background 2"]         = 0.055,
+                    ["Background"]           = 0.080,
+                    ["Section Background"]   = 0.105,
+                    ["Section Background 2"] = 0.130,
+                    ["Section Top"]          = 0.150,
+                    ["Element"]              = 0.180,
+                    ["Outline"]              = 0.240
+                }
+
+                -- нoвaя яpкoсть и нacыщeннocть бepётcя из выбpaннoгo цвeтa
+                local Saturation = MathClamp(S * 0.65, 0, 0.65)
+                local Brightness = 0.55 + V * 0.9
+
+                for Key, Level in Levels do
+                    local New = FromHSV(H, Saturation, MathClamp(Level * Brightness, 0.02, 1))
+
+                    Library.Theme[Key] = New
+                    Library:ChangeTheme(Key, New)
+                end
+            end
+
+            InterfaceColorpicker = CustomSection:Label("Interface color"):Colorpicker({
+                Flag = "InterfaceColor",
+                Default = Library.Theme.Element,
+                Callback = function(Color)
+                    ApplyInterfaceColor(Color)
+                end
+            })
+
+            CustomSection:Divider()
+
+            UseImage = CustomSection:Toggle({
+                Name = "Use Custom Image",
+                Tooltip = "Draw an image instead of the default menu background",
+                Flag = "UseCustomBackground",
+                Default = false,
+            })
+
+            ImageUrlInput = CustomSection:Textbox({
+                Name = "Image URL",
+                Tooltip = "Direct link to a jpg or png. The image is cached into the Assets folder",
+                Placeholder = "https://i.imgur.com/abc123.jpg",
+                Flag = "CustomBackgroundUrl",
+                Default = "",
+            })
+
+            ApplyBackgroundFunc = function()
+                local Holder = Window.Items and Window.Items["BackgroundHolder"]
+                if not Holder then
+                    warn("BackgroundHolder not found")
+                    return
+                end
+
+                local OldBg = Holder.Instance:FindFirstChild("CustomBackground")
+                if OldBg then OldBg:Destroy() end
+
+                local useImage = Library.Flags["UseCustomBackground"] or false
+                local url = Library.Flags["CustomBackgroundUrl"] or ""
+
+                if useImage and url and url ~= "" then
+                    local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
+
+                    local Success, AssetId = pcall(function()
+                        if not isfile(FileName) then
+                            writefile(FileName, game:HttpGet(url))
+                        end
+                        return getcustomasset(FileName)
+                    end)
+
+                    if not Success then
+                        warn("Failed to load background: " .. tostring(AssetId))
+                        return
+                    end
+
+                    local Grey = 255 * (1 - DarknessStrength)
+
+                    local Bg = InstanceNew("ImageLabel")
+                    Bg.Name = "CustomBackground"
+                    Bg.Size = UDim2New(1, 0, 1, 0)
+                    Bg.Position = UDim2New(0, 0, 0, 0)
+                    Bg.BackgroundTransparency = 1
+                    Bg.Image = AssetId
+                    Bg.ImageColor3 = FromRGB(Grey, Grey, Grey)
+                    Bg.ImageTransparency = 0
+                    Bg.ScaleType = Enum.ScaleType.Crop
+                    Bg.ZIndex = -1
+                    Bg.Visible = true
+                    Bg.Parent = Holder.Instance
+
+                    local BgCorner = InstanceNew("UICorner")
+                    BgCorner.CornerRadius = UDimNew(0, 6)
+                    BgCorner.Parent = Bg
+
+                    local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
+                    Window:ApplyBackgroundTransparency(CurrentTransparency)
+                else
+                    Window:ApplyBackgroundTransparency(Library.Flags["CustomBackgroundTransparency"] or 0.1)
+                end
+            end
+
+            CustomSection:Button({
+                Name = "Apply Background",
+                Tooltip = "Download and apply the image from the link above",
+                Callback = function()
+                    ApplyBackgroundFunc()
+                end
+            })
+
+            TableInsert(Library.PostLoadHooks, function()
+                ApplyBackgroundFunc()
+            end)
+
+            CustomSection:Slider({
+                Name = "Background Transparency",
+                Tooltip = "Transparency of the panels above the background image",
+                Flag = "CustomBackgroundTransparency",
+                Min = 0,
+                Max = 1,
+                Default = 0.1,
+                Decimals = 0.01,
+                Callback = function(Value)
+                    Window:ApplyBackgroundTransparency(Value)
+                end
+            })
+
+            CustomSection:Button({
+                Name = "Reset to Default",
+                Tooltip = "Remove the image and restore the default background",
+                Callback = function()
+                    local Holder = Window.Items and Window.Items["BackgroundHolder"]
+                    if Holder then
+                        local Bg = Holder.Instance:FindFirstChild("CustomBackground")
+                        if Bg then Bg:Destroy() end
+                    end
+
+                    Window:ApplyBackgroundTransparency(0.1)
+
+                    UseImage:Set(false)
+                    ImageUrlInput:Set("")
+                end
+            })
+        end
+
+        return Page
+    end
+
      Library.CreateSettingsPage = function(self, Window, KeybindList)
         local Page = Window:Page({Name = "Settings", Icon = "122669828593160"})
 
@@ -8148,216 +9250,6 @@ end
             })
         end
 
--- ==================== BACKGROUND SETTINGS ====================
-local CustomBackgroundSection = Page:Section({Name = "Custom Background", Side = 2}) do
-
-    local function HashString(Str)
-        local Hash = 5381
-        for i = 1, #Str do
-            Hash = (Hash * 33 + string.byte(Str, i)) % 4294967296
-        end
-        return tostring(Hash)
-    end
-
-    local UseImage = CustomBackgroundSection:Toggle({
-        Name = "Use Custom Image",
-        Flag = "UseCustomBackground",
-        Default = false,
-    })
-
-    local ImageUrlInput = CustomBackgroundSection:Textbox({
-        Name = "Image URL",
-        Placeholder = "https://i.imgur.com/abc123.jpg",
-        Flag = "CustomBackgroundUrl",
-        Default = "",
-    })
-
-    -- ==================== ПРЕСЕТЫ ФОНОВ ====================
-    local BackgroundPresets = {
-        ["None"]    = "",
-        ["Komaru"] = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
-        ["Colette"] = "https://wimg.rule34.xxx//samples/2118/sample_51a5204c1e81bddee13b7917bf9a2dab.jpg?12937938",
-        ["Anime Girl"] = "https://m.media-amazon.com/images/I/71k9600LL3L._AC_UF894,1000_QL80_.jpg",
-        ["Cool Cat"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSJC4BF9BZKrLhTM1CfGXq99AmAa5LUa5xSF3fB9Iv--C4Y7_JsCfU8WM5&s=10",
-        ["Manul"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7DUQIPkF7LEDBmIwTvsnAqy0-x3HqnWOGtFqeuj-43VaTxs7vutkEJHct&s=10",
-        ["Green"] = "https://getwallpapers.com/wallpaper/full/c/1/d/1262088-free-download-desktop-wallpapers-backgrounds-2134x1583-samsung.jpg",
-    }
-
-    local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat", "Manul", "Green"}
-
-    local PresetsDropdown = CustomBackgroundSection:Dropdown({
-        Name = "Presets",
-        Flag = "BackgroundPreset",
-        Items = PresetOrder,
-        Default = "None",
-        Callback = function(Value)
-            local Url = BackgroundPresets[Value]
-
-            if Url and Url ~= "" then
-                ImageUrlInput:Set(Url)
-                UseImage:Set(true)
-            else
-                UseImage:Set(false)
-                ImageUrlInput:Set("")
-            end
-        end
-    })
-
-    local DarknessStrength = 0.35
-
--- Вынесли содержимое кнопки в отдельную функцию
-local function ApplyBackgroundFunc()
-    local Holder = Window.Items and Window.Items["BackgroundHolder"]
-    if not Holder then
-        warn("BackgroundHolder not found")
-        return
-    end
-
-    local OldBg = Holder.Instance:FindFirstChild("CustomBackground")
-    if OldBg then OldBg:Destroy() end
-
-    local useImage = Library.Flags["UseCustomBackground"] or false
-    local url = Library.Flags["CustomBackgroundUrl"] or ""
-
-    if useImage and url and url ~= "" then
-        local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
-
-        local Success, AssetId = pcall(function()
-            if not isfile(FileName) then
-                writefile(FileName, game:HttpGet(url))
-            end
-            return getcustomasset(FileName)
-        end)
-
-        if not Success then
-            warn("Не удалось загрузить фон: " .. tostring(AssetId))
-            return
-        end
-
-        local Grey = 255 * (1 - DarknessStrength)
-
-        local Bg = Instance.new("ImageLabel")
-        Bg.Name = "CustomBackground"
-        Bg.Size = UDim2.new(1, 0, 1, 0)
-        Bg.Position = UDim2.new(0, 0, 0, 0)
-        Bg.BackgroundTransparency = 1
-        Bg.Image = AssetId
-        Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey)
-        Bg.ImageTransparency = 0
-        Bg.ScaleType = Enum.ScaleType.Crop
-        Bg.ZIndex = -1
-        Bg.Visible = true
-        Bg.Parent = Holder.Instance
-
-        local BgCorner = Instance.new("UICorner")
-        BgCorner.CornerRadius = UDim.new(0, 6)
-        BgCorner.Parent = Bg
-
-        local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
-        Window:ApplyBackgroundTransparency(CurrentTransparency)
-    else
-        Window:ApplyBackgroundTransparency(Library.Flags["CustomBackgroundTransparency"] or 0.1)
-    end
-end
-
-CustomBackgroundSection:Button({
-    Name = "Apply Background",
-    Callback = ApplyBackgroundFunc -- кнопка теперь просто вызывает функцию
-})
-
--- ГЛАВНОЕ: регистрируем эту же функцию как автозапуск после LoadConfig
-table.insert(Library.PostLoadHooks, ApplyBackgroundFunc)
-
-    CustomBackgroundSection:Slider({
-        Name = "Background Transparency",
-        Flag = "CustomBackgroundTransparency",
-        Min = 0,
-        Max = 1,
-        Default = 0.1,
-        Decimals = 0.01,
-        Callback = function(Value)
-            Window:ApplyBackgroundTransparency(Value)
-        end
-    })
-
-    CustomBackgroundSection:Button({
-        Name = "Reset to Default",
-        Callback = function()
-            local Holder = Window.Items and Window.Items["BackgroundHolder"]
-            if Holder then
-                local Bg = Holder.Instance:FindFirstChild("CustomBackground")
-                if Bg then Bg:Destroy() end
-            end
-
-            Window:ApplyBackgroundTransparency(0.1)
-
-            -- Используем :Set(), чтобы UI (текст поля, состояние чекбокса)
-            -- визуально обновился вместе с флагами, а не разошёлся с ними.
-            UseImage:Set(false)
-            ImageUrlInput:Set("")
-        end
-    })
-
-   -- ==================== COLOR SETTINGS ====================
-local ColorSection = Page:Section({Name = "Background", Side = 2}) do
-
-    local AccentColorpicker
-    local AccentGradientColorpicker
-
-    local GradientPresets = {
-        ["Blue"]   = { Color3.fromRGB(0, 116, 224),   Color3.fromRGB(0, 195, 255) },
-        ["Purple"] = { Color3.fromRGB(124, 54, 245),  Color3.fromRGB(202, 110, 255) },
-        ["Pink"]   = { Color3.fromRGB(245, 66, 191),  Color3.fromRGB(250, 142, 239) },
-        ["Green"]  = { Color3.fromRGB(0, 171, 0),     Color3.fromRGB(120, 255, 120) },
-        ["Orange"] = { Color3.fromRGB(255, 93, 48),   Color3.fromRGB(255, 169, 56) },
-        ["Red"]    = { Color3.fromRGB(200, 0, 0),     Color3.fromRGB(255, 90, 90) },
-        ["White"]  = { Color3.fromRGB(200, 200, 200), Color3.fromRGB(255, 255, 255) },
-    }
-
-    local PresetOrder = {"Blue", "Purple", "Pink", "Green", "Orange", "Red", "White"}
-
-    ColorSection:Dropdown({
-        Name = "Gradient Presets",
-        Flag = "AccentPreset",
-        Items = PresetOrder,
-        Callback = function(Value)
-            local Pair = GradientPresets[Value]
-            if not Pair then return end
-
-            Library.Theme.Accent = Pair[1]
-            Library.Theme.AccentGradient = Pair[2]
-
-            Library:ChangeTheme("Accent", Pair[1])
-            Library:ChangeTheme("AccentGradient", Pair[2])
-
-            if AccentColorpicker then
-                AccentColorpicker:Set(Pair[1])
-            end
-            if AccentGradientColorpicker then
-                AccentGradientColorpicker:Set(Pair[2])
-            end
-        end
-    })
-
-    AccentColorpicker = ColorSection:Label("First gradient color"):Colorpicker({
-        Flag = "AccentColor",
-        Default = Library.Theme.Accent,
-        Callback = function(Color)
-            Library.Theme.Accent = Color
-            Library:ChangeTheme("Accent", Color)
-        end
-    })
-
-    AccentGradientColorpicker = ColorSection:Label("Second gradient color"):Colorpicker({
-        Flag = "AccentGradientColor",
-        Default = Library.Theme.AccentGradient,
-        Callback = function(Color)
-            Library.Theme.AccentGradient = Color
-            Library:ChangeTheme("AccentGradient", Color)
-        end
-    })
-end
-end
 
  local AutoLoadName = Library:GetAutoLoadConfig()
         if AutoLoadName and isfile(Library.Folders.Configs .. "/" .. AutoLoadName) then
@@ -8367,6 +9259,33 @@ end
             ConfigsDropdown:Set(AutoLoadName)
             UpdateAutoLoadVisual()
         end
+
+local InfoSection = Page:Section({Name = "Info", Side = 2})
+
+InfoSection:Image({
+    Id = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
+    Height = 110,
+    Rounded = true
+})
+
+InfoSection:Paragraph({
+    Name = "Meowl Sploit",
+    Text = "You can change the key combination used to open the menu in the Settings tab. On mobile, simply use the floating button instead."
+})
+
+InfoSection:Divider()
+
+InfoSection:Button({
+    Name = "Copy Discord",
+    Tooltip = "Copies the link to the disk into the exchange buffer",
+    Callback = function()
+        if setclipboard then
+            setclipboard("https://discord.gg/")
+            Library:Notification({Name = "UI", Description = "Ccылкa cкoпиpoвaнa", Time = 3})
+        end
+    end
+})
+
 
         return Page
     end
