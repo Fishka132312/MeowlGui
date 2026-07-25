@@ -1,4 +1,4 @@
-local Library do ----105
+local Library do ----107
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -268,6 +268,246 @@ end
             ["Accent"] = FromRGB(249, 115, 22),
             ["Element"] = FromRGB(43, 32, 25)
         },
+        ["Amethyst"] = {
+    ["AccentGradient"] = FromRGB(216, 160, 255),
+    ["Background 2"] = FromRGB(13, 8, 18),
+    ["Background"] = FromRGB(19, 12, 26),
+    ["Text"] = FromRGB(240, 235, 248),
+    ["Outline"] = FromRGB(56, 38, 74),
+    ["Section Top"] = FromRGB(35, 23, 47),
+    ["Section Background"] = FromRGB(25, 16, 34),
+    ["Section Background 2"] = FromRGB(30, 20, 40),
+    ["Accent"] = FromRGB(168, 85, 247),
+    ["Element"] = FromRGB(42, 28, 56)
+},
+["Emerald"] = {
+    ["AccentGradient"] = FromRGB(110, 231, 183),
+    ["Background 2"] = FromRGB(6, 14, 11),
+    ["Background"] = FromRGB(10, 20, 16),
+    ["Text"] = FromRGB(230, 247, 240),
+    ["Outline"] = FromRGB(31, 58, 47),
+    ["Section Top"] = FromRGB(19, 36, 29),
+    ["Section Background"] = FromRGB(13, 26, 21),
+    ["Section Background 2"] = FromRGB(16, 31, 25),
+    ["Accent"] = FromRGB(16, 185, 129),
+    ["Element"] = FromRGB(23, 44, 35)
+},
+["Crimson"] = {
+    ["AccentGradient"] = FromRGB(248, 113, 113),
+    ["Background 2"] = FromRGB(16, 7, 7),
+    ["Background"] = FromRGB(23, 11, 11),
+    ["Text"] = FromRGB(247, 233, 233),
+    ["Outline"] = FromRGB(66, 33, 33),
+    ["Section Top"] = FromRGB(41, 20, 20),
+    ["Section Background"] = FromRGB(30, 14, 14),
+    ["Section Background 2"] = FromRGB(35, 17, 17),
+    ["Accent"] = FromRGB(220, 38, 38),
+    ["Element"] = FromRGB(49, 24, 24)
+},
+["Sakura"] = {
+    ["AccentGradient"] = FromRGB(252, 190, 222),
+    ["Background 2"] = FromRGB(18, 12, 16),
+    ["Background"] = FromRGB(25, 17, 22),
+    ["Text"] = FromRGB(250, 238, 245),
+    ["Outline"] = FromRGB(70, 48, 61),
+    ["Section Top"] = FromRGB(44, 30, 39),
+    ["Section Background"] = FromRGB(32, 22, 28),
+    ["Section Background 2"] = FromRGB(38, 26, 33),
+    ["Accent"] = FromRGB(236, 110, 173),
+    ["Element"] = FromRGB(53, 36, 46)
+},
+["Cyber"] = {
+    ["AccentGradient"] = FromRGB(34, 211, 238),
+    ["Background 2"] = FromRGB(10, 7, 16),
+    ["Background"] = FromRGB(15, 11, 24),
+    ["Text"] = FromRGB(240, 236, 250),
+    ["Outline"] = FromRGB(46, 32, 69),
+    ["Section Top"] = FromRGB(28, 20, 43),
+    ["Section Background"] = FromRGB(20, 14, 31),
+    ["Section Background 2"] = FromRGB(24, 17, 37),
+    ["Accent"] = FromRGB(232, 62, 168),
+    ["Element"] = FromRGB(34, 24, 52)
+},
+["Arctic"] = {
+    ["AccentGradient"] = FromRGB(224, 242, 254),
+    ["Background 2"] = FromRGB(10, 14, 18),
+    ["Background"] = FromRGB(15, 20, 26),
+    ["Text"] = FromRGB(238, 246, 252),
+    ["Outline"] = FromRGB(46, 58, 74),
+    ["Section Top"] = FromRGB(28, 36, 47),
+    ["Section Background"] = FromRGB(20, 26, 34),
+    ["Section Background 2"] = FromRGB(24, 31, 40),
+    ["Accent"] = FromRGB(125, 211, 252),
+    ["Element"] = FromRGB(34, 43, 56)
+},
+["Toxic"] = {
+    ["AccentGradient"] = FromRGB(217, 249, 157),
+    ["Background 2"] = FromRGB(9, 13, 5),
+    ["Background"] = FromRGB(14, 19, 8),
+    ["Text"] = FromRGB(238, 247, 228),
+    ["Outline"] = FromRGB(42, 56, 26),
+    ["Section Top"] = FromRGB(26, 35, 16),
+    ["Section Background"] = FromRGB(18, 25, 11),
+    ["Section Background 2"] = FromRGB(22, 30, 13),
+    ["Accent"] = FromRGB(163, 230, 53),
+    ["Element"] = FromRGB(31, 42, 19)
+},
+["Sunset"] = {
+    ["AccentGradient"] = FromRGB(253, 186, 116),
+    ["Background 2"] = FromRGB(16, 9, 7),
+    ["Background"] = FromRGB(23, 14, 11),
+    ["Text"] = FromRGB(250, 238, 232),
+    ["Outline"] = FromRGB(66, 41, 32),
+    ["Section Top"] = FromRGB(41, 25, 20),
+    ["Section Background"] = FromRGB(30, 18, 14),
+    ["Section Background 2"] = FromRGB(35, 22, 17),
+    ["Accent"] = FromRGB(251, 113, 133),
+    ["Element"] = FromRGB(49, 30, 24)
+},
+["Coffee"] = {
+    ["AccentGradient"] = FromRGB(231, 196, 155),
+    ["Background 2"] = FromRGB(14, 11, 8),
+    ["Background"] = FromRGB(20, 16, 12),
+    ["Text"] = FromRGB(245, 238, 229),
+    ["Outline"] = FromRGB(58, 47, 36),
+    ["Section Top"] = FromRGB(36, 29, 22),
+    ["Section Background"] = FromRGB(26, 21, 16),
+    ["Section Background 2"] = FromRGB(31, 25, 19),
+    ["Accent"] = FromRGB(193, 138, 89),
+    ["Element"] = FromRGB(44, 35, 27)
+},
+["Void"] = {
+    ["AccentGradient"] = FromRGB(160, 160, 160),
+    ["Background 2"] = FromRGB(0, 0, 0),
+    ["Background"] = FromRGB(6, 6, 6),
+    ["Text"] = FromRGB(250, 250, 250),
+    ["Outline"] = FromRGB(40, 40, 40),
+    ["Section Top"] = FromRGB(18, 18, 18),
+    ["Section Background"] = FromRGB(10, 10, 10),
+    ["Section Background 2"] = FromRGB(14, 14, 14),
+    ["Accent"] = FromRGB(255, 255, 255),
+    ["Element"] = FromRGB(24, 24, 24)
+},
+["Lavender"] = {
+    ["AccentGradient"] = FromRGB(216, 206, 255),
+    ["Background 2"] = FromRGB(12, 10, 18),
+    ["Background"] = FromRGB(18, 15, 26),
+    ["Text"] = FromRGB(240, 237, 250),
+    ["Outline"] = FromRGB(53, 46, 74),
+    ["Section Top"] = FromRGB(33, 28, 47),
+    ["Section Background"] = FromRGB(23, 20, 34),
+    ["Section Background 2"] = FromRGB(28, 24, 40),
+    ["Accent"] = FromRGB(167, 139, 250),
+    ["Element"] = FromRGB(39, 34, 56)
+},
+["Gold"] = {
+    ["AccentGradient"] = FromRGB(253, 224, 71),
+    ["Background 2"] = FromRGB(15, 12, 5),
+    ["Background"] = FromRGB(21, 17, 8),
+    ["Text"] = FromRGB(250, 244, 228),
+    ["Outline"] = FromRGB(61, 50, 26),
+    ["Section Top"] = FromRGB(38, 31, 16),
+    ["Section Background"] = FromRGB(27, 22, 11),
+    ["Section Background 2"] = FromRGB(32, 26, 13),
+    ["Accent"] = FromRGB(234, 179, 8),
+    ["Element"] = FromRGB(45, 37, 19)
+},
+["Matrix"] = {
+    ["AccentGradient"] = FromRGB(134, 255, 163),
+    ["Background 2"] = FromRGB(2, 7, 3),
+    ["Background"] = FromRGB(5, 12, 6),
+    ["Text"] = FromRGB(208, 255, 214),
+    ["Outline"] = FromRGB(20, 45, 24),
+    ["Section Top"] = FromRGB(11, 25, 13),
+    ["Section Background"] = FromRGB(7, 17, 9),
+    ["Section Background 2"] = FromRGB(9, 21, 11),
+    ["Accent"] = FromRGB(0, 230, 60),
+    ["Element"] = FromRGB(14, 31, 17)
+},
+["Blood"] = {
+    ["AccentGradient"] = FromRGB(239, 68, 84),
+    ["Background 2"] = FromRGB(12, 3, 4),
+    ["Background"] = FromRGB(18, 6, 7),
+    ["Text"] = FromRGB(245, 225, 227),
+    ["Outline"] = FromRGB(56, 21, 25),
+    ["Section Top"] = FromRGB(33, 12, 14),
+    ["Section Background"] = FromRGB(24, 8, 10),
+    ["Section Background 2"] = FromRGB(28, 10, 12),
+    ["Accent"] = FromRGB(185, 28, 40),
+    ["Element"] = FromRGB(40, 15, 18)
+},
+["Aqua"] = {
+    ["AccentGradient"] = FromRGB(103, 232, 249),
+    ["Background 2"] = FromRGB(5, 13, 16),
+    ["Background"] = FromRGB(9, 19, 23),
+    ["Text"] = FromRGB(228, 246, 250),
+    ["Outline"] = FromRGB(29, 57, 68),
+    ["Section Top"] = FromRGB(17, 35, 42),
+    ["Section Background"] = FromRGB(12, 25, 30),
+    ["Section Background 2"] = FromRGB(15, 30, 36),
+    ["Accent"] = FromRGB(6, 182, 212),
+    ["Element"] = FromRGB(21, 43, 51)
+},
+["Grape"] = {
+    ["AccentGradient"] = FromRGB(196, 181, 253),
+    ["Background 2"] = FromRGB(11, 7, 20),
+    ["Background"] = FromRGB(16, 11, 29),
+    ["Text"] = FromRGB(238, 234, 250),
+    ["Outline"] = FromRGB(48, 34, 84),
+    ["Section Top"] = FromRGB(29, 21, 52),
+    ["Section Background"] = FromRGB(21, 15, 38),
+    ["Section Background 2"] = FromRGB(25, 18, 45),
+    ["Accent"] = FromRGB(139, 92, 246),
+    ["Element"] = FromRGB(35, 25, 63)
+},
+["Steel"] = {
+    ["AccentGradient"] = FromRGB(148, 163, 184),
+    ["Background 2"] = FromRGB(10, 12, 15),
+    ["Background"] = FromRGB(15, 18, 22),
+    ["Text"] = FromRGB(241, 245, 249),
+    ["Outline"] = FromRGB(46, 54, 66),
+    ["Section Top"] = FromRGB(28, 33, 41),
+    ["Section Background"] = FromRGB(20, 24, 29),
+    ["Section Background 2"] = FromRGB(24, 28, 35),
+    ["Accent"] = FromRGB(100, 116, 139),
+    ["Element"] = FromRGB(34, 40, 49)
+},
+["Peach"] = {
+    ["AccentGradient"] = FromRGB(254, 202, 182),
+    ["Background 2"] = FromRGB(17, 11, 9),
+    ["Background"] = FromRGB(24, 16, 13),
+    ["Text"] = FromRGB(252, 240, 234),
+    ["Outline"] = FromRGB(69, 47, 39),
+    ["Section Top"] = FromRGB(43, 29, 24),
+    ["Section Background"] = FromRGB(31, 21, 17),
+    ["Section Background 2"] = FromRGB(37, 25, 20),
+    ["Accent"] = FromRGB(251, 146, 120),
+    ["Element"] = FromRGB(51, 35, 29)
+},
+["Nebula"] = {
+    ["AccentGradient"] = FromRGB(244, 114, 182),
+    ["Background 2"] = FromRGB(9, 8, 20),
+    ["Background"] = FromRGB(14, 12, 29),
+    ["Text"] = FromRGB(236, 234, 252),
+    ["Outline"] = FromRGB(43, 37, 84),
+    ["Section Top"] = FromRGB(26, 22, 52),
+    ["Section Background"] = FromRGB(18, 16, 38),
+    ["Section Background 2"] = FromRGB(22, 19, 45),
+    ["Accent"] = FromRGB(129, 80, 240),
+    ["Element"] = FromRGB(31, 27, 63)
+},
+["Mint"] = {
+    ["AccentGradient"] = FromRGB(167, 243, 208),
+    ["Background 2"] = FromRGB(7, 14, 12),
+    ["Background"] = FromRGB(11, 20, 17),
+    ["Text"] = FromRGB(232, 250, 243),
+    ["Outline"] = FromRGB(35, 58, 50),
+    ["Section Top"] = FromRGB(21, 36, 31),
+    ["Section Background"] = FromRGB(15, 26, 22),
+    ["Section Background 2"] = FromRGB(18, 31, 27),
+    ["Accent"] = FromRGB(52, 211, 153),
+    ["Element"] = FromRGB(26, 44, 38)
+},
     }
 
     Library.Theme = TableClone(Themes["Preset"])
@@ -960,6 +1200,35 @@ end
     Library.Round = function(self, Number, Float)
         local Multiplier = 1 / (Float or 1)
         return MathFloor(Number * Multiplier) / Multiplier
+    end
+
+    Library.CloseOpenFrames = function(self)
+        local function Sweep()
+            local Frames = { }
+
+            for _, Frame in Library.OpenFrames do
+                TableInsert(Frames, Frame)
+            end
+
+            for _, Frame in Frames do
+                Library:SafeCall(function()
+                    Frame:SetOpen(false)
+                end)
+            end
+        end
+
+        Sweep()
+
+        task.spawn(function()
+            for Attempt = 1, 4 do
+                if next(Library.OpenFrames) == nil then
+                    return
+                end
+
+                task.wait(0.15)
+                Sweep()
+            end
+        end)
     end
 
     Library.Thread = function(self, Function)
@@ -3784,6 +4053,10 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
 
                                                 
                 Window.IsOpen = Bool
+
+                if not Window.IsOpen then
+                    Library:CloseOpenFrames()
+                end
 
                 Debounce = true 
 
@@ -8465,7 +8738,13 @@ end)
         local ImageUrlInput
         local ApplyBackgroundFunc
 
-        local ThemeOrder = {"Preset", "Midnight", "Ocean", "Rose", "Mono", "Ember"}
+        local ThemeOrder = {
+    "Preset", "Midnight", "Ocean", "Rose", "Mono", "Ember",
+    "Amethyst", "Emerald", "Crimson", "Sakura", "Cyber",
+    "Arctic", "Toxic", "Sunset", "Coffee", "Void",
+    "Lavender", "Gold", "Matrix", "Blood", "Aqua",
+    "Grape", "Steel", "Peach", "Nebula", "Mint"
+}
 
         local BackgroundPresets = {
             ["None"]       = "",
@@ -8888,21 +9167,21 @@ end
 local InfoSection = Page:Section({Name = "Info", Side = 2})
 
 InfoSection:Image({
-    Id = "129442179713871",
+    Id = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
     Height = 110,
     Rounded = true
 })
 
 InfoSection:Paragraph({
-    Name = "Evade | Meowl Sploit",
-    Text = "Coчeтaниe клaвиш для oткpытия мeню мeняeтcя вo вклaдкe Settings. Ha тeлeфoнe иcпoльзyй плaвaющyю кнoпкy."
+    Name = "Meowl Sploit",
+    Text = "You can change the key combination used to open the menu in the Settings tab. On mobile, simply use the floating button instead."
 })
 
 InfoSection:Divider()
 
 InfoSection:Button({
     Name = "Copy Discord",
-    Tooltip = "Koпиpyeт ccылкy нa диcкopд в бyфep oбмeнa",
+    Tooltip = "Copies the link to the disk into the exchange buffer",
     Callback = function()
         if setclipboard then
             setclipboard("https://discord.gg/")
