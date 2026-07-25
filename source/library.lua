@@ -1,4 +1,4 @@
-local Library do ----98
+local Library do ----99
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -4248,16 +4248,15 @@ end
                 end)
             end
 
-            Items["Inactive"]:Connect("InputBegan", function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-        for Index, Value in Page.Window.Pages do 
-            if Value == Page and Page.Active then
-                return
-            end
-            Value:Turn(Value == Page)
-        end
-    end
-end)
+            Library:TapConnect(Items["Inactive"], function()
+                for Index, Value in Page.Window.Pages do
+                    if Value == Page and Page.Active then
+                        return
+                    end
+
+                    Value:Turn(Value == Page)
+                end
+            end)
 if #Page.Window.Pages == 0 then 
     Page:Turn(true)
 end
