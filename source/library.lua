@@ -1,4 +1,4 @@
-local Library do ----102
+local Library do ----103
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -8454,6 +8454,278 @@ end)
         end
     end
 
+
+     Library.CreateUiPage = function(self, Window)
+        local Page = Window:Page({Name = "UI", Icon = "122669828593160"})
+
+        local AccentColorpicker
+        local AccentGradientColorpicker
+        local UseImage
+        local ImageUrlInput
+        local ApplyBackgroundFunc
+
+        local ThemeOrder = {"Preset", "Midnight", "Ocean", "Rose", "Mono", "Ember"}
+
+        local GradientPresets = {
+            ["Blue"]   = { FromRGB(0, 116, 224),   FromRGB(0, 195, 255) },
+            ["Purple"] = { FromRGB(124, 54, 245),  FromRGB(202, 110, 255) },
+            ["Pink"]   = { FromRGB(245, 66, 191),  FromRGB(250, 142, 239) },
+            ["Green"]  = { FromRGB(0, 171, 0),     FromRGB(120, 255, 120) },
+            ["Orange"] = { FromRGB(255, 93, 48),   FromRGB(255, 169, 56) },
+            ["Red"]    = { FromRGB(200, 0, 0),     FromRGB(255, 90, 90) },
+            ["White"]  = { FromRGB(200, 200, 200), FromRGB(255, 255, 255) },
+        }
+
+        local GradientOrder = {"Blue", "Purple", "Pink", "Green", "Orange", "Red", "White"}
+
+        local BackgroundPresets = {
+            ["None"]       = "",
+            ["Komaru"]     = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
+            ["Colette"]    = "https://wimg.rule34.xxx//samples/2118/sample_51a5204c1e81bddee13b7917bf9a2dab.jpg?12937938",
+            ["Anime Girl"] = "https://m.media-amazon.com/images/I/71k9600LL3L._AC_UF894,1000_QL80_.jpg",
+            ["Cool Cat"]   = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSJC4BF9BZKrLhTM1CfGXq99AmAa5LUa5xSF3fB9Iv--C4Y7_JsCfU8WM5&s=10",
+            ["Manul"]      = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7DUQIPkF7LEDBmIwTvsnAqy0-x3HqnWOGtFqeuj-43VaTxs7vutkEJHct&s=10",
+            ["Green"]      = "https://getwallpapers.com/wallpaper/full/c/1/d/1262088-free-download-desktop-wallpapers-backgrounds-2134x1583-samsung.jpg",
+        }
+
+        local BackgroundOrder = {"None", "Komaru", "Colette", "Anime Girl", "Cool Cat", "Manul", "Green"}
+
+        local DarknessStrength = 0.35
+
+        local function HashString(Str)
+            local Hash = 5381
+            for i = 1, #Str do
+                Hash = (Hash * 33 + string.byte(Str, i)) % 4294967296
+            end
+            return tostring(Hash)
+        end
+
+        -- ==================== SIDE 1 : PRESETS ====================
+        local PresetsSection = Page:Section({Name = "Presets", Side = 1}) do
+
+            PresetsSection:Paragraph({
+                Name = "Theme Presets",
+                Text = "Ready-to-use menu presets that let you quickly switch between different interface styles, layouts, and visual themes without having to set everything up manually each time."
+            })
+
+            PresetsSection:Divider()
+
+            PresetsSection:Dropdown({
+                Name = "Theme Preset",
+                Tooltip = "Changes the whole interface color scheme in one click",
+                Flag = "ThemePreset",
+                Items = ThemeOrder,
+                Callback = function(Value)
+                    Library:SetThemePreset(Value)
+
+                    if AccentColorpicker then
+                        AccentColorpicker:Set(Library.Theme.Accent)
+                    end
+                    if AccentGradientColorpicker then
+                        AccentGradientColorpicker:Set(Library.Theme.AccentGradient)
+                    end
+                end
+            })
+
+            PresetsSection:Dropdown({
+                Name = "Gradient Presets",
+                Tooltip = "Ready color pairs for the accent gradient",
+                Flag = "AccentPreset",
+                Items = GradientOrder,
+                Callback = function(Value)
+                    local Pair = GradientPresets[Value]
+                    if not Pair then return end
+
+                    Library.Theme.Accent = Pair[1]
+                    Library.Theme.AccentGradient = Pair[2]
+
+                    Library:ChangeTheme("Accent", Pair[1])
+                    Library:ChangeTheme("AccentGradient", Pair[2])
+
+                    if AccentColorpicker then
+                        AccentColorpicker:Set(Pair[1])
+                    end
+                    if AccentGradientColorpicker then
+                        AccentGradientColorpicker:Set(Pair[2])
+                    end
+                end
+            })
+
+            PresetsSection:Divider()
+
+            PresetsSection:Dropdown({
+                Name = "Background Presets",
+                Tooltip = "Ready background images. None returns the default background",
+                Flag = "BackgroundPreset",
+                Items = BackgroundOrder,
+                Default = "None",
+                Callback = function(Value)
+                    local Url = BackgroundPresets[Value]
+
+                    if not ImageUrlInput or not UseImage then
+                        return
+                    end
+
+                    if Url and Url ~= "" then
+                        ImageUrlInput:Set(Url)
+                        UseImage:Set(true)
+                    else
+                        UseImage:Set(false)
+                        ImageUrlInput:Set("")
+                    end
+
+                    if ApplyBackgroundFunc then
+                        ApplyBackgroundFunc()
+                    end
+                end
+            })
+        end
+
+        -- ==================== SIDE 2 : CUSTOM ====================
+        local CustomSection = Page:Section({Name = "Customization", Side = 2}) do
+
+            CustomSection:Paragraph({
+                Name = "Manual",
+                Text = "Fine tune the accent gradient and set your own background link. After pasting a link press Apply Background."
+            })
+
+            CustomSection:Divider()
+
+            AccentColorpicker = CustomSection:Label("First gradient color"):Colorpicker({
+                Flag = "AccentColor",
+                Default = Library.Theme.Accent,
+                Callback = function(Color)
+                    Library.Theme.Accent = Color
+                    Library:ChangeTheme("Accent", Color)
+                end
+            })
+
+            AccentGradientColorpicker = CustomSection:Label("Second gradient color"):Colorpicker({
+                Flag = "AccentGradientColor",
+                Default = Library.Theme.AccentGradient,
+                Callback = function(Color)
+                    Library.Theme.AccentGradient = Color
+                    Library:ChangeTheme("AccentGradient", Color)
+                end
+            })
+
+            CustomSection:Divider()
+
+            UseImage = CustomSection:Toggle({
+                Name = "Use Custom Image",
+                Tooltip = "Draw an image instead of the default menu background",
+                Flag = "UseCustomBackground",
+                Default = false,
+            })
+
+            ImageUrlInput = CustomSection:Textbox({
+                Name = "Image URL",
+                Tooltip = "Direct link to a jpg or png. The image is cached into the Assets folder",
+                Placeholder = "https://i.imgur.com/abc123.jpg",
+                Flag = "CustomBackgroundUrl",
+                Default = "",
+            })
+
+            ApplyBackgroundFunc = function()
+                local Holder = Window.Items and Window.Items["BackgroundHolder"]
+                if not Holder then
+                    warn("BackgroundHolder not found")
+                    return
+                end
+
+                local OldBg = Holder.Instance:FindFirstChild("CustomBackground")
+                if OldBg then OldBg:Destroy() end
+
+                local useImage = Library.Flags["UseCustomBackground"] or false
+                local url = Library.Flags["CustomBackgroundUrl"] or ""
+
+                if useImage and url and url ~= "" then
+                    local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
+
+                    local Success, AssetId = pcall(function()
+                        if not isfile(FileName) then
+                            writefile(FileName, game:HttpGet(url))
+                        end
+                        return getcustomasset(FileName)
+                    end)
+
+                    if not Success then
+                        warn("Failed to load background: " .. tostring(AssetId))
+                        return
+                    end
+
+                    local Grey = 255 * (1 - DarknessStrength)
+
+                    local Bg = InstanceNew("ImageLabel")
+                    Bg.Name = "CustomBackground"
+                    Bg.Size = UDim2New(1, 0, 1, 0)
+                    Bg.Position = UDim2New(0, 0, 0, 0)
+                    Bg.BackgroundTransparency = 1
+                    Bg.Image = AssetId
+                    Bg.ImageColor3 = FromRGB(Grey, Grey, Grey)
+                    Bg.ImageTransparency = 0
+                    Bg.ScaleType = Enum.ScaleType.Crop
+                    Bg.ZIndex = -1
+                    Bg.Visible = true
+                    Bg.Parent = Holder.Instance
+
+                    local BgCorner = InstanceNew("UICorner")
+                    BgCorner.CornerRadius = UDimNew(0, 6)
+                    BgCorner.Parent = Bg
+
+                    local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
+                    Window:ApplyBackgroundTransparency(CurrentTransparency)
+                else
+                    Window:ApplyBackgroundTransparency(Library.Flags["CustomBackgroundTransparency"] or 0.1)
+                end
+            end
+
+            CustomSection:Button({
+                Name = "Apply Background",
+                Tooltip = "Download and apply the image from the link above",
+                Callback = function()
+                    ApplyBackgroundFunc()
+                end
+            })
+
+            TableInsert(Library.PostLoadHooks, function()
+                ApplyBackgroundFunc()
+            end)
+
+            CustomSection:Slider({
+                Name = "Background Transparency",
+                Tooltip = "Transparency of the panels above the background image",
+                Flag = "CustomBackgroundTransparency",
+                Min = 0,
+                Max = 1,
+                Default = 0.1,
+                Decimals = 0.01,
+                Callback = function(Value)
+                    Window:ApplyBackgroundTransparency(Value)
+                end
+            })
+
+            CustomSection:Button({
+                Name = "Reset to Default",
+                Tooltip = "Remove the image and restore the default background",
+                Callback = function()
+                    local Holder = Window.Items and Window.Items["BackgroundHolder"]
+                    if Holder then
+                        local Bg = Holder.Instance:FindFirstChild("CustomBackground")
+                        if Bg then Bg:Destroy() end
+                    end
+
+                    Window:ApplyBackgroundTransparency(0.1)
+
+                    UseImage:Set(false)
+                    ImageUrlInput:Set("")
+                end
+            })
+        end
+
+        return Page
+    end
+
      Library.CreateSettingsPage = function(self, Window, KeybindList)
         local Page = Window:Page({Name = "Settings", Icon = "122669828593160"})
 
@@ -8601,234 +8873,6 @@ end
             })
         end
 
--- ==================== BACKGROUND SETTINGS ====================
-local CustomBackgroundSection = Page:Section({Name = "Custom Background", Side = 2}) do
-
-    local function HashString(Str)
-        local Hash = 5381
-        for i = 1, #Str do
-            Hash = (Hash * 33 + string.byte(Str, i)) % 4294967296
-        end
-        return tostring(Hash)
-    end
-
-    local UseImage = CustomBackgroundSection:Toggle({
-        Name = "Use Custom Image",
-        Flag = "UseCustomBackground",
-        Default = false,
-    })
-
-    local ImageUrlInput = CustomBackgroundSection:Textbox({
-        Name = "Image URL",
-        Placeholder = "https://i.imgur.com/abc123.jpg",
-        Flag = "CustomBackgroundUrl",
-        Default = "",
-    })
-
-    -- ==================== ПРЕСЕТЫ ФОНОВ ====================
-    local BackgroundPresets = {
-        ["None"]    = "",
-        ["Komaru"] = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
-        ["Colette"] = "https://wimg.rule34.xxx//samples/2118/sample_51a5204c1e81bddee13b7917bf9a2dab.jpg?12937938",
-        ["Anime Girl"] = "https://m.media-amazon.com/images/I/71k9600LL3L._AC_UF894,1000_QL80_.jpg",
-        ["Cool Cat"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSJC4BF9BZKrLhTM1CfGXq99AmAa5LUa5xSF3fB9Iv--C4Y7_JsCfU8WM5&s=10",
-        ["Manul"] = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7DUQIPkF7LEDBmIwTvsnAqy0-x3HqnWOGtFqeuj-43VaTxs7vutkEJHct&s=10",
-        ["Green"] = "https://getwallpapers.com/wallpaper/full/c/1/d/1262088-free-download-desktop-wallpapers-backgrounds-2134x1583-samsung.jpg",
-    }
-
-    local PresetOrder = {"None", "Komaru", "Colette", "Blue", "Cool Cat", "Manul", "Green"}
-
-    local PresetsDropdown = CustomBackgroundSection:Dropdown({
-        Name = "Presets",
-        Flag = "BackgroundPreset",
-        Items = PresetOrder,
-        Default = "None",
-        Callback = function(Value)
-            local Url = BackgroundPresets[Value]
-
-            if Url and Url ~= "" then
-                ImageUrlInput:Set(Url)
-                UseImage:Set(true)
-            else
-                UseImage:Set(false)
-                ImageUrlInput:Set("")
-            end
-        end
-    })
-
-    local DarknessStrength = 0.35
-
--- Вынесли содержимое кнопки в отдельную функцию
-local function ApplyBackgroundFunc()
-    local Holder = Window.Items and Window.Items["BackgroundHolder"]
-    if not Holder then
-        warn("BackgroundHolder not found")
-        return
-    end
-
-    local OldBg = Holder.Instance:FindFirstChild("CustomBackground")
-    if OldBg then OldBg:Destroy() end
-
-    local useImage = Library.Flags["UseCustomBackground"] or false
-    local url = Library.Flags["CustomBackgroundUrl"] or ""
-
-    if useImage and url and url ~= "" then
-        local FileName = Library.Folders.Assets .. "/bg_" .. HashString(url) .. ".png"
-
-        local Success, AssetId = pcall(function()
-            if not isfile(FileName) then
-                writefile(FileName, game:HttpGet(url))
-            end
-            return getcustomasset(FileName)
-        end)
-
-        if not Success then
-            warn("Не удалось загрузить фон: " .. tostring(AssetId))
-            return
-        end
-
-        local Grey = 255 * (1 - DarknessStrength)
-
-        local Bg = Instance.new("ImageLabel")
-        Bg.Name = "CustomBackground"
-        Bg.Size = UDim2.new(1, 0, 1, 0)
-        Bg.Position = UDim2.new(0, 0, 0, 0)
-        Bg.BackgroundTransparency = 1
-        Bg.Image = AssetId
-        Bg.ImageColor3 = Color3.fromRGB(Grey, Grey, Grey)
-        Bg.ImageTransparency = 0
-        Bg.ScaleType = Enum.ScaleType.Crop
-        Bg.ZIndex = -1
-        Bg.Visible = true
-        Bg.Parent = Holder.Instance
-
-        local BgCorner = Instance.new("UICorner")
-        BgCorner.CornerRadius = UDim.new(0, 6)
-        BgCorner.Parent = Bg
-
-        local CurrentTransparency = Library.Flags["CustomBackgroundTransparency"] or 0.1
-        Window:ApplyBackgroundTransparency(CurrentTransparency)
-    else
-        Window:ApplyBackgroundTransparency(Library.Flags["CustomBackgroundTransparency"] or 0.1)
-    end
-end
-
-CustomBackgroundSection:Button({
-    Name = "Apply Background",
-    Callback = ApplyBackgroundFunc -- кнопка теперь просто вызывает функцию
-})
-
--- ГЛАВНОЕ: регистрируем эту же функцию как автозапуск после LoadConfig
-table.insert(Library.PostLoadHooks, ApplyBackgroundFunc)
-
-    CustomBackgroundSection:Slider({
-        Name = "Background Transparency",
-        Flag = "CustomBackgroundTransparency",
-        Min = 0,
-        Max = 1,
-        Default = 0.1,
-        Decimals = 0.01,
-        Callback = function(Value)
-            Window:ApplyBackgroundTransparency(Value)
-        end
-    })
-
-    CustomBackgroundSection:Button({
-        Name = "Reset to Default",
-        Callback = function()
-            local Holder = Window.Items and Window.Items["BackgroundHolder"]
-            if Holder then
-                local Bg = Holder.Instance:FindFirstChild("CustomBackground")
-                if Bg then Bg:Destroy() end
-            end
-
-            Window:ApplyBackgroundTransparency(0.1)
-
-            -- Используем :Set(), чтобы UI (текст поля, состояние чекбокса)
-            -- визуально обновился вместе с флагами, а не разошёлся с ними.
-            UseImage:Set(false)
-            ImageUrlInput:Set("")
-        end
-    })
-
-   -- ==================== COLOR SETTINGS ====================
-local ColorSection = Page:Section({Name = "Background", Side = 2}) do
-
-    local AccentColorpicker
-    local AccentGradientColorpicker
-
-    local GradientPresets = {
-        ["Blue"]   = { Color3.fromRGB(0, 116, 224),   Color3.fromRGB(0, 195, 255) },
-        ["Purple"] = { Color3.fromRGB(124, 54, 245),  Color3.fromRGB(202, 110, 255) },
-        ["Pink"]   = { Color3.fromRGB(245, 66, 191),  Color3.fromRGB(250, 142, 239) },
-        ["Green"]  = { Color3.fromRGB(0, 171, 0),     Color3.fromRGB(120, 255, 120) },
-        ["Orange"] = { Color3.fromRGB(255, 93, 48),   Color3.fromRGB(255, 169, 56) },
-        ["Red"]    = { Color3.fromRGB(200, 0, 0),     Color3.fromRGB(255, 90, 90) },
-        ["White"]  = { Color3.fromRGB(200, 200, 200), Color3.fromRGB(255, 255, 255) },
-    }
-
-    local PresetOrder = {"Blue", "Purple", "Pink", "Green", "Orange", "Red", "White"}
-
-    ColorSection:Dropdown({
-        Name = "Gradient Presets",
-        Flag = "AccentPreset",
-        Items = PresetOrder,
-        Callback = function(Value)
-            local Pair = GradientPresets[Value]
-            if not Pair then return end
-
-            Library.Theme.Accent = Pair[1]
-            Library.Theme.AccentGradient = Pair[2]
-
-            Library:ChangeTheme("Accent", Pair[1])
-            Library:ChangeTheme("AccentGradient", Pair[2])
-
-            if AccentColorpicker then
-                AccentColorpicker:Set(Pair[1])
-            end
-            if AccentGradientColorpicker then
-                AccentGradientColorpicker:Set(Pair[2])
-            end
-        end
-    })
-
-    AccentColorpicker = ColorSection:Label("First gradient color"):Colorpicker({
-        Flag = "AccentColor",
-        Default = Library.Theme.Accent,
-        Callback = function(Color)
-            Library.Theme.Accent = Color
-            Library:ChangeTheme("Accent", Color)
-        end
-    })
-
-    AccentGradientColorpicker = ColorSection:Label("Second gradient color"):Colorpicker({
-        Flag = "AccentGradientColor",
-        Default = Library.Theme.AccentGradient,
-        Callback = function(Color)
-            Library.Theme.AccentGradient = Color
-            Library:ChangeTheme("AccentGradient", Color)
-        end
-    })
-
-    local ThemeOrder = {"Preset", "Midnight", "Ocean", "Rose", "Mono", "Ember"}
-
-    ColorSection:Dropdown({
-        Name = "Theme Preset",
-        Flag = "ThemePreset",
-        Items = ThemeOrder,
-        Callback = function(Value)
-            Library:SetThemePreset(Value)
-
-            if AccentColorpicker then
-                AccentColorpicker:Set(Library.Theme.Accent)
-            end
-            if AccentGradientColorpicker then
-                AccentGradientColorpicker:Set(Library.Theme.AccentGradient)
-            end
-        end
-    })
-end
-end
 
  local AutoLoadName = Library:GetAutoLoadConfig()
         if AutoLoadName and isfile(Library.Folders.Configs .. "/" .. AutoLoadName) then
