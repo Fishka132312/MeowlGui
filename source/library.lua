@@ -1,4 +1,4 @@
-local Library do ----95
+local Library do ----96
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -1102,6 +1102,38 @@ end
 
         return MousePosition.X >= Frame.AbsolutePosition.X and MousePosition.X <= Frame.AbsolutePosition.X + Frame.AbsoluteSize.X 
         and MousePosition.Y >= Frame.AbsolutePosition.Y and MousePosition.Y <= Frame.AbsolutePosition.Y + Frame.AbsoluteSize.Y
+    end
+    Library.TapConnect = function(self, Object, Callback, Threshold)
+        Threshold = Threshold or 10
+
+        return Object:Connect("InputBegan", function(Input)
+            if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and Input.UserInputType ~= Enum.UserInputType.Touch then
+                return
+            end
+
+            local StartPosition = Input.Position
+            local Moved = false
+            local Changed
+
+            Changed = Input.Changed:Connect(function()
+                if Input.UserInputState == Enum.UserInputState.Change then
+                    local Delta = Input.Position - StartPosition
+
+                    if MathAbs(Delta.X) > Threshold or MathAbs(Delta.Y) > Threshold then
+                        Moved = true
+                    end
+                elseif Input.UserInputState == Enum.UserInputState.End then
+                    if Changed then
+                        Changed:Disconnect()
+                        Changed = nil
+                    end
+
+                    if not Moved then
+                        Callback(Input)
+                    end
+                end
+            end)
+        end)
     end
 
                                     Library.AutoHideScrollbar = function(self, ScrollFrame, BaseTransparency, HoverTransparency)
@@ -2500,6 +2532,7 @@ Instances:Create("UISizeConstraint", {
 
             local Items = { } do
                 Items["MainFrame"] = Instances:Create("Frame", {
+                    Active = true,
                    Parent = Library.Holder.Instance,
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
@@ -2585,6 +2618,7 @@ Items["MainFrame"].Instance.Size = UDim2New(0, DefW, 0, DefH)
                 Library:MakeBlurred(Items["MainFrame"], Window)
                 
                 Items["LeftTabs"] = Instances:Create("ScrollingFrame", {
+                    Active = true,
     Parent = Items["MainFrame"].Instance,
     Name = "\0",
     Visible = true,
@@ -2974,15 +3008,11 @@ function Window:Category(Name)
         end)
     end
 
-    CollapseButton:Connect("InputBegan", function(Input)
-        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-            ToggleCategory()
-        end
+    Library:TapConnect(CollapseButton, function()
+        ToggleCategory()
     end)
-    CategoryButton:Connect("InputBegan", function(Input)
-        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-            ToggleCategory()
-        end
+    Library:TapConnect(CategoryButton, function()
+        ToggleCategory()
     end)
 
     return Category
@@ -3104,11 +3134,9 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["CloseIcon"]:AddToTheme({ImageColor3 = "Text"})        
                 
-                Items["CloseButton"]:Connect("InputBegan", function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-        Library:Unload()
-    end
-end)
+                Library:TapConnect(Items["CloseButton"], function()
+                    Library:Unload()
+                end)
                 Items["CloseIconAccent"] = Instances:Create("Frame", {
                     Parent = Items["CloseButton"].Instance,
                     Name = "\0",
