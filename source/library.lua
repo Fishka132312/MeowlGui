@@ -5236,7 +5236,7 @@ end)
                     AutoButtonColor = false,
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, IsMobile and 40 or 22),
+                    Size = UDim2New(1, 0, 0, 18),
                     ZIndex = 2,
                     TextSize = Library.TextSize.Normal,
                     BackgroundColor3 = FromRGB(255, 255, 255)
@@ -5245,7 +5245,7 @@ end)
                 Items["Indicator"] = Instances:Create("Frame", {
                     Parent = Items["Toggle"].Instance,
                     Name = "\0",
-                    Size = UDim2New(0, IsMobile and 24 or 18, 0, IsMobile and 24 or 18),
+                    Size = UDim2New(0, 18, 0, 18),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
@@ -5321,18 +5321,16 @@ end)
                 end})
 
                 Items["Toggle"]:OnHover(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, (IsMobile and 24 or 18) + 3, 0, (IsMobile and 24 or 18) + 3), Position = UDim2New(0, 58.5, 0.5, 0)})
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 21, 0, 21), Position = UDim2New(0, -3, 0, -3)})
                 end)
 
                 Items["Toggle"]:OnHoverLeave(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, IsMobile and 24 or 18, 0, IsMobile and 24 or 18), Position = UDim2New(0, 60, 0.5, 0)})
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 18, 0, 18), Position = UDim2New(0, 0, 0, 0)})
                 end)
             end
 
-            Items["Indicator"].Instance.AnchorPoint = Vector2New(0, 0.5)
-            Items["Indicator"].Instance.Position = UDim2New(0, 60, 0.5, 0)
-            Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
-            Items["Text"].Instance.Position = UDim2New(0, 84, 0.5, 0)
+            Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
+            Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
 
             --Toggle.Section.Items["Fade"].Instance.Size = UDim2New(1, 0, 0, Toggle.Section.Items["Content"].Instance.AbsoluteSize.X - 180)
 
@@ -5693,13 +5691,11 @@ end)
 
             function Toggle:RefreshPosition(Bool)
                 if Bool then 
-                    Items["Indicator"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0.5, 0)})
-                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, IsMobile and 32 or 24, 0.5, 0)})
+                    Items["Indicator"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 0)})
+                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 24, 0, 0)})
                 else
-                    Items["Indicator"].Instance.AnchorPoint = Vector2New(0, 0.5)
-                    Items["Indicator"].Instance.Position = UDim2New(0, 60, 0.5, 0)
-                    Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
-                    Items["Text"].Instance.Position = UDim2New(0, 84, 0.5, 0)
+                    Items["Indicator"].Instance.Position = UDim2New(0, 60, 0, 0)
+                    Items["Text"].Instance.Position = UDim2New(0, 84, 0, 0)
                 end 
             end
 
