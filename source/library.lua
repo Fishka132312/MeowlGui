@@ -4125,13 +4125,30 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                 end)
             end
 
-            if IsMobile then 
-                Items["FloatingButton"]:Connect("InputBegan", function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
-                        Window:SetOpen(not Window.IsOpen)
-                    end
-                end)
-            end
+           if IsMobile then 
+    Items["FloatingButton"]:Connect("InputBegan", function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
+            local TapStart = Input.Position
+
+            local Changed
+            Changed = Input.Changed:Connect(function()
+                if Input.UserInputState ~= Enum.UserInputState.End then
+                    return
+                end
+
+                if Changed then
+                    Changed:Disconnect()
+                    Changed = nil
+                end
+
+                -- палец сдвинулся меньше чем на 10 пикселей = это тап, а не перетаскивание
+                if (Input.Position - TapStart).Magnitude <= 10 then
+                    Window:SetOpen(not Window.IsOpen)
+                end
+            end)
+        end
+    end)
+end
 
             --[[
             function Window:GetClosestFrame(Position, Instances)
