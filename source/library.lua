@@ -8908,7 +8908,7 @@ end)
         end
 
         -- ==================== SIDE 1 : PRESETS ====================
-        local PresetsSection = Page:Section({Name = "Presets", Side = 1}) do
+        local PresetsSection = Page:Section({Name = "Presets", Side = 1, icon = "https://i.postimg.cc/763r3Gbj/Bez-imeni-1.png"}) do
 
             PresetsSection:Paragraph({
                 Name = "Theme Presets",
@@ -8969,7 +8969,7 @@ end)
         end
 
         -- ==================== SIDE 2 : CUSTOM ====================
-        local CustomSection = Page:Section({Name = "Customization", Side = 2}) do
+        local CustomSection = Page:Section({Name = "Customization", Side = 2, icon = "https://i.postimg.cc/KYFvMNsW/Bez-imeni-1.png"}) do
 
             CustomSection:Paragraph({
                 Name = "Manual",
@@ -9153,7 +9153,7 @@ end)
         local ConfigsDropdown
         local UpdateAutoLoadVisual
 
-        local ConfigsSection = Page:Section({Name = "Configs", Side = 1}) do 
+        local ConfigsSection = Page:Section({Name = "Configs", Side = 1, icon = "https://i.postimg.cc/jSx2LT3V/Bez-imeni-1.png"}) do 
     local ConfigSelected = nil
 
     ConfigsDropdown = ConfigsSection:Listbox({
@@ -9304,7 +9304,7 @@ end
             UpdateAutoLoadVisual()
         end
 
-local InfoSection = Page:Section({Name = "Info", Side = 2})
+local InfoSection = Page:Section({Name = "Info", Side = 2, icon = "https://i.postimg.cc/zDQVt4f0/Bez-imeni-1.png"})
 
 InfoSection:Image({
     Id = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
@@ -9325,7 +9325,7 @@ InfoSection:Button({
     Callback = function()
         if setclipboard then
             setclipboard("https://discord.gg/")
-            Library:Notification({Name = "UI", Description = "Ccылкa cкoпиpoвaнa", Time = 3})
+            Library:Notification({Name = "UI", Description = "Link copied", Time = 3})
         end
     end
 })
