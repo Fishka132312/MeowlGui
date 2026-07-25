@@ -8741,7 +8741,7 @@ end)
 
 
      Library.CreateUiPage = function(self, Window)
-        local Page = Window:Page({Name = "UI", Icon = "122669828593160"})
+        local Page = Window:Page({Name = "UI", Icon = "https://i.postimg.cc/KYFvMNsW/Bez-imeni-1.png"})
 
         local AccentColorpicker
         local AccentGradientColorpicker
