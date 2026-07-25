@@ -1,4 +1,4 @@
-local Library do ----99
+local Library do ----100
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -6112,27 +6112,59 @@ end
             local InputChanged 
             
             Items["RealSlider"]:Connect("InputBegan", function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                    Slider.Sliding = true
+                if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and Input.UserInputType ~= Enum.UserInputType.Touch then
+                    return
+                end
 
-                    local SizeX = (Input.Position.X - Items["RealSlider"].Instance.AbsolutePosition.X) / Items["RealSlider"].Instance.AbsoluteSize.X
+                local IsTouch = Input.UserInputType == Enum.UserInputType.Touch
+                local StartPosition = Input.Position
+                local Armed = not IsTouch
+                local Moved = false
+
+                local function Apply(Position)
+                    local SizeX = (Position.X - Items["RealSlider"].Instance.AbsolutePosition.X) / Items["RealSlider"].Instance.AbsoluteSize.X
                     local Value = ((Slider.Max - Slider.Min) * SizeX) + Slider.Min
 
                     Slider:Set(Value)
+                end
 
-                    if InputChanged then
-                        return
-                    end
+                if Armed then
+                    Slider.Sliding = true
+                    Apply(Input.Position)
+                end
 
-                    InputChanged = Input.Changed:Connect(function()
-                        if Input.UserInputState == Enum.UserInputState.End then
-                            Slider.Sliding = false
+                if InputChanged then
+                    return
+                end
 
+                InputChanged = Input.Changed:Connect(function()
+                    if Input.UserInputState == Enum.UserInputState.Change then
+                        if not Armed then
+                            local Delta = Input.Position - StartPosition
+
+                            if MathAbs(Delta.X) > 6 or MathAbs(Delta.Y) > 6 then
+                                Moved = true
+                            end
+
+                            if MathAbs(Delta.X) > 6 and MathAbs(Delta.X) > MathAbs(Delta.Y) then
+                                Armed = true
+                                Slider.Sliding = true
+                                Apply(Input.Position)
+                            end
+                        end
+                    elseif Input.UserInputState == Enum.UserInputState.End then
+                        if not Armed and not Moved then
+                            Apply(Input.Position)
+                        end
+
+                        Slider.Sliding = false
+
+                        if InputChanged then
                             InputChanged:Disconnect()
                             InputChanged = nil
                         end
-                    end)
-                end
+                    end
+                end)
             end)
 
             Library:Connect(UserInputService.InputChanged, function(Input)
