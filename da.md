@@ -360,18 +360,6 @@ Available theme keys: `Accent`, `AccentGradient`, `Background`, `Background 2`, 
 
 ---
 
-## Click sounds
-
-A short click is played on every button press. Configure or disable it:
-
-```lua
-Library.ClickSound = false                              -- disable completely
-Library.ClickSoundId = "rbxassetid://6042053626"        -- custom sound
-Library.ClickSoundVolume = 0.35
-```
-
----
-
 ## Ready-made pages
 
 ### Settings page
