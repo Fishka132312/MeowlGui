@@ -5225,6 +5225,9 @@ end)
                 Value = false
             }
 
+            local BoxSize = IsMobile and 24 or 18
+            local IndicatorX = 60
+
             local Items = { } do 
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Toggle.Section.Items["Content"].Instance,
@@ -5245,7 +5248,7 @@ end)
                 Items["Indicator"] = Instances:Create("Frame", {
                     Parent = Items["Toggle"].Instance,
                     Name = "\0",
-                    Size = UDim2New(0, IsMobile and 24 or 18, 0, IsMobile and 24 or 18),
+                    Size = UDim2New(0, BoxSize, 0, BoxSize),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     BorderSizePixel = 0,
@@ -5321,11 +5324,11 @@ end)
                 end})
 
                 Items["Toggle"]:OnHover(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, (IsMobile and 24 or 18) + 3, 0, (IsMobile and 24 or 18) + 3), Position = UDim2New(0, 58.5, 0.5, 0)})
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, BoxSize + 3, 0, BoxSize + 3), Position = UDim2New(0, IndicatorX - 1.5, 0.5, 0)})
                 end)
 
                 Items["Toggle"]:OnHoverLeave(function()
-                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, IsMobile and 24 or 18, 0, IsMobile and 24 or 18), Position = UDim2New(0, 60, 0.5, 0)})
+                    Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, BoxSize, 0, BoxSize), Position = UDim2New(0, IndicatorX, 0.5, 0)})
                 end)
             end
 
@@ -5693,9 +5696,11 @@ end)
 
             function Toggle:RefreshPosition(Bool)
                 if Bool then 
-                    Items["Indicator"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0.5, 0)})
-                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, IsMobile and 32 or 24, 0.5, 0)})
+                    IndicatorX = 0
+                    Items["Indicator"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, IndicatorX, 0.5, 0)})
+                    Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, BoxSize + 6, 0.5, 0)})
                 else
+                    IndicatorX = 60
                     Items["Indicator"].Instance.AnchorPoint = Vector2New(0, 0.5)
                     Items["Indicator"].Instance.Position = UDim2New(0, 60, 0.5, 0)
                     Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
