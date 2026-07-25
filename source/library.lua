@@ -1561,7 +1561,7 @@ end
         end
     end
 
-    Library.ClickSound = true
+    Library.ClickSound = false
     Library.ClickSoundId = "rbxassetid://6042053626"
     Library.ClickSoundVolume = 0.35
 
