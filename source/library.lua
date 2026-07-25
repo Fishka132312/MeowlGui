@@ -1,4 +1,4 @@
-local Library do ----94
+local Library do ----95
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -3577,7 +3577,9 @@ end)
                     Flag = "MenuBind",
                     Default = Enum.KeyCode.Z,
                     Callback = function(Value)
-                        Window:SetOpen(Value)
+                        if Window.SetOpen then
+                            Window:SetOpen(Value)
+                        end
                     end
                 })
 
