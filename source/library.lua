@@ -1,4 +1,4 @@
-local Library do ----109
+local Library do ----110
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -1005,21 +1005,50 @@ Library.FontRegular = Regular -- значения, описания, подпи�
 Library.FontLight = Light     -- SubTitle, hint-текст
     end
 
-    Library.Holder = Instances:Create("ScreenGui", {
-        Parent = gethui(),
-        Name = "\0",
-        ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        DisplayOrder = 2,
-        ResetOnSpawn = false
-    })
+    -- ==================== SINGLE INSTANCE ====================
+do
+    -- 1) корректно выгружаем прошлую копию, если она жива
+    local Old = getgenv and getgenv().Library
 
-    Library.UnusedHolder = Instances:Create("ScreenGui", {
-        Parent = gethui(),
-        Name = "\0",
-        ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        Enabled = false,
-        ResetOnSpawn = false
-    })
+    if type(Old) == "table" and Old ~= Library and Old.Unload then
+        pcall(function()
+            Old:Unload()
+        end)
+    end
+
+    -- 2) добиваем осиротевшие ScreenGui, если прошлая копия умерла с ошибкой
+    pcall(function()
+        for _, Object in pairs(gethui():GetChildren()) do
+            if Object:IsA("ScreenGui") and Object:GetAttribute("MeowlLibrary") then
+                Object:Destroy()
+            end
+        end
+    end)
+
+    if getgenv then
+        getgenv().Library = nil
+    end
+end
+
+Library.Holder = Instances:Create("ScreenGui", {
+    Parent = gethui(),
+    Name = "\0",
+    ZIndexBehavior = Enum.ZIndexBehavior.Global,
+    DisplayOrder = 2,
+    ResetOnSpawn = false
+})
+
+Library.UnusedHolder = Instances:Create("ScreenGui", {
+    Parent = gethui(),
+    Name = "\0",
+    ZIndexBehavior = Enum.ZIndexBehavior.Global,
+    Enabled = false,
+    ResetOnSpawn = false
+})
+
+-- метка, чтобы следующий запуск нашёл эти холдеры даже без getgenv
+Library.Holder.Instance:SetAttribute("MeowlLibrary", true)
+Library.UnusedHolder.Instance:SetAttribute("MeowlLibrary", true)
 
     Library.NotifHolder  = Instances:Create("Frame", {
         Parent = Library.Holder.Instance,
