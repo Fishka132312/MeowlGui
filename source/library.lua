@@ -1,4 +1,4 @@
-local Library do ----103
+local Library do ----105
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -8460,23 +8460,12 @@ end)
 
         local AccentColorpicker
         local AccentGradientColorpicker
+        local InterfaceColorpicker
         local UseImage
         local ImageUrlInput
         local ApplyBackgroundFunc
 
         local ThemeOrder = {"Preset", "Midnight", "Ocean", "Rose", "Mono", "Ember"}
-
-        local GradientPresets = {
-            ["Blue"]   = { FromRGB(0, 116, 224),   FromRGB(0, 195, 255) },
-            ["Purple"] = { FromRGB(124, 54, 245),  FromRGB(202, 110, 255) },
-            ["Pink"]   = { FromRGB(245, 66, 191),  FromRGB(250, 142, 239) },
-            ["Green"]  = { FromRGB(0, 171, 0),     FromRGB(120, 255, 120) },
-            ["Orange"] = { FromRGB(255, 93, 48),   FromRGB(255, 169, 56) },
-            ["Red"]    = { FromRGB(200, 0, 0),     FromRGB(255, 90, 90) },
-            ["White"]  = { FromRGB(200, 200, 200), FromRGB(255, 255, 255) },
-        }
-
-        local GradientOrder = {"Blue", "Purple", "Pink", "Green", "Orange", "Red", "White"}
 
         local BackgroundPresets = {
             ["None"]       = "",
@@ -8524,29 +8513,8 @@ end)
                     if AccentGradientColorpicker then
                         AccentGradientColorpicker:Set(Library.Theme.AccentGradient)
                     end
-                end
-            })
-
-            PresetsSection:Dropdown({
-                Name = "Gradient Presets",
-                Tooltip = "Ready color pairs for the accent gradient",
-                Flag = "AccentPreset",
-                Items = GradientOrder,
-                Callback = function(Value)
-                    local Pair = GradientPresets[Value]
-                    if not Pair then return end
-
-                    Library.Theme.Accent = Pair[1]
-                    Library.Theme.AccentGradient = Pair[2]
-
-                    Library:ChangeTheme("Accent", Pair[1])
-                    Library:ChangeTheme("AccentGradient", Pair[2])
-
-                    if AccentColorpicker then
-                        AccentColorpicker:Set(Pair[1])
-                    end
-                    if AccentGradientColorpicker then
-                        AccentGradientColorpicker:Set(Pair[2])
+                    if InterfaceColorpicker then
+                        InterfaceColorpicker:Set(Library.Theme.Element)
                     end
                 end
             })
@@ -8586,7 +8554,7 @@ end)
 
             CustomSection:Paragraph({
                 Name = "Manual",
-                Text = "Fine tune the accent gradient and set your own background link. After pasting a link press Apply Background."
+                Text = "Fine tune the accent gradient, repaint the whole interface and set your own background link. After pasting a link press Apply Background."
             })
 
             CustomSection:Divider()
@@ -8606,6 +8574,40 @@ end)
                 Callback = function(Color)
                     Library.Theme.AccentGradient = Color
                     Library:ChangeTheme("AccentGradient", Color)
+                end
+            })
+
+            local function ApplyInterfaceColor(Color)
+                local H, S, V = Color:ToHSV()
+
+                -- бaзoвыe ypовни яpкoсти тeмнoй тeмы
+                local Levels = {
+                    ["Background 2"]         = 0.055,
+                    ["Background"]           = 0.080,
+                    ["Section Background"]   = 0.105,
+                    ["Section Background 2"] = 0.130,
+                    ["Section Top"]          = 0.150,
+                    ["Element"]              = 0.180,
+                    ["Outline"]              = 0.240
+                }
+
+                -- нoвaя яpкoсть и нacыщeннocть бepётcя из выбpaннoгo цвeтa
+                local Saturation = MathClamp(S * 0.65, 0, 0.65)
+                local Brightness = 0.55 + V * 0.9
+
+                for Key, Level in Levels do
+                    local New = FromHSV(H, Saturation, MathClamp(Level * Brightness, 0.02, 1))
+
+                    Library.Theme[Key] = New
+                    Library:ChangeTheme(Key, New)
+                end
+            end
+
+            InterfaceColorpicker = CustomSection:Label("Interface color"):Colorpicker({
+                Flag = "InterfaceColor",
+                Default = Library.Theme.Element,
+                Callback = function(Color)
+                    ApplyInterfaceColor(Color)
                 end
             })
 
