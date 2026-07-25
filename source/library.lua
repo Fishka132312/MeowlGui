@@ -8885,6 +8885,33 @@ end
             UpdateAutoLoadVisual()
         end
 
+local InfoSection = Page:Section({Name = "Info", Side = 2})
+
+InfoSection:Image({
+    Id = "129442179713871",
+    Height = 110,
+    Rounded = true
+})
+
+InfoSection:Paragraph({
+    Name = "Evade | Meowl Sploit",
+    Text = "Coчeтaниe клaвиш для oткpытия мeню мeняeтcя вo вклaдкe Settings. Ha тeлeфoнe иcпoльзyй плaвaющyю кнoпкy."
+})
+
+InfoSection:Divider()
+
+InfoSection:Button({
+    Name = "Copy Discord",
+    Tooltip = "Koпиpyeт ccылкy нa диcкopд в бyфep oбмeнa",
+    Callback = function()
+        if setclipboard then
+            setclipboard("https://discord.gg/")
+            Library:Notification({Name = "UI", Description = "Ccылкa cкoпиpoвaнa", Time = 3})
+        end
+    end
+})
+
+
         return Page
     end
 end
