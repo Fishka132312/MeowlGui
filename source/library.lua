@@ -1,4 +1,4 @@
-local Library do ----110
+local Library do ----111
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -137,13 +137,13 @@ end
         ["Ampersand"]         = "&",
         ["Quote"]             = "'",
         ["LeftParenthesis"]   = "(",
-        ["RightParenthesis"]  = " )",
+        ["RightParenthesis"]  = ")",
         ["Asterisk"]          = "*",
         ["Plus"]              = "+",
         ["Comma"]             = ",",
         ["Minus"]             = "-",
         ["Period"]            = ".",
-        ["Slash"]             = "`",
+        ["Slash"]             = "/",
         ["Three"]             = "3",
         ["Seven"]             = "7",
         ["Eight"]             = "8",
@@ -155,7 +155,7 @@ end
         ["Equals"]            = "=",
         ["At"]                = "@",
         ["LeftBracket"]       = "LeftBracket",
-        ["RightBracket"]      = "RightBracked",
+        ["RightBracket"]      = "RightBracket",
         ["BackSlash"]         = "BackSlash",
         ["Caret"]             = "^",
         ["Underscore"]        = "_",
@@ -176,13 +176,13 @@ end
         ["KeypadSeven"]       = "Keypad7",
         ["KeypadEight"]       = "Keypad8",
         ["KeypadNine"]        = "Keypad9",
-        ["KeypadPeriod"]      = "KeypadP",
-        ["KeypadDivide"]      = "KeypadD",
-        ["KeypadMultiply"]    = "KeypadM",
-        ["KeypadMinus"]       = "KeypadM",
-        ["KeypadPlus"]        = "KeypadP",
-        ["KeypadEnter"]       = "KeypadE",
-        ["KeypadEquals"]      = "KeypadE",
+        ["KeypadPeriod"]      = "Num.",
+        ["KeypadDivide"]      = "Num/",
+        ["KeypadMultiply"]    = "Num*",
+        ["KeypadMinus"]       = "Num-",
+        ["KeypadPlus"]        = "Num+",
+        ["KeypadEnter"]       = "NumEnter",
+        ["KeypadEquals"]      = "Num=",
         ["Insert"]            = "Insert",
         ["Home"]              = "Home",
         ["PageUp"]            = "PageUp",
@@ -968,11 +968,22 @@ end)
     -- Custom font
     local CustomFont = { } do
         function CustomFont:New(Name, Weight, Style, Data)
+            -- Executor может не уметь работать с файлами - раньше тут был жёсткий краш
+            if not (isfile and writefile and getcustomasset) then
+                warn("[Library] Кастомные шрифты недоступны: нет файлового API")
+                return nil
+            end
+
+            if not (Data and Data.Id and Data.Url) then
+                return nil
+            end
+
             if not isfile(Data.Id) then 
                 writefile(Data.Id, game:HttpGet(Data.Url))
             end
 
-            local Data = {
+            -- было `local Data = {...}` поверх аргумента Data: читается ужасно и легко ломается
+            local FontData = {
                 name = Name,
                 faces = {
                     {
@@ -984,7 +995,7 @@ end)
                 }
             }
 
-            writefile(`{Library.Folders.Assets}/{Name}.font`, HttpService:JSONEncode(Data))
+            writefile(`{Library.Folders.Assets}/{Name}.font`, HttpService:JSONEncode(FontData))
             return getcustomasset(`{Library.Folders.Assets}/{Name}.font`)
         end
 
@@ -1082,14 +1093,19 @@ Library.UnusedHolder.Instance:SetAttribute("MeowlLibrary", true)
 
     Library.Unload = function(self)
         for Index, Value in self.Connections do 
-            Value.Connection:Disconnect()
+            -- Connection мог не успеть создаться -> раньше тут падало "attempt to index nil"
+            if Value and Value.Connection then
+                pcall(function()
+                    Value.Connection:Disconnect()
+                end)
+            end
         end
 
         for Index, Value in self.Threads do 
-    if coroutine.status(Value) ~= "running" then
-        coroutine.close(Value)
-    end
-end
+            if type(Value) == "thread" and coroutine.status(Value) ~= "running" then
+                pcall(coroutine.close, Value)
+            end
+        end
 
         if self.Holder then 
             self.Holder:Clean()
@@ -1110,18 +1126,37 @@ end
             end
         end
 
-        Library = nil 
-        getgenv().Library = nil
+        table.clear(self.Connections)
+        table.clear(self.Threads)
+        table.clear(self.ToClean)
+        table.clear(self.OpenFrames)
+        table.clear(self.ThemeItems)
+
+        self.Unloaded = true
+
+        -- раньше тут было `Library = nil`: все замыкания внутри библиотеки
+        -- продолжали ссылаться на неё и падали при любом событии
+        if getgenv then
+            getgenv().Library = nil
+        end
     end
 
     Library.GetImage = function(self, Image)
-        local ImageData = self.Images[Image]
+        -- self.Images в библиотеке не создаётся -> вызов этой функции гарантированно падал
+        local Images = self.Images
+
+        if not Images then
+            return nil
+        end
+
+        local ImageData = Images[Image]
 
         if not ImageData then 
             return
         end
 
-        return getcustomasset(self.Folders.Assets .. "/" .. ImageData[1])
+        local Ok, Asset = pcall(getcustomasset, self.Folders.Assets .. "/" .. ImageData[1])
+        return Ok and Asset or nil
     end
 
                     -- ==================== IMAGE RESOLVER ====================
@@ -1230,7 +1265,14 @@ end
 
     Library.Round = function(self, Number, Float)
         local Multiplier = 1 / (Float or 1)
-        return MathFloor(Number * Multiplier) / Multiplier
+        local Value = Number * Multiplier
+
+        -- было простое floor: слайдеры всегда занижали значение (0.99 -> 0)
+        if Value >= 0 then
+            return MathFloor(Value + 0.5) / Multiplier
+        end
+
+        return -MathFloor(-Value + 0.5) / Multiplier
     end
 
     Library.CloseOpenFrames = function(self)
@@ -1264,10 +1306,13 @@ end
 
     Library.Thread = function(self, Function)
         local NewThread = coroutine.create(Function)
-        
-        coroutine.wrap(function()
-            coroutine.resume(NewThread)
-        end)()
+
+        -- ошибки внутри потоков раньше молча проглатывались
+        local Ok, Err = coroutine.resume(NewThread)
+
+        if not Ok then
+            warn("[Library] Ошибка в потоке: " .. tostring(Err))
+        end
 
         TableInsert(self.Threads, NewThread)
         return NewThread
@@ -1278,15 +1323,18 @@ end
         local Success, Result = pcall(Function, TableUnpack(Arguements))
 
         if not Success then
-            warn(Result)
-            return false
+            warn("[Library] " .. tostring(Result))
+            return false, Result
         end
 
-        return Success
+        return true, Result
     end
 
     Library.Connect = function(self, Event, Callback, Name)
-        Name = Name or StringFormat("connection_number_%s_%s", self.UnnamedConnections + 1, HttpService:GenerateGUID(false))
+        if not Name then
+            self.UnnamedConnections = self.UnnamedConnections + 1
+            Name = StringFormat("connection_number_%s_%s", self.UnnamedConnections, HttpService:GenerateGUID(false))
+        end
 
         local NewConnection = {
             Event = Event,
@@ -1295,26 +1343,32 @@ end
             Connection = nil
         }
 
-        Library:Thread(function()
-            NewConnection.Connection = Event:Connect(Callback)
-        end)
+        -- было подключение внутри отдельного потока: Connection какое-то время был nil,
+        -- из-за чего Unload/Disconnect иногда падали
+        NewConnection.Connection = Event:Connect(Callback)
 
         TableInsert(self.Connections, NewConnection)
         return NewConnection
     end
 
     Library.Disconnect = function(self, Name)
-        for _, Connection in self.Connections do 
+        for Index, Connection in self.Connections do 
             if Connection.Name == Name then
-                Connection.Connection:Disconnect()
+                if Connection.Connection then
+                    pcall(function()
+                        Connection.Connection:Disconnect()
+                    end)
+                end
+
+                TableRemove(self.Connections, Index)
                 break
             end
         end
     end
 
     Library.NextFlag = function(self)
-        local FlagNumber = self.UnnamedFlags + 1
-        return StringFormat("flag_number_%s_%s", FlagNumber, HttpService:GenerateGUID(false))
+        self.UnnamedFlags = self.UnnamedFlags + 1
+        return StringFormat("flag_number_%s_%s", self.UnnamedFlags, HttpService:GenerateGUID(false))
     end
 
     Library.AddToTheme = function(self, Item, Properties)
@@ -1327,8 +1381,11 @@ end
 
         for Property, Value in ThemeData.Properties do
             if type(Value) == "string" then
-                Item[Property] = self.Theme[Value]
-            else
+                -- если ключа темы нет, присвоение nil роняло весь Create
+                if self.Theme[Value] ~= nil then
+                    Item[Property] = self.Theme[Value]
+                end
+            elseif type(Value) == "function" then
                 Item[Property] = Value()
             end
         end
@@ -1360,7 +1417,16 @@ end
     end
 
     Library.LoadConfig = function(self, Config)
-    local Decoded = HttpService:JSONDecode(Config)
+    -- битый/пустой файл конфига раньше ронял скрипт целиком
+    local Decoded
+    local DecodeOk, DecodeError = pcall(function()
+        Decoded = HttpService:JSONDecode(Config)
+    end)
+
+    if not DecodeOk or type(Decoded) ~= "table" then
+        warn("[Library] Не читается конфиг: " .. tostring(DecodeError))
+        return false, DecodeError
+    end
 
     local Success, Result = Library:SafeCall(function()
         for Index, Value in Decoded do 
@@ -1441,8 +1507,20 @@ end
             return
         end
 
-        self.ThemeMap[Item].Properties = Properties
-        self.ThemeMap[Item] = self.ThemeMap[Item]
+        local ThemeData = self.ThemeMap[Item]
+        ThemeData.Properties = Properties
+
+        -- строка `self.ThemeMap[Item] = self.ThemeMap[Item]` не делала ничего:
+        -- новые свойства не применялись до следующей смены темы
+        for Property, Value in Properties do
+            if type(Value) == "string" then
+                if self.Theme[Value] ~= nil then
+                    Item[Property] = self.Theme[Value]
+                end
+            elseif type(Value) == "function" then
+                Item[Property] = Value()
+            end
+        end
     end
 
     Library.ChangeTheme = function(self, Theme, Color)
@@ -1493,6 +1571,25 @@ end
                     end
 
                     if not Moved then
+                        -- UI+ : лёгкая отдача при нажатии
+                        if Library.PressAnimation and Object.Instance and Object.Instance:IsA("GuiObject") then
+                            local PressScale = Object.Instance:FindFirstChild("PressScale")
+
+                            if not PressScale or not PressScale:IsA("UIScale") then
+                                PressScale = InstanceNew("UIScale")
+                                PressScale.Name = "PressScale"
+                                PressScale.Parent = Object.Instance
+                            end
+
+                            PressScale.Scale = 0.96
+
+                            TweenService:Create(
+                                PressScale,
+                                TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                                {Scale = 1}
+                            ):Play()
+                        end
+
                         if Library.ClickSound then
                             Library:SafeCall(function()
                                 local Sound = InstanceNew("Sound")
@@ -1572,7 +1669,14 @@ end
 
         Library:Connect(Object.Instance.MouseMoved, function(X, Y)
             if Library.Tooltip and Library.Tooltip.Instance.Visible then
-                Library.Tooltip.Instance.Position = UDim2New(0, X + 16, 0, Y + 16)
+                -- подсказка больше не уезжает за край экрана
+                local Viewport = Camera.ViewportSize
+                local TipSize = Library.Tooltip.Instance.AbsoluteSize
+
+                local PositionX = MathClamp(X + 16, 4, math.max(4, Viewport.X - TipSize.X - 4))
+                local PositionY = MathClamp(Y + 16, 4, math.max(4, Viewport.Y - TipSize.Y - 4))
+
+                Library.Tooltip.Instance.Position = UDim2New(0, PositionX, 0, PositionY)
             end
         end)
     end
@@ -1593,6 +1697,11 @@ end
     Library.ClickSound = false
     Library.ClickSoundId = "rbxassetid://6042053626"
     Library.ClickSoundVolume = 0.35
+
+    -- UI+ : анимация нажатия и масштаб интерфейса
+    Library.PressAnimation = true
+    Library.UIScaleMultiplier = 1
+    Library.TargetScale = 1
 
                                     Library.AutoHideScrollbar = function(self, ScrollFrame, BaseTransparency, HoverTransparency)
     local Instance_ = ScrollFrame.Instance
@@ -1668,17 +1777,25 @@ end
     end
 
     Library.UpdateText = function(self)
-        for Index, Value in self.UnusedHolder.Instance:GetDescendants() do 
-            if Value:IsA("TextLabel") or Value:IsA("TextButton") or Value:IsA("TextBox") then
-                Value.FontFace = Library.Font
+        -- раньше всему тексту насильно ставился SemiBold и вся типографика
+        -- (Regular/Light) схлопывалась в один вес
+        local Family = Library.Font.Family
+
+        local function Apply(Root)
+            if not Root then
+                return
+            end
+
+            for Index, Value in Root:GetDescendants() do 
+                if Value:IsA("TextLabel") or Value:IsA("TextButton") or Value:IsA("TextBox") then
+                    local Current = Value.FontFace
+                    Value.FontFace = Font.new(Family, Current.Weight, Current.Style)
+                end
             end
         end
 
-        for Index, Value in self.Holder.Instance:GetDescendants() do 
-            if Value:IsA("TextLabel") or Value:IsA("TextButton") or Value:IsA("TextBox") then
-                Value.FontFace = Library.Font
-            end
-        end
+        Apply(self.UnusedHolder and self.UnusedHolder.Instance)
+        Apply(self.Holder and self.Holder.Instance)
     end
 
     Library.MakeBlurred = function(self, Item, Window)
@@ -1693,7 +1810,7 @@ end
             Anchored = true,
             CanCollide = false,
             CanQuery = false,
-            CollisionGroup = " ",
+            CollisionGroup = "Default",
             Size = Vector3New(1, 1, 1) * 0.01,
             Color = FromRGB(0,0,0),
             Parent = Camera
@@ -2793,7 +2910,11 @@ end
         Library.Notification = function(self, Data)
             local Items = { } do 
 												Data = Data or { }  
-                Data.Duration = tonumber(Data.Duration) or 5
+                -- поддержка Time/Name/Text: внутри самой библиотеки уведомления
+                -- вызывались как {Name = ..., Time = ...} и получали "Label" и 5 секунд
+                Data.Duration = tonumber(Data.Duration) or tonumber(Data.Time) or 5
+                Data.Title = Data.Title or Data.Name or "Notification"
+                Data.Description = Data.Description or Data.Text or ""
                 Items["Notification"] = Instances:Create("Frame", {
                     Parent = Library.NotifHolder.Instance,
                     Name = "\0",
@@ -2811,6 +2932,16 @@ Instances:Create("UISizeConstraint", {
     Name = "\0",
     MaxSize = Vector2New(MaxNotifWidth, math.huge)
 })
+
+                -- UI+ : обводка уведомления в цвет темы
+                Instances:Create("UIStroke", {
+                    Parent = Items["Notification"].Instance,
+                    Name = "\0",
+                    Color = FromRGB(42, 44, 52),
+                    Thickness = 1,
+                    Transparency = 0.35,
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Outline"})
                 
                 Items["Title"] = Instances:Create("TextLabel", {
                     Parent = Items["Notification"].Instance,
@@ -3048,18 +3179,69 @@ Instances:Create("UICorner", {
 })
 
                                                 
-                if IsMobile then
-    local Scale = Instances:Create("UIScale", {
-        Parent = Items["MainFrame"].Instance,
-        Name = "\0",
-        Scale = UIScaleFactor          -- считается от реального экрана
-    })
-    -- пересчёт при повороте телефона
-    Library:Connect(Camera:GetPropertyChangedSignal("ViewportSize"), function()
-        local V = Camera.ViewportSize
-        Scale.Instance.Scale = math.clamp(V.X / 1280, 0.55, 0.95)
-    end)
-end
+                -- ==================== UI+ : мягкая тень окна ====================
+                Items["Shadow"] = Instances:Create("ImageLabel", {
+                    Parent = Items["MainFrame"].Instance,
+                    Name = "\0",
+                    BackgroundTransparency = 1,
+                    Image = "rbxassetid://6014261993",
+                    ImageColor3 = FromRGB(0, 0, 0),
+                    ImageTransparency = 0.42,
+                    ScaleType = Enum.ScaleType.Slice,
+                    SliceCenter = RectNew(49, 49, 450, 450),
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Position = UDim2New(0.5, -112, 0.5, 6),
+                    Size = UDim2New(1, 285, 1, 60),
+                    ZIndex = -3,
+                    BorderSizePixel = 0
+                })
+
+                Library.WindowShadow = Items["Shadow"]
+
+                -- тонкая акцентная обводка по контуру окна
+                Instances:Create("UIStroke", {
+                    Parent = Items["BackgroundHolder"].Instance,
+                    Name = "\0",
+                    Color = FromRGB(59, 130, 246),
+                    Thickness = 1,
+                    Transparency = 0.6,
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Accent"})
+
+                -- ==================== UI+ : ЕДИНЫЙ UIScale ====================
+                -- Раньше на телефоне висело два UIScale сразу (мобильный и "OpenScale"
+                -- от анимации открытия) - они дрались и масштаб прыгал.
+                Library.UIScaleMultiplier = Library.UIScaleMultiplier or 1
+
+                local function BaseScale()
+                    if IsMobile then
+                        return math.clamp(Camera.ViewportSize.X / 1280, 0.55, 0.95)
+                    end
+
+                    return 1
+                end
+
+                Items["Scale"] = Instances:Create("UIScale", {
+                    Parent = Items["MainFrame"].Instance,
+                    Name = "OpenScale",
+                    Scale = BaseScale() * Library.UIScaleMultiplier
+                })
+
+                Library.TargetScale = BaseScale() * Library.UIScaleMultiplier
+
+                function Library:ApplyUIScale(Multiplier)
+                    Library.UIScaleMultiplier = Multiplier or Library.UIScaleMultiplier or 1
+                    Library.TargetScale = BaseScale() * Library.UIScaleMultiplier
+
+                    Items["Scale"]:Tween(
+                        TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {Scale = Library.TargetScale}
+                    )
+                end
+
+                Library:Connect(Camera:GetPropertyChangedSignal("ViewportSize"), function()
+                    Library:ApplyUIScale()
+                end)
 
             
 local V = Camera.ViewportSize
@@ -3071,7 +3253,7 @@ local DefH = math.clamp(math.floor(V.Y * 0.75), 420, 600)
 Items["MainFrame"]:MakeResizeable(
     Vector2New(IsMobile and 460 or 650, IsMobile and 380 or 520),
     Vector2New(MaxW, MaxH),
-    OriginalSizes
+    Window -- было OriginalSizes: такой переменной не существует, туда уходил nil
 )
 Items["MainFrame"].Instance.Size = UDim2New(0, DefW, 0, DefH)
                                                 
@@ -4114,7 +4296,7 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                 if Window.IsOpen then 
                     Items["MainFrame"].Instance.Visible = true 
 
-                    local AnimScale = Items["MainFrame"].Instance:FindFirstChild("OpenScale")
+                    local AnimScale = Items["MainFrame"].Instance:FindFirstChildOfClass("UIScale")
 
                     if not AnimScale then
                         AnimScale = InstanceNew("UIScale")
@@ -4122,9 +4304,12 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                         AnimScale.Parent = Items["MainFrame"].Instance
                     end
 
-                    AnimScale.Scale = 0.93
+                    -- анимация теперь идёт от пользовательского масштаба, а не жёстко к 1
+                    local TargetScale = Library.TargetScale or 1
 
-                    Tween:Create(AnimScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}, true)
+                    AnimScale.Scale = TargetScale * 0.93
+
+                    Tween:Create(AnimScale, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = TargetScale}, true)
                 end
 
                 local Descendants = Items["MainFrame"].Instance:GetDescendants()
@@ -9186,6 +9371,72 @@ end)
 
                     UseImage:Set(false)
                     ImageUrlInput:Set("")
+                end
+            })
+        end
+
+        -- ==================== SIDE 1 : UI+ ====================
+        local ExtraSection = Page:Section({Name = "Extra", Side = 1, icon = "https://i.postimg.cc/763r3Gbj/Bez-imeni-1.png"}) do
+
+            ExtraSection:Slider({
+                Name = "UI Scale",
+                Tooltip = "Масштаб всего окна",
+                Flag = "UIScaleMultiplier",
+                Min = 60,
+                Max = 140,
+                Default = 100,
+                Decimals = 1,
+                Suffix = "%",
+                Callback = function(Value)
+                    if Library.ApplyUIScale then
+                        Library:ApplyUIScale(Value / 100)
+                    end
+                end
+            })
+
+            ExtraSection:Toggle({
+                Name = "Window Shadow",
+                Tooltip = "Мягкая тень под окном",
+                Flag = "WindowShadow",
+                Default = true,
+                Callback = function(Value)
+                    if Library.WindowShadow then
+                        Library.WindowShadow.Instance.Visible = Value
+                    end
+                end
+            })
+
+            ExtraSection:Toggle({
+                Name = "Press Animation",
+                Tooltip = "Лёгкое сжатие элемента при клике",
+                Flag = "PressAnimation",
+                Default = true,
+                Callback = function(Value)
+                    Library.PressAnimation = Value
+                end
+            })
+
+            ExtraSection:Toggle({
+                Name = "Click Sound",
+                Tooltip = "Звук при нажатии",
+                Flag = "ClickSound",
+                Default = false,
+                Callback = function(Value)
+                    Library.ClickSound = Value
+                end
+            })
+
+            ExtraSection:Slider({
+                Name = "Click Volume",
+                Tooltip = "Громкость звука нажатия",
+                Flag = "ClickSoundVolume",
+                Min = 0,
+                Max = 100,
+                Default = 35,
+                Decimals = 1,
+                Suffix = "%",
+                Callback = function(Value)
+                    Library.ClickSoundVolume = Value / 100
                 end
             })
         end
