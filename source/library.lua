@@ -1,4 +1,4 @@
-local Library do ----111
+local Library do ----112
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -1381,7 +1381,7 @@ end
 
         for Property, Value in ThemeData.Properties do
             if type(Value) == "string" then
-                -- если ключа темы нет, присвоение nil роняло весь Create
+                -- если ключа темы нет, присво����ние nil роняло весь Create
                 if self.Theme[Value] ~= nil then
                     Item[Property] = self.Theme[Value]
                 end
@@ -1571,36 +1571,6 @@ end
                     end
 
                     if not Moved then
-                        -- UI+ : лёгкая отдача при нажатии
-                        if Library.PressAnimation and Object.Instance and Object.Instance:IsA("GuiObject") then
-                            local PressScale = Object.Instance:FindFirstChild("PressScale")
-
-                            if not PressScale or not PressScale:IsA("UIScale") then
-                                PressScale = InstanceNew("UIScale")
-                                PressScale.Name = "PressScale"
-                                PressScale.Parent = Object.Instance
-                            end
-
-                            PressScale.Scale = 0.96
-
-                            TweenService:Create(
-                                PressScale,
-                                TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                                {Scale = 1}
-                            ):Play()
-                        end
-
-                        if Library.ClickSound then
-                            Library:SafeCall(function()
-                                local Sound = InstanceNew("Sound")
-                                Sound.SoundId = Library.ClickSoundId
-                                Sound.Volume = Library.ClickSoundVolume
-                                Sound.PlayOnRemove = true
-                                Sound.Parent = Library.Holder.Instance
-                                Sound:Destroy()
-                            end)
-                        end
-
                         Callback(Input)
                     end
                 end
@@ -1694,12 +1664,7 @@ end
         end
     end
 
-    Library.ClickSound = false
-    Library.ClickSoundId = "rbxassetid://6042053626"
-    Library.ClickSoundVolume = 0.35
-
-    -- UI+ : анимация нажатия и масштаб интерфейса
-    Library.PressAnimation = true
+    -- UI+ : масштаб интерфейса
     Library.UIScaleMultiplier = 1
     Library.TargetScale = 1
 
@@ -1778,7 +1743,7 @@ end
 
     Library.UpdateText = function(self)
         -- раньше всему тексту насильно ставился SemiBold и вся типографика
-        -- (Regular/Light) схлопывалась в один вес
+        -- (Regular/Light) схлопывалась в од��н вес
         local Family = Library.Font.Family
 
         local function Apply(Root)
@@ -2447,7 +2412,19 @@ end
                     end
                 end
                 
-                NewTween.Tween.Completed:Connect(function()
+                local CompletedSignal = NewTween and NewTween.Tween.Completed
+
+                -- если анимировать было нечего, NewTween оставался nil и тут был краш:
+                -- Debounce навсегда застревал в true и список больше не открывался
+                local function WhenFadeDone(FadeCallback)
+                    if CompletedSignal then
+                        CompletedSignal:Connect(FadeCallback)
+                    else
+                        task.delay(Library.FadeSpeed or 0.2, FadeCallback)
+                    end
+                end
+
+                WhenFadeDone(function()
                     Debounce = false 
                     Items["ColorpickerWindow"].Instance.Visible = Colorpicker.IsOpen
                     task.wait(0.2)
@@ -4172,7 +4149,19 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                             end
                         end
                         
-                        NewTween.Tween.Completed:Connect(function()
+                        local CompletedSignal = NewTween and NewTween.Tween.Completed
+
+                -- если анимировать было нечего, NewTween оставался nil и тут был краш:
+                -- Debounce навсегда застревал в true и список больше не открывался
+                local function WhenFadeDone(FadeCallback)
+                    if CompletedSignal then
+                        CompletedSignal:Connect(FadeCallback)
+                    else
+                        task.delay(Library.FadeSpeed or 0.2, FadeCallback)
+                    end
+                end
+
+                WhenFadeDone(function()
                             Debounce = false 
                             SettingsItems["Settings"].Instance.Visible = Settings.IsOpen
                             task.wait(0.2)
@@ -4333,7 +4322,19 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                     end
                 end
                 
-                NewTween.Tween.Completed:Connect(function()
+                local CompletedSignal = NewTween and NewTween.Tween.Completed
+
+                -- если анимировать было нечего, NewTween оставался nil и тут был краш:
+                -- Debounce навсегда застревал в true и список больше не открывался
+                local function WhenFadeDone(FadeCallback)
+                    if CompletedSignal then
+                        CompletedSignal:Connect(FadeCallback)
+                    else
+                        task.delay(Library.FadeSpeed or 0.2, FadeCallback)
+                    end
+                end
+
+                WhenFadeDone(function()
                     Debounce = false 
                     Items["MainFrame"].Instance.Visible = Window.IsOpen
                 end)
@@ -5667,7 +5668,7 @@ end
                     Parent = Items["Top"].Instance,
                     Name = "\0",
                     Active = false,
-                    -- ДОБАВЛЕНО: Видимость зависит от параметра EnableToggle
+                    -- ДОБАВЛЕНО: ��идимость зависит от параметра EnableToggle
                     Visible = Section.EnableToggle,
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "",
@@ -6329,7 +6330,19 @@ end
                         end
                     end
                     
-                    NewTween.Tween.Completed:Connect(function()
+                    local CompletedSignal = NewTween and NewTween.Tween.Completed
+
+                -- если анимировать было нечего, NewTween оставался nil и тут был краш:
+                -- Debounce навсегда застревал в true и список больше не открывался
+                local function WhenFadeDone(FadeCallback)
+                    if CompletedSignal then
+                        CompletedSignal:Connect(FadeCallback)
+                    else
+                        task.delay(Library.FadeSpeed or 0.2, FadeCallback)
+                    end
+                end
+
+                WhenFadeDone(function()
                         Debounce = false 
                         SettingsItem["Settings"].Instance.Visible = Settings.IsOpen
                         task.wait(0.2)
@@ -7218,7 +7231,19 @@ end
                     end
                 end
                 
-                NewTween.Tween.Completed:Connect(function()
+                local CompletedSignal = NewTween and NewTween.Tween.Completed
+
+                -- если анимировать было нечего, NewTween оставался nil и тут был краш:
+                -- Debounce навсегда застревал в true и список больше не открывался
+                local function WhenFadeDone(FadeCallback)
+                    if CompletedSignal then
+                        CompletedSignal:Connect(FadeCallback)
+                    else
+                        task.delay(Library.FadeSpeed or 0.2, FadeCallback)
+                    end
+                end
+
+                WhenFadeDone(function()
                     Debounce = false 
                     Items["OptionHolder"].Instance.Visible = Dropdown.IsOpen
                     task.wait(0.2)
@@ -9406,39 +9431,6 @@ end)
                 end
             })
 
-            ExtraSection:Toggle({
-                Name = "Press Animation",
-                Tooltip = "Лёгкое сжатие элемента при клике",
-                Flag = "PressAnimation",
-                Default = true,
-                Callback = function(Value)
-                    Library.PressAnimation = Value
-                end
-            })
-
-            ExtraSection:Toggle({
-                Name = "Click Sound",
-                Tooltip = "Звук при нажатии",
-                Flag = "ClickSound",
-                Default = false,
-                Callback = function(Value)
-                    Library.ClickSound = Value
-                end
-            })
-
-            ExtraSection:Slider({
-                Name = "Click Volume",
-                Tooltip = "Громкость звука нажатия",
-                Flag = "ClickSoundVolume",
-                Min = 0,
-                Max = 100,
-                Default = 35,
-                Decimals = 1,
-                Suffix = "%",
-                Callback = function(Value)
-                    Library.ClickSoundVolume = Value / 100
-                end
-            })
         end
 
         return Page
