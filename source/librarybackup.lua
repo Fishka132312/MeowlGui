@@ -1,4 +1,4 @@
-local Library do ----108
+local Library do ----110
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -1005,21 +1005,50 @@ Library.FontRegular = Regular -- значения, описания, подпи�
 Library.FontLight = Light     -- SubTitle, hint-текст
     end
 
-    Library.Holder = Instances:Create("ScreenGui", {
-        Parent = gethui(),
-        Name = "\0",
-        ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        DisplayOrder = 2,
-        ResetOnSpawn = false
-    })
+    -- ==================== SINGLE INSTANCE ====================
+do
+    -- 1) корректно выгружаем прошлую копию, если она жива
+    local Old = getgenv and getgenv().Library
 
-    Library.UnusedHolder = Instances:Create("ScreenGui", {
-        Parent = gethui(),
-        Name = "\0",
-        ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        Enabled = false,
-        ResetOnSpawn = false
-    })
+    if type(Old) == "table" and Old ~= Library and Old.Unload then
+        pcall(function()
+            Old:Unload()
+        end)
+    end
+
+    -- 2) добиваем осиротевшие ScreenGui, если прошлая копия умерла с ошибкой
+    pcall(function()
+        for _, Object in pairs(gethui():GetChildren()) do
+            if Object:IsA("ScreenGui") and Object:GetAttribute("MeowlLibrary") then
+                Object:Destroy()
+            end
+        end
+    end)
+
+    if getgenv then
+        getgenv().Library = nil
+    end
+end
+
+Library.Holder = Instances:Create("ScreenGui", {
+    Parent = gethui(),
+    Name = "\0",
+    ZIndexBehavior = Enum.ZIndexBehavior.Global,
+    DisplayOrder = 2,
+    ResetOnSpawn = false
+})
+
+Library.UnusedHolder = Instances:Create("ScreenGui", {
+    Parent = gethui(),
+    Name = "\0",
+    ZIndexBehavior = Enum.ZIndexBehavior.Global,
+    Enabled = false,
+    ResetOnSpawn = false
+})
+
+-- метка, чтобы следующий запуск нашёл эти холдеры даже без getgenv
+Library.Holder.Instance:SetAttribute("MeowlLibrary", true)
+Library.UnusedHolder.Instance:SetAttribute("MeowlLibrary", true)
 
     Library.NotifHolder  = Instances:Create("Frame", {
         Parent = Library.Holder.Instance,
@@ -1561,7 +1590,7 @@ end
         end
     end
 
-    Library.ClickSound = true
+    Library.ClickSound = false
     Library.ClickSoundId = "rbxassetid://6042053626"
     Library.ClickSoundVolume = 0.35
 
@@ -4032,8 +4061,18 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                     Flag = "MenuBind",
                     Default = Enum.KeyCode.Z,
                     Callback = function(Value)
-                        if Window.SetOpen then
-                            Window:SetOpen(Value)
+                        if not Window.SetOpen then return end
+
+                        local BindData = Library.Flags and Library.Flags["MenuBind"]
+                        local Mode = (type(BindData) == "table" and BindData.Mode) or "Toggle"
+
+                        if Mode == "Hold" then
+                            Window:SetOpen(Value and true or false)
+                        elseif Mode == "Always" then
+                            Window:SetOpen(true)
+                        else
+                            -- тогглим от РЕАЛЬНОГО состояния окна, а не от Toggled кейбинда
+                            Window:SetOpen(not Window.IsOpen)
                         end
                     end
                 })
@@ -4115,13 +4154,30 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
                 end)
             end
 
-            if IsMobile then 
-                Items["FloatingButton"]:Connect("InputBegan", function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
-                        Window:SetOpen(not Window.IsOpen)
-                    end
-                end)
-            end
+           if IsMobile then 
+    Items["FloatingButton"]:Connect("InputBegan", function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
+            local TapStart = Input.Position
+
+            local Changed
+            Changed = Input.Changed:Connect(function()
+                if Input.UserInputState ~= Enum.UserInputState.End then
+                    return
+                end
+
+                if Changed then
+                    Changed:Disconnect()
+                    Changed = nil
+                end
+
+                -- палец сдвинулся меньше чем на 10 пикселей = это тап, а не перетаскивание
+                if (Input.Position - TapStart).Magnitude <= 10 then
+                    Window:SetOpen(not Window.IsOpen)
+                end
+            end)
+        end
+    end)
+end
 
             --[[
             function Window:GetClosestFrame(Position, Instances)
@@ -4269,6 +4325,18 @@ Size = UDim2New(0, IsMobile and 38 or 32, 0, IsMobile and 38 or 32),
             end
 
             local MenuKeybindConnection = Library:Connect(UserInputService.InputBegan, function(Input)
+    if Input.UserInputState ~= nil and Input.UserInputState ~= Enum.UserInputState.Begin then
+        return
+    end
+
+    local BindData = Library.Flags and Library.Flags["MenuBind"]
+    local BindKey = (type(BindData) == "table" and BindData.Key) or nil
+
+    -- если эта же клавиша уже обрабатывается элементом Menu Keybind - выходим
+    if BindKey and (tostring(Input.KeyCode) == BindKey or tostring(Input.UserInputType) == BindKey) then
+        return
+    end
+
     if (Input.KeyCode and tostring(Input.KeyCode) == Library.MenuKeybind) 
        or (Input.UserInputType and tostring(Input.UserInputType) == Library.MenuKeybind) then
         
@@ -4284,7 +4352,16 @@ end)
 
             Window:SetCenter()
             task.wait()
+            Window.IsOpen = false
             Window:SetOpen(true)
+
+            -- синхронизируем состояние кейбинда с тем, что меню уже открыто
+            task.defer(function()
+                local BindData = Library.Flags and Library.Flags["MenuBind"]
+                if type(BindData) == "table" then
+                    BindData.Toggled = true
+                end
+            end)
             return setmetatable(Window, Library)
         end
 
@@ -8877,7 +8954,7 @@ end)
         end
 
         -- ==================== SIDE 1 : PRESETS ====================
-        local PresetsSection = Page:Section({Name = "Presets", Side = 1}) do
+        local PresetsSection = Page:Section({Name = "Presets", Side = 1, icon = "https://i.postimg.cc/763r3Gbj/Bez-imeni-1.png"}) do
 
             PresetsSection:Paragraph({
                 Name = "Theme Presets",
@@ -8938,7 +9015,7 @@ end)
         end
 
         -- ==================== SIDE 2 : CUSTOM ====================
-        local CustomSection = Page:Section({Name = "Customization", Side = 2}) do
+        local CustomSection = Page:Section({Name = "Customization", Side = 2, icon = "https://i.postimg.cc/KYFvMNsW/Bez-imeni-1.png"}) do
 
             CustomSection:Paragraph({
                 Name = "Manual",
@@ -9122,7 +9199,7 @@ end)
         local ConfigsDropdown
         local UpdateAutoLoadVisual
 
-        local ConfigsSection = Page:Section({Name = "Configs", Side = 1}) do 
+        local ConfigsSection = Page:Section({Name = "Configs", Side = 1, icon = "https://i.postimg.cc/jSx2LT3V/Bez-imeni-1.png"}) do 
     local ConfigSelected = nil
 
     ConfigsDropdown = ConfigsSection:Listbox({
@@ -9273,7 +9350,7 @@ end
             UpdateAutoLoadVisual()
         end
 
-local InfoSection = Page:Section({Name = "Info", Side = 2})
+local InfoSection = Page:Section({Name = "Info", Side = 2, icon = "https://i.postimg.cc/zDQVt4f0/Bez-imeni-1.png"})
 
 InfoSection:Image({
     Id = "https://i.pinimg.com/736x/45/54/22/455422b179773ef4d869da5f045c0a87.jpg",
@@ -9294,7 +9371,7 @@ InfoSection:Button({
     Callback = function()
         if setclipboard then
             setclipboard("https://discord.gg/")
-            Library:Notification({Name = "UI", Description = "Ccылкa cкoпиpoвaнa", Time = 3})
+            Library:Notification({Name = "UI", Description = "Link copied", Time = 3})
         end
     end
 })
