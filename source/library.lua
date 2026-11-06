@@ -7252,26 +7252,23 @@ end
             end
 
             function Dropdown:Set(Option)
-                if Dropdown.Multi then 
-                    if type(Option) ~= "table" then 
-                        return
-                    end
-
-                    Dropdown.Value = Option
-                    Library.Flags[Dropdown.Flag] = Option
-
-                    for Index, Value in Option do
-                        local OptionData = Dropdown.Options[Value]
-                        
-                        if not OptionData then
-                            continue
-                        end
-
-                        OptionData.Selected = true 
-                        OptionData:Toggle("Active")
-                    end
-
-                    Items["Value"].Instance.Text = TableConcat(Option, ", ")
+                if Dropdown.Multi then
+    if type(Option) ~= "table" then return end
+    Option = table.clone(Option)
+    Dropdown.Value = Option
+    Library.Flags[Dropdown.Flag] = Option
+    for _, Data in Dropdown.Options do
+        Data.Selected = false
+        Data:Toggle("Inactive")
+    end
+    for _, Value in Option do
+        local OptionData = Dropdown.Options[Value]
+        if OptionData then
+            OptionData.Selected = true
+            OptionData:Toggle("Active")
+        end
+    end
+    Items["Value"].Instance.Text = #Option > 0 and TableConcat(Option, ", ") or "..."
                 else
                     if not Dropdown.Options[Option] then
                         return
@@ -7490,26 +7487,28 @@ end
             end
 
             function Dropdown:Refresh(List, DefaultVal)
-                local OptionsToRemove = {}
-                for Name, _ in pairs(Dropdown.Options) do
-                    table.insert(OptionsToRemove, Name)
-                end
-                for _, Name in ipairs(OptionsToRemove) do
-                    Dropdown:Remove(Name)
-                end
-                Dropdown.Options = {}
-                Dropdown.OptionsWithIndexes = {}
-                for Index, Value in ipairs(List) do
-                    Dropdown:Add(Value)
-                end
-                if DefaultVal then
-                    Dropdown:Set(DefaultVal)
-                else
-                    Dropdown.Value = nil
-                    Library.Flags[Dropdown.Flag] = nil
-                    Items["Value"].Instance.Text = "..." 
-                end
-            end
+    for Name in pairs(Dropdown.Options) do
+        Dropdown.Options[Name].Button:Clean()
+    end
+    Dropdown.Options = {}
+    Dropdown.OptionsWithIndexes = {}
+    for _, Value in ipairs(List) do Dropdown:Add(Value) end
+
+    if Dropdown.Multi then
+        Dropdown.Value = {}
+        Library.Flags[Dropdown.Flag] = Dropdown.Value
+        Items["Value"].Instance.Text = "..."
+        if type(DefaultVal) == "table" and #DefaultVal > 0 then
+            Dropdown:Set(table.clone(DefaultVal))
+        end
+    elseif DefaultVal then
+        Dropdown:Set(DefaultVal)
+    else
+        Dropdown.Value = nil
+        Library.Flags[Dropdown.Flag] = nil
+        Items["Value"].Instance.Text = "..."
+    end
+end
 
             Library:TapConnect(Items["RealDropdown"], function()
                 Dropdown:SetOpen(not Dropdown.IsOpen)
